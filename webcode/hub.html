@@ -180,8 +180,8 @@
                 </button>
                 <span id="editorTitle" class="font-bold text-gray-700 dark:text-gray-200">ปลูกต้นกล้าใหม่</span>
                 
-                <!-- Full Screen Toggle Button -->
-                <button onclick="toggleFullScreen()" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="เต็มจอ/ย่อจอ">
+                <!-- Full Screen Toggle Button (Whole Page) -->
+                <button onclick="toggleFullScreen()" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="เต็มจอ/ย่อจอ (ทั้งหมด)">
                     <i id="fsIcon" class="fas fa-expand"></i>
                 </button>
             </div>
@@ -197,11 +197,17 @@
                     </div>
                     <textarea id="codeEditor" class="flex-1 p-4 w-full h-full resize-none code-editor outline-none text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-green-300 focus:bg-white dark:focus:bg-black transition placeholder-gray-400 dark:placeholder-gray-600" placeholder="<!-- วางโค้ดที่นี่ได้เลยครับน้องต้นกล้า -->"></textarea>
                 </div>
-                <!-- Preview -->
-                <div class="w-full md:w-1/2 flex flex-col bg-white dark:bg-black">
+                <!-- Preview (With specific fullscreen) -->
+                <div id="previewContainer" class="w-full md:w-1/2 flex flex-col bg-white dark:bg-black relative">
                     <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                         <span class="font-bold text-gray-600 dark:text-gray-300 text-sm"><i class="fas fa-eye text-green-500 mr-2"></i>ผลลัพธ์</span>
-                        <button onclick="updatePreview()" class="text-xs text-green-600 hover:text-green-800 dark:text-green-400"><i class="fas fa-sync-alt"></i> รีเฟรช</button>
+                        <div class="flex space-x-2">
+                            <!-- Button for Preview Fullscreen -->
+                            <button onclick="togglePreviewFullScreen()" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition px-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="ดูผลลัพธ์เต็มจอ">
+                                <i id="previewFsIcon" class="fas fa-expand text-xs"></i>
+                            </button>
+                            <button onclick="updatePreview()" class="text-xs text-green-600 hover:text-green-800 dark:text-green-400 ml-2"><i class="fas fa-sync-alt"></i> รีเฟรช</button>
+                        </div>
                     </div>
                     <iframe id="previewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
                 </div>
@@ -313,6 +319,42 @@
             }
         }
 
+        // --- Preview Full Screen Logic ---
+        function togglePreviewFullScreen() {
+            const el = document.getElementById('previewContainer');
+            const isFullScreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+
+            if (!isFullScreen) {
+                 try {
+                    if (el.requestFullscreen) {
+                        el.requestFullscreen().catch(err => {
+                            console.warn("Fullscreen blocked:", err);
+                            showToast("โหมดเต็มจอไม่รองรับในพรีวิวนี้ครับ", "info");
+                        });
+                    } else if (el.webkitRequestFullscreen) {
+                        el.webkitRequestFullscreen();
+                    } else if (el.msRequestFullscreen) {
+                        el.msRequestFullscreen();
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("เกิดข้อผิดพลาดในการขยายจอ", "info");
+                }
+            } else {
+                try {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().catch(err => console.error(err));
+                    } else if (document.webkitExitFullscreen) { 
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) { 
+                        document.msExitFullscreen();
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        }
+
         // ฟังเหตุการณ์เมื่อจอเปลี่ยนขนาด เพื่อเปลี่ยนไอคอน
         document.addEventListener('fullscreenchange', updateFsIcon);
         document.addEventListener('webkitfullscreenchange', updateFsIcon);
@@ -320,15 +362,28 @@
         document.addEventListener('MSFullscreenChange', updateFsIcon);
 
         function updateFsIcon() {
-            const icon = document.getElementById('fsIcon');
-            const isFullScreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            const fsElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
             
-            if (isFullScreen) {
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
+            // Icon for Main Editor Fullscreen
+            const mainIcon = document.getElementById('fsIcon');
+            if (fsElement && fsElement.id === 'page-create') {
+                mainIcon.classList.remove('fa-expand');
+                mainIcon.classList.add('fa-compress');
             } else {
-                icon.classList.remove('fa-compress');
-                icon.classList.add('fa-expand');
+                mainIcon.classList.remove('fa-compress');
+                mainIcon.classList.add('fa-expand');
+            }
+
+            // Icon for Preview Fullscreen
+            const previewIcon = document.getElementById('previewFsIcon');
+            if (previewIcon) {
+                if (fsElement && fsElement.id === 'previewContainer') {
+                    previewIcon.classList.remove('fa-expand');
+                    previewIcon.classList.add('fa-compress');
+                } else {
+                    previewIcon.classList.remove('fa-compress');
+                    previewIcon.classList.add('fa-expand');
+                }
             }
         }
 
