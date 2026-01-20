@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="th" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tonkla Code Keeper</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // เปิดใช้ Dark Mode แบบสั่งเอง
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            light: '#4ade80', // green-400
+                            DEFAULT: '#16a34a', // green-600
+                            dark: '#14532d', // green-900
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Mitr:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; transition: background-color 0.5s, color 0.5s; }
+        h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
+        .code-editor { font-family: 'Courier New', Courier, monospace; }
+        
+        /* Custom Scrollbar for Dark Mode */
+        .dark ::-webkit-scrollbar { width: 8px; }
+        .dark ::-webkit-scrollbar-track { background: #0f172a; }
+        .dark ::-webkit-scrollbar-thumb { background: #166534; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #15803d; }
+
+        /* Smooth Fade for Theme Switch */
+        .page-transition { transition: opacity 0.3s ease-in-out; }
+        
+        /* Easter Egg Slider */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: #16a34a;
+            margin-top: -6px;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            background: #d1d5db; border-radius: 2px;
+        }
+        .dark input[type=range]::-webkit-slider-thumb { background: #4ade80; }
+        .dark input[type=range]::-webkit-slider-runnable-track { background: #374151; }
+    </style>
+</head>
+<body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-screen flex flex-col overflow-hidden transition-colors duration-500">
+
+    <!-- Navbar -->
+    <nav class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-10 transition-colors duration-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand -->
+                <div class="flex items-center cursor-pointer transform hover:scale-105 transition" onclick="showPage('home')">
+                    <i class="fas fa-seedling fa-lg mr-2 text-green-200"></i>
+                    <span class="font-bold text-xl brand-font">Tonkla Code</span>
+                </div>
+                <!-- Menu -->
+                <div class="flex space-x-2 sm:space-x-4">
+                    <button onclick="showPage('create')" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition"><i class="fas fa-pen sm:mr-1"></i> <span class="hidden sm:inline">เขียน</span></button>
+                    <button onclick="loadList()" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition"><i class="fas fa-folder sm:mr-1"></i> <span class="hidden sm:inline">งาน</span></button>
+                    <button onclick="toggleConfig()" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition"><i class="fas fa-cog"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="hidden fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm h-full w-full z-50 flex items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md animate-fade-in-down border border-green-100 dark:border-green-900 transition-colors duration-300">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-2">
+                <h3 class="text-xl font-bold text-green-700 dark:text-green-400 brand-font">ตั้งค่าระบบนิเวศ</h3>
+                <button onclick="toggleConfig()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- General Settings -->
+            <div class="space-y-6">
+                
+                <!-- Theme Toggle -->
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3 text-green-600 dark:text-green-400">
+                            <i class="fas fa-moon"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-700 dark:text-gray-200">โหมดป่าตอนกลางคืน</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">เปลี่ยนธีมเป็นสีมืด</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="darkModeToggle" class="sr-only peer" onchange="toggleDarkMode()">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                    </label>
+                </div>
+
+                <!-- Easter Egg: Ambient Sound -->
+                <div class="bg-green-50 dark:bg-gray-700/50 p-4 rounded-xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-200"><i class="fas fa-music mr-2"></i>บรรยากาศในป่า</span>
+                        <span id="volumeLabel" class="text-xs text-green-600 dark:text-green-400 font-bold">เงียบสงบ</span>
+                    </div>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">ลองปรับดูสิ... ได้ยินเสียงอะไรไหม?</p>
+                </div>
+
+                <!-- Advanced Settings Toggle -->
+                <div class="pt-2">
+                    <button onclick="document.getElementById('advancedSettings').classList.toggle('hidden')" class="text-xs text-gray-400 hover:text-green-600 underline w-full text-center">
+                        แสดงการตั้งค่าขั้นสูง (API)
+                    </button>
+                    
+                    <div id="advancedSettings" class="hidden mt-4 space-y-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div>
+                            <label class="block text-gray-600 dark:text-gray-400 text-xs font-bold mb-1">Web App URL</label>
+                            <input type="text" id="apiUrlInput" class="w-full p-2 text-sm bg-white dark:bg-gray-800 border rounded dark:border-gray-600 focus:ring-1 focus:ring-green-500 outline-none" placeholder="https://script.google.com/...">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 dark:text-gray-400 text-xs font-bold mb-1">รหัสผ่าน</label>
+                            <input type="password" id="apiPassInput" class="w-full p-2 text-sm bg-white dark:bg-gray-800 border rounded dark:border-gray-600 focus:ring-1 focus:ring-green-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="saveConfig()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transform active:scale-95 transition">บันทึกการตั้งค่า</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden relative">
+        
+        <!-- Page: Home -->
+        <div id="page-home" class="page-transition absolute inset-0 p-8 flex flex-col items-center justify-center text-center">
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl max-w-lg w-full border border-green-100 dark:border-green-900">
+                <div class="inline-block p-4 rounded-full bg-green-100 dark:bg-green-900/30 mb-6 animate-bounce-slow">
+                    <i class="fas fa-seedling text-6xl text-green-500 dark:text-green-400"></i>
+                </div>
+                <h1 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">Tonkla's Space</h1>
+                <p class="text-gray-600 dark:text-gray-300 mb-8 font-light">พื้นที่เก็บโค้ดส่วนตัวสไตล์ธรรมชาติ</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="startNewCode()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg hover:shadow-green-500/30">
+                        <i class="fas fa-plus mr-2"></i> ปลูกต้นกล้าใหม่
+                    </button>
+                    <button onclick="loadList()" class="bg-white dark:bg-transparent dark:text-green-300 dark:border-green-500 hover:bg-green-50 text-green-600 font-bold py-3 px-8 border border-green-600 rounded-xl transition shadow-sm">
+                        <i class="fas fa-folder-open mr-2"></i> สำรวจงานเก่า
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: Create/Edit -->
+        <div id="page-create" class="page-transition absolute inset-0 flex flex-col hidden bg-white dark:bg-gray-900">
+            <!-- Header for Create Page -->
+             <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-between">
+                <button onclick="showPage('home')" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i> ย้อนกลับ
+                </button>
+                <span id="editorTitle" class="font-bold text-gray-700 dark:text-gray-200">ปลูกต้นกล้าใหม่</span>
+                <div class="w-20"></div> <!-- Spacer to center title -->
+            </div>
+
+            <div class="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
+                <!-- Editor -->
+                <div class="w-full md:w-1/2 flex flex-col border-r border-gray-200 dark:border-gray-700">
+                    <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <span class="font-bold text-gray-600 dark:text-gray-300 text-sm"><i class="fas fa-code text-green-500 mr-2"></i>HTML Source</span>
+                        <div class="flex space-x-2">
+                            <button onclick="insertTemplate()" class="text-xs bg-white dark:bg-gray-700 border dark:border-gray-600 hover:bg-gray-100 px-2 py-1 rounded text-gray-600 dark:text-gray-300 transition">โครงสร้างพื้นฐาน</button>
+                        </div>
+                    </div>
+                    <textarea id="codeEditor" class="flex-1 p-4 w-full h-full resize-none code-editor outline-none text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-green-300 focus:bg-white dark:focus:bg-black transition placeholder-gray-400 dark:placeholder-gray-600" placeholder="<!-- วางโค้ดที่นี่ได้เลยครับน้องต้นกล้า -->"></textarea>
+                </div>
+                <!-- Preview -->
+                <div class="w-full md:w-1/2 flex flex-col bg-white dark:bg-black">
+                    <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <span class="font-bold text-gray-600 dark:text-gray-300 text-sm"><i class="fas fa-eye text-green-500 mr-2"></i>ผลลัพธ์</span>
+                        <button onclick="updatePreview()" class="text-xs text-green-600 hover:text-green-800 dark:text-green-400"><i class="fas fa-sync-alt"></i> รีเฟรช</button>
+                    </div>
+                    <iframe id="previewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
+                </div>
+            </div>
+            <!-- Toolbar -->
+            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
+                <div class="text-gray-400 text-xs sm:text-sm flex items-center">
+                    <div class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></div>
+                    <span id="statusMsg">พร้อมเติบโต</span>
+                </div>
+                <button onclick="saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg hover:shadow-green-500/40 transition flex items-center">
+                    <i class="fas fa-save mr-2"></i> บันทึกข้อมูล
+                </button>
+            </div>
+        </div>
+
+        <!-- Page: List -->
+        <div id="page-list" class="page-transition absolute inset-0 overflow-y-auto hidden bg-gray-50 dark:bg-gray-900 p-4 sm:p-8">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center mb-6">
+                    <button onclick="showPage('home')" class="mr-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow hover:bg-green-50 dark:hover:bg-gray-700 text-gray-500 hover:text-green-600 dark:text-gray-400 transition">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white brand-font">แปลงเพาะปลูกของต้นกล้า</h2>
+                </div>
+                <div id="listContainer" class="grid gap-4">
+                    <!-- Loading Skeleton -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm animate-pulse border border-gray-100 dark:border-gray-700">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
+                        <div class="h-3 bg-gray-100 dark:bg-gray-700 rounded w-1/5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page: View -->
+        <div id="page-view" class="page-transition absolute inset-0 hidden flex flex-col bg-white">
+            <div class="bg-green-800 text-white px-4 py-2 flex justify-between items-center shadow-md z-20">
+                <button onclick="showPage('list')" class="bg-green-700 hover:bg-green-600 text-white px-3 py-1 rounded-full text-sm transition shadow-sm">
+                    <i class="fas fa-arrow-left mr-1"></i> ย้อนกลับ
+                </button>
+                <div class="text-sm font-bold opacity-80 brand-font">Tonkla Viewer</div>
+                <button onclick="copyCurrentUrl()" class="text-xs bg-green-700 hover:bg-green-600 px-3 py-1 rounded transition">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+            </div>
+            <iframe id="fullViewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
+            <div id="viewLoading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-10">
+                <div class="text-center">
+                    <i class="fas fa-seedling fa-spin text-4xl text-green-500 mb-4"></i>
+                    <p class="text-gray-500 dark:text-gray-400">กำลังดึงข้อมูลจากราก...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-gray-800 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-xl shadow-2xl transform transition-all duration-300 translate-y-10 opacity-0 z-50 flex items-center font-bold">
+        <i class="fas fa-info-circle mr-2 text-green-500"></i>
+        <span id="toastMsg">Notification</span>
+    </div>
+
+    <!-- Audio Element -->
+    <audio id="bgMusic" loop>
+        <source src="https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg" type="audio/ogg">
+    </audio>
+
+    <script>
+        // Global variables for State
+        let currentEditingId = null;
+
+        // --- Theme & Settings ---
+        function initTheme() {
+            try {
+                const isDark = localStorage.getItem('tonkla_theme') === 'dark';
+                applyTheme(isDark);
+                
+                document.getElementById('apiUrlInput').value = localStorage.getItem('codeKeeper_url') || '';
+                document.getElementById('apiPassInput').value = localStorage.getItem('codeKeeper_pass') || '';
+            } catch (e) {
+                console.log('Cannot access localStorage for theme');
+            }
+        }
+
+        function toggleDarkMode() {
+            const toggle = document.getElementById('darkModeToggle');
+            applyTheme(toggle.checked);
+            try {
+                localStorage.setItem('tonkla_theme', toggle.checked ? 'dark' : 'light');
+            } catch (e) {}
+        }
+
+        function applyTheme(isDark) {
+            const html = document.documentElement;
+            const toggle = document.getElementById('darkModeToggle');
+            
+            if (isDark) {
+                html.classList.add('dark');
+                toggle.checked = true;
+            } else {
+                html.classList.remove('dark');
+                toggle.checked = false;
+            }
+        }
+
+        // --- Easter Egg Audio ---
+        const volumeSlider = document.getElementById('volumeSlider');
+        const bgMusic = document.getElementById('bgMusic');
+        const volumeLabel = document.getElementById('volumeLabel');
+
+        volumeSlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            bgMusic.volume = val / 100;
+
+            if (val > 0) {
+                if (bgMusic.paused) {
+                    bgMusic.play().catch(e => console.log("Audio play failed (interaction needed first)"));
+                }
+                volumeLabel.textContent = `บรรยากาศ (${val}%)`;
+                volumeLabel.className = "text-xs text-green-600 dark:text-green-400 font-bold animate-pulse";
+            } else {
+                bgMusic.pause();
+                volumeLabel.textContent = "เงียบสงบ";
+                volumeLabel.className = "text-xs text-gray-400 font-bold";
+            }
+        });
+
+        // --- Core Logic ---
+        function saveConfig() {
+            const url = document.getElementById('apiUrlInput').value.trim();
+            const pass = document.getElementById('apiPassInput').value.trim();
+            
+            try {
+                localStorage.setItem('codeKeeper_url', url);
+                localStorage.setItem('codeKeeper_pass', pass);
+            } catch (e) {}
+            
+            toggleConfig();
+            showToast('บันทึกการตั้งค่าเรียบร้อย', 'success');
+        }
+
+        function toggleConfig() {
+            const modal = document.getElementById('configModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function showPage(pageId) {
+            ['home', 'create', 'list', 'view'].forEach(p => {
+                document.getElementById('page-' + p).classList.add('hidden');
+            });
+            document.getElementById('page-' + pageId).classList.remove('hidden');
+            
+            if (pageId !== 'view' && pageId !== 'list') {
+                try {
+                    history.pushState("", document.title, window.location.pathname);
+                } catch (e) {
+                    console.log('Cannot push state (likely in sandbox)');
+                }
+            }
+        }
+
+        function startNewCode() {
+            currentEditingId = null;
+            document.getElementById('editorTitle').innerText = "ปลูกต้นกล้าใหม่";
+            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save mr-2"></i> ปลูกลงดิน';
+            document.getElementById('codeEditor').value = '';
+            updatePreview();
+            showPage('create');
+        }
+
+        // --- Editor ---
+        const editor = document.getElementById('codeEditor');
+        const previewFrame = document.getElementById('previewFrame');
+
+        editor.addEventListener('input', () => {
+            clearTimeout(window.previewTimeout);
+            window.previewTimeout = setTimeout(updatePreview, 800);
+        });
+
+        function updatePreview() {
+            const content = editor.value;
+            const doc = previewFrame.contentWindow.document;
+            doc.open();
+            doc.write(content);
+            doc.close();
+        }
+
+        function insertTemplate() {
+            if(editor.value && !confirm('ต้นไม้เดิมจะถูกแทนที่แน่ใจนะครับ?')) return;
+            editor.value = `<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: sans-serif; padding: 20px; color: #333; }
+        h1 { color: #16a34a; }
+        .card { background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; }
+    </style>
+</head>
+<body>
+    <h1>สวัสดี! นี่คือเว็บของต้นกล้า</h1>
+    <div class="card">
+        <p>ลองแก้ไขข้อความตรงนี้ดูสิ...</p>
+    </div>
+</body>
+</html>`;
+            updatePreview();
+        }
+
+        // --- API & List ---
+        async function saveCode() {
+            let url = '', pass = '';
+            try {
+                url = localStorage.getItem('codeKeeper_url');
+                pass = localStorage.getItem('codeKeeper_pass');
+            } catch(e) {}
+
+            if (!url || !pass) {
+                toggleConfig();
+                return showToast('ไปตั้งค่า API ก่อนนะครับ');
+            }
+            if (!editor.value.trim()) return showToast('ยังไม่ได้เขียนโค้ดเลยครับ');
+
+            const btn = document.getElementById('saveBtn');
+            const status = document.getElementById('statusMsg');
+            
+            // Determine action (create or update)
+            const isUpdate = !!currentEditingId;
+            const action = isUpdate ? 'update' : 'create';
+            const actionText = isUpdate ? 'ผลัดใบใหม่' : 'ปลูกลงดิน';
+            const processingText = isUpdate ? 'กำลังผลัดใบ...' : 'กำลังปลูก...';
+            
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ${processingText}`;
+            status.textContent = "กำลังส่งข้อมูลไปที่ราก...";
+
+            try {
+                const body = {
+                    password: pass,
+                    code: editor.value,
+                    action: action
+                };
+                if(isUpdate) body.id = currentEditingId;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    mode: 'cors', 
+                    body: JSON.stringify(body)
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showToast(`${actionText}เรียบร้อย!`, 'success');
+                    if (!isUpdate) editor.value = ''; 
+                    updatePreview(); 
+                    showPage('home');
+                } else {
+                    showToast('เกิดปัญหา: ' + (result.message || 'Unknown'));
+                }
+            } catch (error) {
+                showToast('เชื่อมต่อไม่ได้ เช็คเน็ตหรือ URL หน่อยครับ');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-2"></i> ${actionText}`;
+                status.textContent = "พร้อมเติบโต";
+            }
+        }
+
+        async function loadList() {
+            showPage('list');
+            const container = document.getElementById('listContainer');
+            let url = '';
+            try {
+                 url = localStorage.getItem('codeKeeper_url');
+            } catch(e) {}
+
+            if (!url) {
+                container.innerHTML = '<div class="text-center p-8 text-gray-500 dark:text-gray-400">ไปที่ตั้งค่า (รูปเฟือง) เพื่อใส่ URL ก่อนนะครับ</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="text-center p-8"><i class="fas fa-seedling fa-spin text-2xl text-green-500"></i><br><span class="text-gray-500 dark:text-gray-400">กำลังสำรวจแปลงเพาะปลูก...</span></div>';
+
+            try {
+                const response = await fetch(`${url}?action=list`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    if (result.data.length === 0) {
+                        container.innerHTML = '<div class="text-center p-8 text-gray-500 dark:text-gray-400">ยังไม่มีต้นไม้เลยครับ มาเริ่มปลูกกันเถอะ</div>';
+                        return;
+                    }
+                    let html = '';
+                    result.data.forEach(item => {
+                        const date = new Date(item.timestamp).toLocaleString('th-TH');
+                        html += `
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-green-500 dark:border-green-600 flex justify-between items-center group">
+                                <div onclick="openView('${item.id}')" class="cursor-pointer flex-1">
+                                    <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">ID: ${item.id.substring(0, 6)}...</div>
+                                    <div class="font-bold text-gray-700 dark:text-gray-200">เติบโตเมื่อ: ${date}</div>
+                                </div>
+                                <div class="flex space-x-3 items-center ml-4">
+                                    <button onclick="editCode('${item.id}')" class="text-gray-400 hover:text-blue-500 transition" title="แก้ไข/ผลัดใบ">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteCode('${item.id}')" class="text-gray-400 hover:text-red-500 transition" title="ถอนทิ้ง">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button onclick="openView('${item.id}')" class="text-green-300 group-hover:text-green-500 transition-colors">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div class="text-red-400 text-center">เกิดข้อผิดพลาด: ${result.message}</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="text-red-400 text-center">โหลดไม่ได้ ลองเช็ค URL ดูครับ</div>`;
+            }
+        }
+
+        async function editCode(id) {
+            // Fetch code content first (using view logic)
+            let url = '';
+            try { url = localStorage.getItem('codeKeeper_url'); } catch(e){}
+            if(!url) return;
+            
+            showToast('กำลังเตรียมดินเพื่อแก้ไข...', 'info');
+            
+            try {
+                const response = await fetch(`${url}?action=view&id=${id}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    currentEditingId = id;
+                    document.getElementById('codeEditor').value = result.code;
+                    updatePreview();
+                    
+                    document.getElementById('editorTitle').innerText = "ผลัดใบ (แก้ไขงาน)";
+                    document.getElementById('saveBtn').innerHTML = '<i class="fas fa-leaf mr-2"></i> ยืนยันผลัดใบ';
+                    
+                    showPage('create');
+                } else {
+                    showToast('หาข้อมูลไม่เจอครับ');
+                }
+            } catch (e) {
+                showToast('ดึงข้อมูลมาแก้ไขไม่ได้ครับ');
+            }
+        }
+
+        async function deleteCode(id) {
+            if (!confirm('แน่ใจนะครับว่าจะถอนต้นไม้นี้ทิ้ง? (กู้คืนไม่ได้นะ)')) return;
+
+            let url = '', pass = '';
+            try {
+                url = localStorage.getItem('codeKeeper_url');
+                pass = localStorage.getItem('codeKeeper_pass');
+            } catch(e){}
+            
+            if (!url || !pass) return showToast('API Error');
+
+            showToast('กำลังถอนราก...', 'info');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        password: pass,
+                        action: 'delete',
+                        id: id
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showToast('นำไปทำปุ๋ยเรียบร้อย (ลบแล้ว)', 'success');
+                    loadList(); // Refresh list
+                } else {
+                    showToast('ลบไม่สำเร็จ: ' + result.message);
+                }
+            } catch (e) {
+                showToast('ลบไม่ได้ เช็คเน็ตหน่อยครับ');
+            }
+        }
+
+        async function openView(id) {
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
+            try {
+                history.pushState({path: newUrl}, '', newUrl);
+            } catch (e) {}
+            loadViewFromUrl(id);
+        }
+
+        async function loadViewFromUrl(id) {
+            showPage('view');
+            const loader = document.getElementById('viewLoading');
+            const frame = document.getElementById('fullViewFrame');
+            let url = '';
+            try { url = localStorage.getItem('codeKeeper_url'); } catch(e){}
+
+            loader.classList.remove('hidden');
+            const doc = frame.contentWindow.document;
+            doc.open(); doc.write(''); doc.close();
+
+            if (!url) {
+                alert("ต้องตั้งค่า API URL ก่อนนะครับ");
+                showPage('home');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${url}?action=view&id=${id}`);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    const doc = frame.contentWindow.document;
+                    doc.open(); doc.write(result.code); doc.close();
+                } else {
+                    alert('หาต้นไม้ต้นนี้ไม่เจอครับ'); showPage('home');
+                }
+            } catch (error) {
+                alert('โหลดไม่ได้ครับผม');
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function showToast(message, type='info') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = message;
+            toast.classList.remove('hidden', 'translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        function copyCurrentUrl() {
+            try {
+                const el = document.createElement('textarea');
+                el.value = window.location.href;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                showToast('ก๊อปปี้เส้นทางแล้ว!', 'success');
+            } catch (e) {
+                showToast('ก๊อปปี้ไม่ได้ (ติดระบบความปลอดภัย)', 'info');
+            }
+        }
+
+        // Init
+        window.addEventListener('load', () => {
+            initTheme();
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (id) {
+                let url = '';
+                try { url = localStorage.getItem('codeKeeper_url'); } catch(e){}
+                if(!url) { toggleConfig(); showToast('ใส่ API URL ก่อนดูงานนะครับ'); } 
+                else { loadViewFromUrl(id); }
+            } else {
+                showPage('home');
+            }
+        });
+    </script>
+</body>
+</html>
