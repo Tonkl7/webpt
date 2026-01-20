@@ -58,6 +58,11 @@
         }
         .dark input[type=range]::-webkit-slider-thumb { background: #4ade80; }
         .dark input[type=range]::-webkit-slider-runnable-track { background: #374151; }
+
+        /* Fullscreen styles fix */
+        :fullscreen { overflow: hidden; background: white; }
+        :fullscreen .bg-white { background: white; }
+        .dark :fullscreen { background: #111827; } /* gray-900 */
     </style>
 </head>
 <body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-screen flex flex-col overflow-hidden transition-colors duration-500">
@@ -166,7 +171,7 @@
             </div>
         </div>
 
-        <!-- Page: Create/Edit -->
+        <!-- Page: Create/Edit (With Full Screen Capability) -->
         <div id="page-create" class="page-transition absolute inset-0 flex flex-col hidden bg-white dark:bg-gray-900">
             <!-- Header for Create Page -->
              <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-between">
@@ -174,7 +179,11 @@
                     <i class="fas fa-arrow-left mr-2"></i> ย้อนกลับ
                 </button>
                 <span id="editorTitle" class="font-bold text-gray-700 dark:text-gray-200">ปลูกต้นกล้าใหม่</span>
-                <div class="w-20"></div> <!-- Spacer to center title -->
+                
+                <!-- Full Screen Toggle Button -->
+                <button onclick="toggleFullScreen()" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="เต็มจอ/ย่อจอ">
+                    <i id="fsIcon" class="fas fa-expand"></i>
+                </button>
             </div>
 
             <div class="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
@@ -264,6 +273,64 @@
     <script>
         // Global variables for State
         let currentEditingId = null;
+
+        // --- Full Screen Logic ---
+        function toggleFullScreen() {
+            const page = document.getElementById('page-create');
+            // Check for standard and vendor prefixed fullscreen states
+            const isFullScreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+
+            if (!isFullScreen) {
+                // เข้าโหมดเต็มจอ
+                try {
+                    if (page.requestFullscreen) {
+                        page.requestFullscreen().catch(err => {
+                            console.warn("Fullscreen blocked:", err);
+                            showToast("โหมดเต็มจอไม่รองรับในพรีวิวนี้ครับ", "info");
+                        });
+                    } else if (page.webkitRequestFullscreen) { // Safari
+                        page.webkitRequestFullscreen();
+                    } else if (page.msRequestFullscreen) { // IE11
+                        page.msRequestFullscreen();
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("เกิดข้อผิดพลาดในการขยายจอ", "info");
+                }
+            } else {
+                // ออกจากโหมดเต็มจอ
+                try {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().catch(err => console.error(err));
+                    } else if (document.webkitExitFullscreen) { 
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) { 
+                        document.msExitFullscreen();
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        }
+
+        // ฟังเหตุการณ์เมื่อจอเปลี่ยนขนาด เพื่อเปลี่ยนไอคอน
+        document.addEventListener('fullscreenchange', updateFsIcon);
+        document.addEventListener('webkitfullscreenchange', updateFsIcon);
+        document.addEventListener('mozfullscreenchange', updateFsIcon);
+        document.addEventListener('MSFullscreenChange', updateFsIcon);
+
+        function updateFsIcon() {
+            const icon = document.getElementById('fsIcon');
+            const isFullScreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            
+            if (isFullScreen) {
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        }
 
         // --- Theme & Settings ---
         function initTheme() {
