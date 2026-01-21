@@ -14,6 +14,9 @@
                 extend: {
                     colors: {
                         primary: { DEFAULT: '#16a34a' }
+                    },
+                    screens: {
+                        'xs': '375px', // เพิ่มขนาดจอเล็กพิเศษ
                     }
                 }
             }
@@ -25,15 +28,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Mitr:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Sarabun', sans-serif; }
+        /* Base Settings */
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            -webkit-tap-highlight-color: transparent; /* ลบสีเทาเวลาแตะปุ่มในมือถือ */
+            touch-action: manipulation; /* ปรับปรุงการตอบสนองการสัมผัส */
+        }
         h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
         .code-editor { font-family: 'Courier New', Courier, monospace; }
         
+        /* Utility */
+        .force-hidden { display: none !important; } /* ซ่อนแบบเด็ดขาด */
+        
         /* Scrollbar */
-        .dark ::-webkit-scrollbar { width: 8px; }
+        .dark ::-webkit-scrollbar { width: 6px; }
         .dark ::-webkit-scrollbar-track { background: #0f172a; }
         .dark ::-webkit-scrollbar-thumb { background: #166534; border-radius: 4px; }
 
+        /* Fullscreen */
+        :fullscreen { overflow: hidden; background: white; }
+        .dark :fullscreen { background: #111827; }
+        
         /* Range Slider */
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
@@ -45,40 +60,36 @@
         }
         .dark input[type=range]::-webkit-slider-thumb { background: #4ade80; }
         .dark input[type=range]::-webkit-slider-runnable-track { background: #374151; }
-
-        /* Fixes */
-        .page-hidden { display: none !important; } /* บังคับซ่อน */
-        :fullscreen { overflow: hidden; background: white; }
-        .dark :fullscreen { background: #111827; }
     </style>
 </head>
 <body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-[100dvh] flex flex-col overflow-hidden transition-colors duration-500">
 
-    <!-- Navbar -->
-    <nav class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-40 shrink-0">
+    <!-- Navbar (Z-Index 50: สูงกว่าเนื้อหา) -->
+    <nav class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-50 shrink-0 relative">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center justify-between h-16">
                 <!-- Brand -->
-                <div class="flex items-center cursor-pointer active:scale-95 transition" onclick="window.showPage('home')">
+                <div class="flex items-center cursor-pointer active:scale-95 transition select-none" onclick="window.showPage('home')">
                     <i class="fas fa-seedling fa-lg mr-2 text-green-200"></i>
                     <span class="font-bold text-xl brand-font">Tonkla Code</span>
                 </div>
                 <!-- Menu -->
-                <div class="flex space-x-2">
-                    <button onclick="window.showPage('create')" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition active:scale-95"><i class="fas fa-pen"></i> <span class="hidden sm:inline">เขียน</span></button>
-                    <button onclick="window.loadList()" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition active:scale-95"><i class="fas fa-folder"></i> <span class="hidden sm:inline">งาน</span></button>
-                    <button onclick="window.toggleConfig()" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition active:scale-95"><i class="fas fa-cog"></i></button>
+                <div class="flex space-x-1 sm:space-x-2">
+                    <button type="button" onclick="window.showPage('create')" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition active:scale-90 select-none"><i class="fas fa-pen"></i> <span class="hidden sm:inline">เขียน</span></button>
+                    <button type="button" onclick="window.loadList()" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition active:scale-90 select-none"><i class="fas fa-folder"></i> <span class="hidden sm:inline">งาน</span></button>
+                    <button type="button" onclick="window.toggleConfig()" class="hover:bg-green-500 dark:hover:bg-green-800 px-3 py-2 rounded-full text-sm font-medium transition active:scale-90 select-none"><i class="fas fa-cog"></i></button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Configuration Modal (Z-Index 50) -->
-    <div id="configModal" class="page-hidden fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <!-- Configuration Modal (Z-Index 60: สูงสุด) -->
+    <!-- เพิ่ม onclick ที่ backdrop เพื่อให้แตะพื้นหลังแล้วปิดได้ -->
+    <div id="configModal" class="force-hidden fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onclick="if(event.target === this) window.toggleConfig()">
         <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md border border-green-100 dark:border-green-900 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-2">
                 <h3 class="text-xl font-bold text-green-700 dark:text-green-400 brand-font">ตั้งค่าระบบนิเวศ</h3>
-                <button onclick="window.toggleConfig()" class="text-gray-400 hover:text-red-500 p-2"><i class="fas fa-times fa-lg"></i></button>
+                <button type="button" onclick="window.toggleConfig()" class="text-gray-400 hover:text-red-500 p-2 active:scale-90"><i class="fas fa-times fa-lg"></i></button>
             </div>
 
             <div class="space-y-6">
@@ -97,22 +108,13 @@
                     </label>
                 </div>
 
-                <!-- Sound -->
-                <div class="bg-green-50 dark:bg-gray-700/50 p-4 rounded-xl">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm font-bold"><i class="fas fa-music mr-2"></i>เสียงบรรยากาศ</span>
-                        <span id="volumeLabel" class="text-xs text-green-600 font-bold">ปิด</span>
-                    </div>
-                    <input type="range" id="volumeSlider" min="0" max="100" value="0" class="w-full">
-                </div>
-
                 <!-- API Settings -->
                 <div class="pt-2">
-                    <button onclick="document.getElementById('advancedSettings').classList.toggle('hidden')" class="text-xs text-gray-400 underline w-full text-center">แสดงการตั้งค่า API</button>
+                    <button type="button" onclick="document.getElementById('advancedSettings').classList.toggle('hidden')" class="text-xs text-gray-400 underline w-full text-center p-2">แสดงการตั้งค่า API</button>
                     <div id="advancedSettings" class="hidden mt-4 space-y-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                         <div>
                             <label class="block text-xs font-bold mb-1">Web App URL</label>
-                            <input type="text" id="apiUrlInput" class="w-full p-2 text-sm border rounded dark:bg-gray-800 dark:border-gray-600">
+                            <input type="text" id="apiUrlInput" class="w-full p-2 text-sm border rounded dark:bg-gray-800 dark:border-gray-600 select-text">
                         </div>
                         <div>
                             <label class="block text-xs font-bold mb-1">รหัสผ่าน</label>
@@ -123,7 +125,7 @@
             </div>
 
             <div class="mt-6">
-                <button onclick="window.saveConfig()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow active:scale-95 transition">บันทึก</button>
+                <button type="button" onclick="window.saveConfig()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow active:scale-95 transition touch-manipulation">บันทึก</button>
             </div>
         </div>
     </div>
@@ -131,38 +133,38 @@
     <!-- MAIN CONTENT AREA -->
     <main class="flex-1 overflow-hidden relative flex flex-col z-0">
         
-        <!-- 1. HOME PAGE -->
-        <div id="page-home" class="absolute inset-0 p-8 flex flex-col items-center justify-center text-center overflow-y-auto z-10">
+        <!-- 1. HOME PAGE (Z-Index 10) -->
+        <div id="page-home" class="absolute inset-0 p-8 flex flex-col items-center justify-center text-center overflow-y-auto z-10 w-full h-full">
             <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur p-8 rounded-3xl shadow-xl max-w-md w-full border border-green-100 dark:border-green-900">
                 <i class="fas fa-seedling text-6xl text-green-500 mb-6 inline-block animate-bounce"></i>
                 <h1 class="text-3xl font-bold mb-2 brand-font">Tonkla's Space</h1>
                 <p class="text-gray-600 dark:text-gray-300 mb-8">พื้นที่เก็บโค้ดส่วนตัว</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button onclick="window.startNewCode()" class="bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow hover:bg-green-700 active:scale-95 transition">
+                    <button type="button" onclick="window.startNewCode()" class="bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow hover:bg-green-700 active:scale-95 transition touch-manipulation">
                         <i class="fas fa-plus mr-2"></i> เริ่มใหม่
                     </button>
-                    <button onclick="window.loadList()" class="bg-white text-green-600 border border-green-600 font-bold py-3 px-8 rounded-xl shadow hover:bg-green-50 active:scale-95 transition">
+                    <button type="button" onclick="window.loadList()" class="bg-white text-green-600 border border-green-600 font-bold py-3 px-8 rounded-xl shadow hover:bg-green-50 active:scale-95 transition touch-manipulation">
                         <i class="fas fa-folder-open mr-2"></i> งานเก่า
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 2. CREATE PAGE (EDITOR) -->
-        <div id="page-create" class="page-hidden absolute inset-0 flex flex-col bg-white dark:bg-gray-900 z-20">
+        <!-- 2. CREATE PAGE (EDITOR) (Z-Index 20) -->
+        <div id="page-create" class="force-hidden absolute inset-0 flex flex-col bg-white dark:bg-gray-900 z-20 w-full h-full">
             <!-- Toolbar Top -->
-             <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 h-14 flex items-center justify-between shrink-0">
-                <button onclick="window.showPage('home')" class="text-gray-500 hover:text-green-600 transition"><i class="fas fa-arrow-left mr-1"></i> กลับ</button>
+             <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 h-14 flex items-center justify-between shrink-0 relative z-30">
+                <button type="button" onclick="window.showPage('home')" class="text-gray-500 hover:text-green-600 transition active:scale-90 p-2"><i class="fas fa-arrow-left mr-1"></i> กลับ</button>
                 <span id="editorTitle" class="font-bold text-gray-700 dark:text-gray-200 truncate mx-2">งานใหม่</span>
-                <button onclick="window.toggleFullScreen()" class="text-gray-500 hover:text-green-600 p-2"><i id="fsIcon" class="fas fa-expand"></i></button>
+                <button type="button" onclick="window.toggleFullScreen()" class="text-gray-500 hover:text-green-600 p-2 active:scale-90"><i id="fsIcon" class="fas fa-expand"></i></button>
             </div>
 
             <!-- Editor Split -->
-            <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative z-10">
                 <div class="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 h-1/2 md:h-full">
                     <div class="bg-gray-50 dark:bg-gray-800 px-4 py-2 flex justify-between items-center shrink-0">
                         <span class="text-xs font-bold text-green-600 uppercase">HTML Code</span>
-                        <button onclick="window.insertTemplate()" class="text-xs bg-white border px-2 py-1 rounded">Template</button>
+                        <button type="button" onclick="window.insertTemplate()" class="text-xs bg-white border px-2 py-1 rounded shadow-sm active:bg-gray-100">Template</button>
                     </div>
                     <textarea id="codeEditor" class="flex-1 p-4 w-full h-full resize-none code-editor text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-green-300 focus:outline-none" placeholder="เขียนโค้ดที่นี่..."></textarea>
                 </div>
@@ -171,28 +173,29 @@
                     <div class="bg-gray-50 dark:bg-gray-800 px-4 py-2 flex justify-between items-center shrink-0">
                         <span class="text-xs font-bold text-green-600 uppercase">Preview</span>
                         <div>
-                            <button onclick="window.togglePreviewFullScreen()" class="px-2"><i id="previewFsIcon" class="fas fa-expand text-xs"></i></button>
-                            <button onclick="window.updatePreview()" class="ml-2"><i class="fas fa-sync-alt text-xs"></i></button>
+                            <button type="button" onclick="window.togglePreviewFullScreen()" class="px-2 py-1 active:bg-gray-200 rounded"><i id="previewFsIcon" class="fas fa-expand text-xs"></i></button>
+                            <button type="button" onclick="window.updatePreview()" class="ml-2 px-2 py-1 active:bg-gray-200 rounded"><i class="fas fa-sync-alt text-xs"></i></button>
                         </div>
                     </div>
                     <iframe id="previewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
                 </div>
             </div>
 
-            <!-- Bottom Action Bar -->
-            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 flex justify-between items-center shadow-lg shrink-0 z-30">
-                <div class="text-gray-400 text-xs flex items-center"><div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div> <span id="statusMsg">พร้อม</span></div>
-                <button onclick="window.saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow active:scale-95 transition">
+            <!-- Bottom Action Bar (Z-Index 40: สูงกว่า Editor) -->
+            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 flex justify-between items-center shadow-[0_-5px_15px_rgba(0,0,0,0.1)] shrink-0 z-40 relative">
+                <div class="text-gray-400 text-xs flex items-center pl-2"><div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div> <span id="statusMsg">พร้อม</span></div>
+                <!-- ปุ่มบันทึกที่แก้ปัญหา Z-Index และ Touch -->
+                <button type="button" onclick="window.saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg active:scale-95 transition-transform touch-manipulation z-50">
                     <i class="fas fa-save mr-2"></i> บันทึก
                 </button>
             </div>
         </div>
 
-        <!-- 3. LIST PAGE -->
-        <div id="page-list" class="page-hidden absolute inset-0 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 z-20">
-            <div class="max-w-4xl mx-auto pb-20">
+        <!-- 3. LIST PAGE (Z-Index 20) -->
+        <div id="page-list" class="force-hidden absolute inset-0 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 z-20 w-full h-full">
+            <div class="max-w-4xl mx-auto pb-24">
                 <div class="flex items-center mb-6">
-                    <button onclick="window.showPage('home')" class="mr-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow"><i class="fas fa-arrow-left"></i></button>
+                    <button type="button" onclick="window.showPage('home')" class="mr-4 bg-white dark:bg-gray-800 p-3 rounded-full shadow active:scale-90"><i class="fas fa-arrow-left"></i></button>
                     <h2 class="text-2xl font-bold brand-font">รายการงาน</h2>
                 </div>
                 <div id="listContainer" class="grid gap-4">
@@ -202,39 +205,40 @@
             </div>
         </div>
 
-        <!-- 4. VIEW PAGE -->
-        <div id="page-view" class="page-hidden absolute inset-0 flex flex-col bg-white z-30">
-            <div class="bg-green-800 text-white px-4 py-2 flex justify-between items-center shadow shrink-0">
-                <button onclick="window.showPage('list')" class="bg-green-700 px-3 py-1 rounded-full text-sm"><i class="fas fa-arrow-left mr-1"></i> กลับ</button>
+        <!-- 4. VIEW PAGE (Z-Index 30) -->
+        <div id="page-view" class="force-hidden absolute inset-0 flex flex-col bg-white z-30 w-full h-full">
+            <div class="bg-green-800 text-white px-4 py-2 flex justify-between items-center shadow shrink-0 h-14 relative z-40">
+                <button type="button" onclick="window.showPage('list')" class="bg-green-700 px-3 py-1 rounded-full text-sm active:bg-green-600"><i class="fas fa-arrow-left mr-1"></i> กลับ</button>
                 <div class="text-sm font-bold brand-font">Tonkla Viewer</div>
-                <button onclick="window.copyCurrentUrl()" class="px-2"><i class="fas fa-share-alt"></i></button>
+                <button type="button" onclick="window.copyCurrentUrl()" class="px-2 active:scale-90"><i class="fas fa-share-alt"></i></button>
             </div>
-            <iframe id="fullViewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
-            <div id="viewLoading" class="absolute inset-0 flex items-center justify-center bg-white z-40">
+            <iframe id="fullViewFrame" class="flex-1 w-full h-full border-none bg-white relative z-10"></iframe>
+            <div id="viewLoading" class="absolute inset-0 flex items-center justify-center bg-white z-50">
                 <div class="text-center"><i class="fas fa-seedling fa-spin text-4xl text-green-500"></i></div>
             </div>
         </div>
     </main>
 
-    <!-- Toast -->
-    <div id="toast" class="hidden fixed bottom-10 right-5 bg-gray-800 text-white px-6 py-3 rounded-xl shadow-2xl z-50 transition-all duration-300 transform translate-y-10 opacity-0">
+    <!-- Toast (Z-Index 70: สูงกว่า Modal) -->
+    <div id="toast" class="hidden fixed bottom-10 right-5 left-5 sm:left-auto bg-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl z-[70] transition-all duration-300 transform translate-y-10 opacity-0 text-center font-bold">
         <span id="toastMsg">Notification</span>
     </div>
 
+    <!-- Audio (Hidden) -->
     <audio id="bgMusic" loop>
         <source src="https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg" type="audio/ogg">
     </audio>
 
     <script>
-        // --- 1. GLOBAL SCOPE SETUP (สำคัญมากสำหรับ GitHub Pages) ---
-        // ทำให้ฟังก์ชันทั้งหมดเป็น Global เพื่อให้ HTML onclick เรียกใช้ได้แน่นอน
+        // --- 1. GLOBAL SCOPE & INIT ---
         window.currentEditingId = null;
 
-        // --- Theme & Config ---
+        // --- Theme ---
         window.initTheme = function() {
             try {
                 const isDark = localStorage.getItem('tonkla_theme') === 'dark';
                 window.applyTheme(isDark);
+                // Load API Config
                 document.getElementById('apiUrlInput').value = localStorage.getItem('codeKeeper_url') || '';
                 document.getElementById('apiPassInput').value = localStorage.getItem('codeKeeper_pass') || '';
             } catch(e) {}
@@ -258,12 +262,13 @@
             }
         }
 
+        // --- Navigation (ใช้ class force-hidden แทน page-hidden เพื่อความชัวร์) ---
         window.toggleConfig = function() {
             const modal = document.getElementById('configModal');
-            if (modal.classList.contains('page-hidden')) {
-                modal.classList.remove('page-hidden');
+            if (modal.classList.contains('force-hidden')) {
+                modal.classList.remove('force-hidden');
             } else {
-                modal.classList.add('page-hidden');
+                modal.classList.add('force-hidden');
             }
         }
 
@@ -276,22 +281,18 @@
             window.showToast('บันทึกแล้ว', 'success');
         }
 
-        // --- Navigation ---
         window.showPage = function(pageId) {
-            // ซ่อนทุกหน้า
             ['home', 'create', 'list', 'view'].forEach(p => {
-                document.getElementById('page-' + p).classList.add('page-hidden');
+                document.getElementById('page-' + p).classList.add('force-hidden');
             });
-            // แสดงหน้าเป้าหมาย
-            document.getElementById('page-' + pageId).classList.remove('page-hidden');
+            document.getElementById('page-' + pageId).classList.remove('force-hidden');
             
-            // Push State (Optional)
             if (pageId !== 'view' && pageId !== 'list') {
                 try { history.pushState("", document.title, window.location.pathname); } catch(e){}
             }
         }
 
-        // --- Editor ---
+        // --- Editor Functions ---
         window.startNewCode = function() {
             window.currentEditingId = null;
             document.getElementById('editorTitle').innerText = "ปลูกต้นกล้าใหม่";
@@ -322,10 +323,11 @@
             editor.value = `<!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: sans-serif; padding: 20px; text-align: center; }
         h1 { color: #16a34a; }
-        .box { border: 2px dashed #16a34a; padding: 20px; border-radius: 10px; }
+        .box { border: 2px dashed #16a34a; padding: 20px; border-radius: 10px; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -345,28 +347,4 @@
 
             if (!url || !pass) {
                 window.toggleConfig();
-                return window.showToast('ตั้งค่า API ก่อนนะ');
-            }
-            if (!editor.value.trim()) return window.showToast('ยังไม่ได้เขียนโค้ด');
-
-            const btn = document.getElementById('saveBtn');
-            const status = document.getElementById('statusMsg');
-            
-            const isUpdate = !!window.currentEditingId;
-            const action = isUpdate ? 'update' : 'create';
-            
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> รอสักครู่...`;
-            status.textContent = "กำลังส่งข้อมูล...";
-
-            try {
-                const body = { password: pass, code: editor.value, action: action };
-                if(isUpdate) body.id = window.currentEditingId;
-
-                const response = await fetch(url, {
-                    method: 'POST', mode: 'cors', body: JSON.stringify(body)
-                });
-                const result = await response.json();
-
-                if (result.status === 'success') {
-     
+                r
