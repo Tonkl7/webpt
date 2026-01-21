@@ -56,31 +56,26 @@
             width: 100%; height: 4px; background: #d1d5db; border-radius: 2px;
         }
 
-        /* เทคนิคสร้างเส้นบรรทัด (Grid Lines) */
-        .editor-container {
-            position: relative;
-            isolation: isolate;
-        }
-        
-        /* พื้นหลังเส้นบรรทัด */
+        /* พื้นหลังเส้นบรรทัด (Grid Lines) แบบเส้นสมุด */
         .grid-background {
-            background-image: linear-gradient(transparent 96%, #e5e7eb 96%); /* เส้นสีเทาจางๆ */
-            background-size: 100% 1.5rem; /* ความสูงเท่ากับ line-height ของ text area */
+            /* เส้นสีเทาจางๆ สูง 1px วางที่ด้านล่างของทุกๆ 1.5rem */
+            background-image: linear-gradient(to bottom, transparent calc(1.5rem - 1px), #e5e7eb calc(1.5rem - 1px));
+            background-size: 100% 1.5rem; /* ความสูงเท่ากับ line-height */
             background-attachment: local;
         }
         .dark .grid-background {
-            background-image: linear-gradient(transparent 96%, #374151 96%); /* เส้นสีเทาเข้มสำหรับโหมดมืด */
+            background-image: linear-gradient(to bottom, transparent calc(1.5rem - 1px), #1f2937 calc(1.5rem - 1px));
         }
 
         #codeEditor {
-            line-height: 1.5rem; /* ต้องเท่ากับ background-size */
+            line-height: 1.5rem !important; /* บังคับความสูงบรรทัดให้เท่ากับ Grid */
             background-color: transparent;
             z-index: 1;
         }
 
         #lineNumbers {
             font-family: 'JetBrains Mono', monospace;
-            line-height: 1.5rem;
+            line-height: 1.5rem !important; /* ต้องเท่ากับ Editor */
             text-align: right;
             user-select: none;
         }
@@ -145,12 +140,17 @@
                 <!-- Code Area with Line Numbers & Grid -->
                 <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 relative">
                     <div class="flex-1 flex relative overflow-hidden bg-gray-50 dark:bg-[#0d1117]">
-                        <!-- Line Numbers -->
-                        <div id="lineNumbers" class="w-10 md:w-12 pt-4 md:pt-6 pb-20 px-1 bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-xs md:text-sm overflow-hidden border-r border-gray-300 dark:border-gray-700 font-mono text-right select-none">
+                        <!-- Line Numbers (Font size synced with editor) -->
+                        <div id="lineNumbers" class="w-10 md:w-12 pt-4 md:pt-6 pb-20 px-1 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-sm md:text-base overflow-hidden border-r border-gray-300 dark:border-gray-700 font-mono text-right select-none">
                             1
                         </div>
-                        <!-- Textarea with Grid Background -->
-                        <textarea id="codeEditor" class="flex-1 p-4 md:p-6 pb-20 w-full h-full resize-none code-font text-sm md:text-base text-gray-800 dark:text-green-400 focus:outline-none whitespace-pre overflow-auto grid-background leading-6" placeholder="<!-- เขียนโค้ดที่นี่ -->" spellcheck="false"></textarea>
+                        <!-- Textarea with Grid Background (Font size synced with line numbers) -->
+                        <textarea id="codeEditor" class="flex-1 p-4 md:p-6 pb-20 w-full h-full resize-none code-font text-sm md:text-base text-gray-800 dark:text-green-400 focus:outline-none whitespace-pre overflow-auto grid-background" placeholder="<!-- เขียนโค้ดที่นี่ -->" spellcheck="false"></textarea>
+                        
+                        <!-- Line Count Summary (Bottom Right) -->
+                        <div id="lineCountSummary" class="absolute bottom-4 right-4 bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 text-xs px-3 py-1 rounded-full shadow-md border border-gray-200 dark:border-gray-700 select-none pointer-events-none backdrop-blur-sm z-10">
+                            1 บรรทัด
+                        </div>
                     </div>
                 </div>
                 
@@ -299,13 +299,19 @@
 
         const editor = document.getElementById('codeEditor');
         const lineNumbers = document.getElementById('lineNumbers');
+        const lineCountSummary = document.getElementById('lineCountSummary');
         const previewFrame = document.getElementById('previewFrame');
         
-        // ฟังก์ชันอัปเดตเลขบรรทัด
+        // ฟังก์ชันอัปเดตเลขบรรทัดและสรุป
         window.updateLineNumbers = function() {
-            const lines = editor.value.split('\n').length;
-            // สร้างตัวเลขตามจำนวนบรรทัด
+            const text = editor.value;
+            const lines = text.split('\n').length;
+            
+            // อัปเดตแถบเลขบรรทัดด้านซ้าย
             lineNumbers.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
+            
+            // อัปเดตสรุปจำนวนบรรทัดที่มุมขวาล่าง
+            lineCountSummary.innerText = `${lines} บรรทัด`;
         };
 
         // ซิงค์การเลื่อน (Scroll) ระหว่างโค้ดกับเลขบรรทัด
