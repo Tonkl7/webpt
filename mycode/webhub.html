@@ -39,7 +39,7 @@
         .page-section.active { display: flex; flex-direction: column; }
         
         /* Scrollbar */
-        .dark ::-webkit-scrollbar { width: 4px; }
+        .dark ::-webkit-scrollbar { width: 6px; }
         .dark ::-webkit-scrollbar-track { background: #0f172a; }
         .dark ::-webkit-scrollbar-thumb { background: #166534; border-radius: 4px; }
         
@@ -140,7 +140,8 @@
                     <button type="button" onclick="window.showPage('home')" class="mr-3 md:mr-5 bg-white dark:bg-gray-800 p-2 md:p-3 rounded-full shadow hover:scale-105 transition"><i class="fas fa-arrow-left md:text-xl"></i></button>
                     <h2 class="text-xl md:text-3xl font-bold brand-font">รายการงาน</h2>
                 </div>
-                <div id="listContainer" class="grid gap-3 md:gap-6 md:grid-cols-2">
+                <!-- แก้ไข Grid ให้แสดง 1 แถว เพื่อให้ไม่ดูบีบ -->
+                <div id="listContainer" class="grid gap-3 md:gap-5">
                     <!-- Loading -->
                     <div class="text-center py-10 text-gray-400 col-span-full"><i class="fas fa-circle-notch fa-spin text-2xl md:text-4xl"></i><br>กำลังโหลด...</div>
                 </div>
@@ -372,14 +373,14 @@
                     result.data.forEach(item => {
                         const date = new Date(item.timestamp).toLocaleString('th-TH');
                         html += `
-                            <div class="bg-white dark:bg-gray-800 p-3 rounded-xl shadow border-l-4 border-green-500 flex justify-between items-center active:scale-[0.98] transition">
-                                <div onclick="window.openView('${item.id}')" class="cursor-pointer flex-1 py-2">
-                                    <div class="text-[10px] text-gray-400">ID: ${item.id.substring(0, 6)}</div>
-                                    <div class="font-bold text-sm text-gray-700 dark:text-gray-200">${date}</div>
+                            <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex justify-between items-center hover:shadow-md transition">
+                                <div onclick="window.openView('${item.id}')" class="cursor-pointer flex-1">
+                                    <div class="text-xs md:text-sm text-gray-400 mb-1">ID: ${item.id.substring(0, 6)}</div>
+                                    <div class="font-bold text-base md:text-xl text-gray-700 dark:text-gray-200">${date}</div>
                                 </div>
-                                <div class="flex gap-2 pl-2">
-                                    <button onclick="window.editCode('${item.id}')" class="text-blue-500 p-2 bg-blue-50 rounded-full"><i class="fas fa-edit"></i></button>
-                                    <button onclick="window.deleteCode('${item.id}')" class="text-red-500 p-2 bg-red-50 rounded-full"><i class="fas fa-trash"></i></button>
+                                <div class="flex gap-3 md:gap-4 pl-3">
+                                    <button onclick="window.editCode('${item.id}')" class="text-blue-500 p-2 md:p-3 bg-blue-50 hover:bg-blue-100 rounded-full transition"><i class="fas fa-edit md:text-lg"></i></button>
+                                    <button onclick="window.deleteCode('${item.id}')" class="text-red-500 p-2 md:p-3 bg-red-50 hover:bg-red-100 rounded-full transition"><i class="fas fa-trash md:text-lg"></i></button>
                                 </div>
                             </div>`;
                     });
