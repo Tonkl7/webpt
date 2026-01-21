@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <!-- ป้องกันการซูมและการกดสองครั้งในมือถือ -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tonkla Code Keeper</title>
+    <title>Tonkla's Code Space</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,19 +22,22 @@
     
     <!-- Icons & Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Mitr:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Mitr:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     
     <style>
         /* ตั้งค่าพื้นฐานสำหรับมือถือ */
         body { 
             font-family: 'Sarabun', sans-serif; 
-            -webkit-tap-highlight-color: transparent; /* ลบสีเทาเวลากด */
-            touch-action: manipulation; /* ลดดีเลย์เวลากดปุ่ม */
-            overscroll-behavior-y: none; /* ป้องกันการดึงขอบจอ */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            overscroll-behavior-y: none;
         }
         h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
         
-        /* คลาสสำหรับซ่อนหน้าเว็บแบบเด็ดขาด (แก้ปัญหากดปุ่มไม่ได้) */
+        /* Font สำหรับเขียนโค้ดโดยเฉพาะ อ่านง่าย วงเล็บชัด */
+        .code-font { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+        
+        /* คลาสสำหรับซ่อนหน้าเว็บแบบเด็ดขาด */
         .page-section { display: none; width: 100%; height: 100%; }
         .page-section.active { display: flex; flex-direction: column; }
         
@@ -52,6 +55,35 @@
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 4px; background: #d1d5db; border-radius: 2px;
         }
+
+        /* เทคนิคสร้างเส้นบรรทัด (Grid Lines) */
+        .editor-container {
+            position: relative;
+            isolation: isolate;
+        }
+        
+        /* พื้นหลังเส้นบรรทัด */
+        .grid-background {
+            background-image: linear-gradient(transparent 96%, #e5e7eb 96%); /* เส้นสีเทาจางๆ */
+            background-size: 100% 1.5rem; /* ความสูงเท่ากับ line-height ของ text area */
+            background-attachment: local;
+        }
+        .dark .grid-background {
+            background-image: linear-gradient(transparent 96%, #374151 96%); /* เส้นสีเทาเข้มสำหรับโหมดมืด */
+        }
+
+        #codeEditor {
+            line-height: 1.5rem; /* ต้องเท่ากับ background-size */
+            background-color: transparent;
+            z-index: 1;
+        }
+
+        #lineNumbers {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.5rem;
+            text-align: right;
+            user-select: none;
+        }
     </style>
 </head>
 <body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-[100dvh] w-screen flex flex-col overflow-hidden transition-colors duration-300">
@@ -60,8 +92,8 @@
     <nav class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-50 shrink-0 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-300">
         <!-- Brand -->
         <div class="flex items-center cursor-pointer select-none" onclick="window.showPage('home')">
-            <i class="fas fa-seedling fa-lg md:text-2xl mr-2 text-green-200"></i>
-            <span class="font-bold text-lg xs:text-xl md:text-2xl brand-font">Tonkla Code</span>
+            <i class="fas fa-code-branch fa-lg md:text-2xl mr-2 text-green-200"></i>
+            <span class="font-bold text-lg xs:text-xl md:text-2xl brand-font">Tonkla's Space</span>
         </div>
         <!-- Menu Buttons -->
         <div class="flex space-x-1 md:space-x-4">
@@ -77,22 +109,22 @@
         </div>
     </nav>
 
-    <!-- Main Content Area (Dynamic Height) -->
+    <!-- Main Content Area -->
     <main class="flex-1 relative w-full overflow-hidden z-0">
         
         <!-- 1. HOME PAGE -->
         <div id="page-home" class="page-section active bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm overflow-y-auto">
             <div class="min-h-full flex flex-col items-center justify-center p-6 text-center">
                 <div class="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-3xl shadow-xl w-full max-w-sm md:max-w-2xl border border-green-100 dark:border-green-800 transition-all">
-                    <i class="fas fa-seedling text-6xl md:text-8xl text-green-500 mb-6 inline-block animate-bounce"></i>
-                    <h1 class="text-2xl md:text-4xl font-bold mb-2 brand-font">Tonkla's Space</h1>
-                    <p class="text-gray-600 dark:text-gray-400 mb-8 text-sm md:text-lg">พื้นที่เก็บโค้ดส่วนตัว</p>
+                    <i class="fas fa-laptop-code text-6xl md:text-8xl text-green-500 mb-6 inline-block animate-bounce"></i>
+                    <h1 class="text-2xl md:text-4xl font-bold mb-2 brand-font">Tonkla's Code Space</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mb-8 text-sm md:text-lg">พื้นที่เก็บโค้ดส่วนตัวของคุณต้นกล้า</p>
                     <div class="flex flex-col md:flex-row gap-3 md:gap-6 justify-center">
                         <button type="button" onclick="window.startNewCode()" class="w-full md:w-auto md:px-10 bg-green-600 text-white font-bold py-3 md:py-4 rounded-xl shadow active:scale-95 transition md:text-lg">
-                            <i class="fas fa-plus mr-2"></i> ปลูกต้นกล้าใหม่
+                            <i class="fas fa-plus mr-2"></i> สร้างงานใหม่
                         </button>
                         <button type="button" onclick="window.loadList()" class="w-full md:w-auto md:px-10 bg-white text-green-600 border border-green-600 font-bold py-3 md:py-4 rounded-xl shadow active:scale-95 transition md:text-lg">
-                            <i class="fas fa-folder-open mr-2"></i> สำรวจงานเก่า
+                            <i class="fas fa-folder-open mr-2"></i> ดูงานเก่า
                         </button>
                     </div>
                 </div>
@@ -110,10 +142,18 @@
 
             <!-- Editor Split Area -->
             <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-                <!-- Code Area -->
-                <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700">
-                    <textarea id="codeEditor" class="flex-1 p-4 md:p-6 w-full h-full resize-none font-mono text-sm md:text-base bg-gray-50 dark:bg-black text-gray-800 dark:text-green-400 focus:outline-none leading-relaxed" placeholder="<!-- เขียนโค้ดที่นี่ -->"></textarea>
+                <!-- Code Area with Line Numbers & Grid -->
+                <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 relative">
+                    <div class="flex-1 flex relative overflow-hidden bg-gray-50 dark:bg-[#0d1117]">
+                        <!-- Line Numbers -->
+                        <div id="lineNumbers" class="w-10 md:w-12 pt-4 md:pt-6 pb-20 px-1 bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-xs md:text-sm overflow-hidden border-r border-gray-300 dark:border-gray-700 font-mono text-right select-none">
+                            1
+                        </div>
+                        <!-- Textarea with Grid Background -->
+                        <textarea id="codeEditor" class="flex-1 p-4 md:p-6 pb-20 w-full h-full resize-none code-font text-sm md:text-base text-gray-800 dark:text-green-400 focus:outline-none whitespace-pre overflow-auto grid-background leading-6" placeholder="<!-- เขียนโค้ดที่นี่ -->" spellcheck="false"></textarea>
+                    </div>
                 </div>
+                
                 <!-- Preview Area -->
                 <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col bg-white">
                     <div class="h-8 md:h-12 bg-gray-100 dark:bg-gray-800 flex items-center justify-between px-3 md:px-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
@@ -140,9 +180,7 @@
                     <button type="button" onclick="window.showPage('home')" class="mr-3 md:mr-5 bg-white dark:bg-gray-800 p-2 md:p-3 rounded-full shadow hover:scale-105 transition"><i class="fas fa-arrow-left md:text-xl"></i></button>
                     <h2 class="text-xl md:text-3xl font-bold brand-font">รายการงาน</h2>
                 </div>
-                <!-- แก้ไข Grid ให้แสดง 1 แถว เพื่อให้ไม่ดูบีบ -->
                 <div id="listContainer" class="grid gap-3 md:gap-5">
-                    <!-- Loading -->
                     <div class="text-center py-10 text-gray-400 col-span-full"><i class="fas fa-circle-notch fa-spin text-2xl md:text-4xl"></i><br>กำลังโหลด...</div>
                 </div>
             </div>
@@ -156,7 +194,6 @@
                 <button type="button" onclick="window.copyCurrentUrl()" class="p-2 md:p-3 hover:bg-green-700 rounded-full transition"><i class="fas fa-share-alt md:text-xl"></i></button>
             </div>
             <iframe id="fullViewFrame" class="flex-1 w-full h-full border-none bg-white relative z-0"></iframe>
-            <!-- Loading Overlay -->
             <div id="viewLoading" class="absolute inset-0 bg-white flex items-center justify-center z-10 hidden">
                 <i class="fas fa-seedling fa-spin text-4xl md:text-6xl text-green-500"></i>
             </div>
@@ -164,7 +201,7 @@
 
     </main>
 
-    <!-- Config Modal (Full Screen Overlay) -->
+    <!-- Config Modal -->
     <div id="configModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onclick="if(event.target === this) window.toggleConfig()">
         <div class="bg-white dark:bg-gray-800 w-full max-w-xs rounded-2xl p-5 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -173,13 +210,11 @@
             </div>
             
             <div class="space-y-4">
-                <!-- Theme -->
                 <div class="flex justify-between items-center">
                     <span class="text-sm"><i class="fas fa-moon mr-2 text-green-600"></i>โหมดมืด</span>
                     <input type="checkbox" id="darkModeToggle" class="accent-green-600 w-5 h-5" onchange="window.toggleDarkMode()">
                 </div>
                 
-                <!-- API -->
                 <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
                     <div onclick="document.getElementById('apiSettings').classList.toggle('hidden')" class="text-xs text-center text-gray-500 underline cursor-pointer pb-1">ตั้งค่า API (แตะเพื่อเปิด)</div>
                     <div id="apiSettings" class="hidden space-y-2 mt-2">
@@ -206,17 +241,14 @@
         // --- GLOBAL VARIABLES ---
         window.currentEditingId = null;
 
-        // --- NAVIGATION LOGIC (Core Fix for Mobile) ---
+        // --- NAVIGATION LOGIC ---
         window.showPage = function(pageId) {
-            // ซ่อนทุกหน้าด้วย display: none
             document.querySelectorAll('.page-section').forEach(el => {
                 el.classList.remove('active');
             });
-            // แสดงหน้าเป้าหมาย
             const target = document.getElementById('page-' + pageId);
             if(target) target.classList.add('active');
             
-            // Push State
             if (pageId !== 'view' && pageId !== 'list') {
                 try { history.pushState("", document.title, window.location.pathname); } catch(e){}
             }
@@ -254,20 +286,35 @@
             window.showToast('บันทึกการตั้งค่าแล้ว ✅');
         }
 
-        // --- EDITOR LOGIC ---
+        // --- EDITOR LOGIC & LINE NUMBERS ---
         window.startNewCode = function() {
             window.currentEditingId = null;
             document.getElementById('editorTitle').innerText = "ปลูกต้นกล้าใหม่";
             document.getElementById('saveBtn').innerText = "บันทึก";
             document.getElementById('codeEditor').value = '';
+            window.updateLineNumbers();
             window.updatePreview();
             window.showPage('create');
         }
 
         const editor = document.getElementById('codeEditor');
+        const lineNumbers = document.getElementById('lineNumbers');
         const previewFrame = document.getElementById('previewFrame');
         
+        // ฟังก์ชันอัปเดตเลขบรรทัด
+        window.updateLineNumbers = function() {
+            const lines = editor.value.split('\n').length;
+            // สร้างตัวเลขตามจำนวนบรรทัด
+            lineNumbers.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
+        };
+
+        // ซิงค์การเลื่อน (Scroll) ระหว่างโค้ดกับเลขบรรทัด
+        editor.addEventListener('scroll', () => {
+            lineNumbers.scrollTop = editor.scrollTop;
+        });
+
         editor.addEventListener('input', () => {
+            window.updateLineNumbers(); // อัปเดตเลขบรรทัดทุกครั้งที่พิมพ์
             clearTimeout(window.previewTimeout);
             window.previewTimeout = setTimeout(window.updatePreview, 800);
         });
@@ -297,6 +344,7 @@
   <div class="box"><p>เขียนโค้ดที่นี่...</p></div>
 </body>
 </html>`;
+            window.updateLineNumbers();
             window.updatePreview();
         }
 
@@ -332,7 +380,10 @@
 
                 if (result.status === 'success') {
                     window.showToast('บันทึกเรียบร้อย! 🎉');
-                    if (!isUpdate) editor.value = ''; 
+                    if (!isUpdate) {
+                        editor.value = ''; 
+                        window.updateLineNumbers();
+                    }
                     window.updatePreview(); 
                     window.showPage('home');
                 } else {
@@ -403,6 +454,7 @@
                 if(result.status === 'success') {
                     window.currentEditingId = id;
                     editor.value = result.code;
+                    window.updateLineNumbers(); // อัปเดตบรรทัดเมื่อโหลดงานเก่า
                     window.updatePreview();
                     document.getElementById('editorTitle').innerText = "แก้ไขงาน";
                     window.showPage('create');
