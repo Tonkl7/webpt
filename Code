@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <!-- ป้องกันการซูมและการกดสองครั้งในมือถือ -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tonkla Code Keeper</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { primary: { DEFAULT: '#16a34a' } },
+                    screens: { 'xs': '375px' }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Mitr:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ตั้งค่าพื้นฐานสำหรับมือถือ */
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            -webkit-tap-highlight-color: transparent; /* ลบสีเทาเวลากด */
+            touch-action: manipulation; /* ลดดีเลย์เวลากดปุ่ม */
+            overscroll-behavior-y: none; /* ป้องกันการดึงขอบจอ */
+        }
+        h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
+        
+        /* คลาสสำหรับซ่อนหน้าเว็บแบบเด็ดขาด (แก้ปัญหากดปุ่มไม่ได้) */
+        .page-section { display: none; width: 100%; height: 100%; }
+        .page-section.active { display: flex; flex-direction: column; }
+        
+        /* Scrollbar */
+        .dark ::-webkit-scrollbar { width: 4px; }
+        .dark ::-webkit-scrollbar-track { background: #0f172a; }
+        .dark ::-webkit-scrollbar-thumb { background: #166534; border-radius: 4px; }
+        
+        /* Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #16a34a; margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; background: #d1d5db; border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-[100dvh] w-screen flex flex-col overflow-hidden transition-colors duration-300">
+
+    <!-- Navbar (Fixed Top) -->
+    <nav class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-50 shrink-0 h-16 flex items-center justify-between px-4">
+        <!-- Brand -->
+        <div class="flex items-center cursor-pointer select-none" onclick="window.showPage('home')">
+            <i class="fas fa-seedling fa-lg mr-2 text-green-200"></i>
+            <span class="font-bold text-lg xs:text-xl brand-font">Tonkla Code</span>
+        </div>
+        <!-- Menu Buttons -->
+        <div class="flex space-x-1">
+            <button type="button" onclick="window.showPage('create')" class="p-2 rounded-full hover:bg-green-500 active:scale-95 transition">
+                <i class="fas fa-pen"></i> <span class="hidden sm:inline ml-1">เขียน</span>
+            </button>
+            <button type="button" onclick="window.loadList()" class="p-2 rounded-full hover:bg-green-500 active:scale-95 transition">
+                <i class="fas fa-folder"></i> <span class="hidden sm:inline ml-1">งาน</span>
+            </button>
+            <button type="button" onclick="window.toggleConfig()" class="p-2 rounded-full hover:bg-green-500 active:scale-95 transition">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area (Dynamic Height) -->
+    <main class="flex-1 relative w-full overflow-hidden z-0">
+        
+        <!-- 1. HOME PAGE -->
+        <div id="page-home" class="page-section active bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm overflow-y-auto">
+            <div class="min-h-full flex flex-col items-center justify-center p-6 text-center">
+                <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl w-full max-w-sm border border-green-100 dark:border-green-800">
+                    <i class="fas fa-seedling text-6xl text-green-500 mb-6 inline-block animate-bounce"></i>
+                    <h1 class="text-2xl font-bold mb-2 brand-font">Tonkla's Space</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mb-8 text-sm">พื้นที่เก็บโค้ดส่วนตัว</p>
+                    <div class="flex flex-col gap-3">
+                        <button type="button" onclick="window.startNewCode()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow active:scale-95 transition">
+                            <i class="fas fa-plus mr-2"></i> ปลูกต้นกล้าใหม่
+                        </button>
+                        <button type="button" onclick="window.loadList()" class="w-full bg-white text-green-600 border border-green-600 font-bold py-3 rounded-xl shadow active:scale-95 transition">
+                            <i class="fas fa-folder-open mr-2"></i> สำรวจงานเก่า
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CREATE PAGE (Editor) -->
+        <div id="page-create" class="page-section bg-white dark:bg-gray-900">
+            <!-- Toolbar Top -->
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-12 flex items-center justify-between px-3 shrink-0">
+                <button type="button" onclick="window.showPage('home')" class="text-gray-500 p-2"><i class="fas fa-arrow-left"></i></button>
+                <span id="editorTitle" class="font-bold text-sm text-gray-700 dark:text-gray-200 truncate">งานใหม่</span>
+                <button type="button" onclick="window.insertTemplate()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Template</button>
+            </div>
+
+            <!-- Editor Split Area -->
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+                <!-- Code Area -->
+                <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700">
+                    <textarea id="codeEditor" class="flex-1 p-4 w-full h-full resize-none font-mono text-sm bg-gray-50 dark:bg-black text-gray-800 dark:text-green-400 focus:outline-none" placeholder="<!-- เขียนโค้ดที่นี่ -->"></textarea>
+                </div>
+                <!-- Preview Area -->
+                <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col bg-white">
+                    <div class="h-8 bg-gray-100 dark:bg-gray-800 flex items-center justify-between px-3 border-b border-gray-200 dark:border-gray-700">
+                        <span class="text-[10px] font-bold uppercase text-gray-500">Preview</span>
+                        <button onclick="window.updatePreview()" class="text-gray-500"><i class="fas fa-sync-alt text-xs"></i></button>
+                    </div>
+                    <iframe id="previewFrame" class="flex-1 w-full h-full border-none"></iframe>
+                </div>
+            </div>
+
+            <!-- Action Bar (Bottom) -->
+            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 flex justify-between items-center shadow-lg shrink-0 z-20">
+                <div class="text-xs text-gray-400 flex items-center"><div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div> <span id="statusMsg">พร้อม</span></div>
+                <button type="button" onclick="window.saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow active:scale-95 transition w-32">
+                    บันทึก
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. LIST PAGE -->
+        <div id="page-list" class="page-section bg-gray-50 dark:bg-gray-900 overflow-y-auto">
+            <div class="max-w-3xl mx-auto p-4 pb-20">
+                <div class="flex items-center mb-4">
+                    <button type="button" onclick="window.showPage('home')" class="mr-3 bg-white dark:bg-gray-800 p-2 rounded-full shadow"><i class="fas fa-arrow-left"></i></button>
+                    <h2 class="text-xl font-bold brand-font">รายการงาน</h2>
+                </div>
+                <div id="listContainer" class="grid gap-3">
+                    <!-- Loading -->
+                    <div class="text-center py-10 text-gray-400"><i class="fas fa-circle-notch fa-spin text-2xl"></i><br>กำลังโหลด...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. VIEW PAGE -->
+        <div id="page-view" class="page-section bg-white flex-col">
+            <div class="bg-green-800 text-white h-12 flex items-center justify-between px-3 shrink-0">
+                <button type="button" onclick="window.showPage('list')" class="bg-green-700 px-3 py-1 rounded-full text-xs"><i class="fas fa-arrow-left mr-1"></i> กลับ</button>
+                <div class="text-xs font-bold opacity-80">Tonkla Viewer</div>
+                <button type="button" onclick="window.copyCurrentUrl()" class="p-2"><i class="fas fa-share-alt"></i></button>
+            </div>
+            <iframe id="fullViewFrame" class="flex-1 w-full h-full border-none bg-white relative z-0"></iframe>
+            <!-- Loading Overlay -->
+            <div id="viewLoading" class="absolute inset-0 bg-white flex items-center justify-center z-10 hidden">
+                <i class="fas fa-seedling fa-spin text-4xl text-green-500"></i>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Config Modal (Full Screen Overlay) -->
+    <div id="configModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onclick="if(event.target === this) window.toggleConfig()">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-xs rounded-2xl p-5 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg brand-font">ตั้งค่า</h3>
+                <button onclick="window.toggleConfig()" class="text-gray-400 p-2"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Theme -->
+                <div class="flex justify-between items-center">
+                    <span class="text-sm"><i class="fas fa-moon mr-2 text-green-600"></i>โหมดมืด</span>
+                    <input type="checkbox" id="darkModeToggle" class="accent-green-600 w-5 h-5" onchange="window.toggleDarkMode()">
+                </div>
+                
+                <!-- API -->
+                <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                    <div onclick="document.getElementById('apiSettings').classList.toggle('hidden')" class="text-xs text-center text-gray-500 underline cursor-pointer pb-1">ตั้งค่า API (แตะเพื่อเปิด)</div>
+                    <div id="apiSettings" class="hidden space-y-2 mt-2">
+                        <input type="text" id="apiUrlInput" placeholder="Web App URL" class="w-full text-xs p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
+                        <input type="password" id="apiPassInput" placeholder="Password" class="w-full text-xs p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
+                    </div>
+                </div>
+
+                <button onclick="window.saveConfig()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg shadow active:scale-95 transition">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl z-[70] text-sm font-bold whitespace-nowrap">
+        <span id="toastMsg">Notification</span>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg" type="audio/ogg">
+    </audio>
+
+    <script>
+        // --- GLOBAL VARIABLES ---
+        window.currentEditingId = null;
+
+        // --- NAVIGATION LOGIC (Core Fix for Mobile) ---
+        window.showPage = function(pageId) {
+            // ซ่อนทุกหน้าด้วย display: none
+            document.querySelectorAll('.page-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            // แสดงหน้าเป้าหมาย
+            const target = document.getElementById('page-' + pageId);
+            if(target) target.classList.add('active');
+            
+            // Push State
+            if (pageId !== 'view' && pageId !== 'list') {
+                try { history.pushState("", document.title, window.location.pathname); } catch(e){}
+            }
+        }
+
+        window.toggleConfig = function() {
+            document.getElementById('configModal').classList.toggle('hidden');
+        }
+
+        // --- THEME & CONFIG ---
+        window.initTheme = function() {
+            try {
+                const isDark = localStorage.getItem('tonkla_theme') === 'dark';
+                if(isDark) document.documentElement.classList.add('dark');
+                document.getElementById('darkModeToggle').checked = isDark;
+                
+                document.getElementById('apiUrlInput').value = localStorage.getItem('codeKeeper_url') || '';
+                document.getElementById('apiPassInput').value = localStorage.getItem('codeKeeper_pass') || '';
+            } catch(e){}
+        }
+
+        window.toggleDarkMode = function() {
+            const isDark = document.getElementById('darkModeToggle').checked;
+            if(isDark) document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+            localStorage.setItem('tonkla_theme', isDark ? 'dark' : 'light');
+        }
+
+        window.saveConfig = function() {
+            const url = document.getElementById('apiUrlInput').value.trim();
+            const pass = document.getElementById('apiPassInput').value.trim();
+            localStorage.setItem('codeKeeper_url', url);
+            localStorage.setItem('codeKeeper_pass', pass);
+            window.toggleConfig();
+            window.showToast('บันทึกการตั้งค่าแล้ว ✅');
+        }
+
+        // --- EDITOR LOGIC ---
+        window.startNewCode = function() {
+            window.currentEditingId = null;
+            document.getElementById('editorTitle').innerText = "ปลูกต้นกล้าใหม่";
+            document.getElementById('saveBtn').innerText = "บันทึก";
+            document.getElementById('codeEditor').value = '';
+            window.updatePreview();
+            window.showPage('create');
+        }
+
+        const editor = document.getElementById('codeEditor');
+        const previewFrame = document.getElementById('previewFrame');
+        
+        editor.addEventListener('input', () => {
+            clearTimeout(window.previewTimeout);
+            window.previewTimeout = setTimeout(window.updatePreview, 800);
+        });
+
+        window.updatePreview = function() {
+            const content = editor.value;
+            const doc = previewFrame.contentWindow.document;
+            doc.open();
+            doc.write(content);
+            doc.close();
+        }
+
+        window.insertTemplate = function() {
+            if(editor.value && !confirm('ทับโค้ดเดิมไหม?')) return;
+            editor.value = `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family: sans-serif; padding: 20px; text-align: center; }
+  h1 { color: #16a34a; }
+  .box { border: 2px dashed #16a34a; padding: 20px; border-radius: 10px; margin-top: 20px; }
+</style>
+</head>
+<body>
+  <h1>สวัสดีต้นกล้า!</h1>
+  <div class="box"><p>เขียนโค้ดที่นี่...</p></div>
+</body>
+</html>`;
+            window.updatePreview();
+        }
+
+        // --- API & DATA ---
+        window.saveCode = async function() {
+            const url = localStorage.getItem('codeKeeper_url');
+            const pass = localStorage.getItem('codeKeeper_pass');
+
+            if (!url || !pass) {
+                window.toggleConfig();
+                return window.showToast('⚠️ ตั้งค่า API ก่อนนะ');
+            }
+            if (!editor.value.trim()) return window.showToast('⚠️ ยังไม่ได้เขียนโค้ด');
+
+            const btn = document.getElementById('saveBtn');
+            const status = document.getElementById('statusMsg');
+            
+            const isUpdate = !!window.currentEditingId;
+            const action = isUpdate ? 'update' : 'create';
+            
+            btn.disabled = true;
+            btn.innerText = "กำลังส่ง...";
+            status.textContent = "กำลังส่งข้อมูล...";
+
+            try {
+                const body = { password: pass, code: editor.value, action: action };
+                if(isUpdate) body.id = window.currentEditingId;
+
+                const response = await fetch(url, {
+                    method: 'POST', body: JSON.stringify(body)
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    window.showToast('บันทึกเรียบร้อย! 🎉');
+                    if (!isUpdate) editor.value = ''; 
+                    window.updatePreview(); 
+                    window.showPage('home');
+                } else {
+                    window.showToast('❌ ผิดพลาด: ' + (result.message || 'Unknown'));
+                }
+            } catch (error) {
+                console.error(error);
+                window.showToast('❌ เชื่อมต่อไม่ได้');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "บันทึก";
+                status.textContent = "พร้อม";
+            }
+        }
+
+        window.loadList = async function() {
+            window.showPage('list');
+            const container = document.getElementById('listContainer');
+            const url = localStorage.getItem('codeKeeper_url');
+
+            if (!url) {
+                container.innerHTML = '<div class="text-center text-gray-400 p-10">ไปตั้งค่า API ก่อนครับ</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="text-center mt-10 text-green-600"><i class="fas fa-spinner fa-spin text-3xl"></i><br>กำลังโหลด...</div>';
+
+            try {
+                const response = await fetch(`${url}?action=list`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    if (result.data.length === 0) {
+                        container.innerHTML = '<div class="text-center text-gray-400 p-10">ไม่มีข้อมูล</div>';
+                        return;
+                    }
+                    let html = '';
+                    result.data.forEach(item => {
+                        const date = new Date(item.timestamp).toLocaleString('th-TH');
+                        html += `
+                            <div class="bg-white dark:bg-gray-800 p-3 rounded-xl shadow border-l-4 border-green-500 flex justify-between items-center active:scale-[0.98] transition">
+                                <div onclick="window.openView('${item.id}')" class="cursor-pointer flex-1 py-2">
+                                    <div class="text-[10px] text-gray-400">ID: ${item.id.substring(0, 6)}</div>
+                                    <div class="font-bold text-sm text-gray-700 dark:text-gray-200">${date}</div>
+                                </div>
+                                <div class="flex gap-2 pl-2">
+                                    <button onclick="window.editCode('${item.id}')" class="text-blue-500 p-2 bg-blue-50 rounded-full"><i class="fas fa-edit"></i></button>
+                                    <button onclick="window.deleteCode('${item.id}')" class="text-red-500 p-2 bg-red-50 rounded-full"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>`;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="text-center text-red-500 p-10">Server Error</div>';
+                }
+            } catch (e) {
+                container.innerHTML = '<div class="text-center text-red-500 p-10">Connect Error</div>';
+            }
+        }
+
+        window.editCode = async function(id) {
+            const url = localStorage.getItem('codeKeeper_url');
+            if(!url) return;
+            window.showToast('กำลังโหลดข้อมูล...');
+            try {
+                const response = await fetch(`${url}?action=view&id=${id}`);
+                const result = await response.json();
+                if(result.status === 'success') {
+                    window.currentEditingId = id;
+                    editor.value = result.code;
+                    window.updatePreview();
+                    document.getElementById('editorTitle').innerText = "แก้ไขงาน";
+                    window.showPage('create');
+                }
+            } catch(e) { window.showToast('Error loading'); }
+        }
+
+        window.deleteCode = async function(id) {
+            if(!confirm('ลบจริงๆ นะ?')) return;
+            const url = localStorage.getItem('codeKeeper_url');
+            const pass = localStorage.getItem('codeKeeper_pass');
+            try {
+                const response = await fetch(url, {
+                    method: 'POST', body: JSON.stringify({ password: pass, action: 'delete', id: id })
+                });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    window.showToast('ลบแล้ว 🗑️');
+                    window.loadList();
+                }
+            } catch(e) { window.showToast('Error deleting'); }
+        }
+
+        window.openView = async function(id) {
+            window.showPage('view');
+            const loader = document.getElementById('viewLoading');
+            const frame = document.getElementById('fullViewFrame');
+            const url = localStorage.getItem('codeKeeper_url');
+
+            loader.classList.remove('hidden');
+            frame.contentWindow.document.open();
+            frame.contentWindow.document.write('');
+            frame.contentWindow.document.close();
+
+            try {
+                const response = await fetch(`${url}?action=view&id=${id}`);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    frame.contentWindow.document.open();
+                    frame.contentWindow.document.write(result.code);
+                    frame.contentWindow.document.close();
+                } else {
+                    alert('Not Found');
+                    window.showPage('home');
+                }
+            } catch(e) { alert('Error'); }
+            finally { loader.classList.add('hidden'); }
+        }
+
+        // --- UTILS ---
+        window.showToast = function(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+        }
+
+        window.copyCurrentUrl = function() {
+            try {
+                const el = document.createElement('textarea');
+                el.value = window.location.href;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                window.showToast('ก๊อปปี้แล้ว! 📋');
+            } catch (e) { window.showToast('ก๊อปปี้ไม่ได้'); }
+        }
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            console.log("Tonkla Mobile Ready 📱");
+            window.initTheme();
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('id')) window.openView(urlParams.get('id'));
+        });
+    </script>
+</body>
+</html>
+
+
