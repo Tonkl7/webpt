@@ -2,20 +2,20 @@
 <html lang="th" class="">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tonkla Code Keeper</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // เปิดใช้ Dark Mode แบบสั่งเอง
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         primary: {
-                            light: '#4ade80', // green-400
-                            DEFAULT: '#16a34a', // green-600
-                            dark: '#14532d', // green-900
+                            light: '#4ade80',
+                            DEFAULT: '#16a34a',
+                            dark: '#14532d',
                         }
                     }
                 }
@@ -30,45 +30,39 @@
         h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
         .code-editor { font-family: 'Courier New', Courier, monospace; }
         
-        /* Custom Scrollbar for Dark Mode */
+        /* Custom Scrollbar */
         .dark ::-webkit-scrollbar { width: 8px; }
         .dark ::-webkit-scrollbar-track { background: #0f172a; }
         .dark ::-webkit-scrollbar-thumb { background: #166534; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb:hover { background: #15803d; }
 
-        /* Smooth Fade for Theme Switch */
         .page-transition { transition: opacity 0.3s ease-in-out; }
         
-        /* Easter Egg Slider */
-        input[type=range] {
-            -webkit-appearance: none; 
-            background: transparent; 
-        }
+        /* Range Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px; width: 16px;
-            border-radius: 50%;
-            background: #16a34a;
-            margin-top: -6px;
-            cursor: pointer;
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #16a34a; margin-top: -6px; cursor: pointer;
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px;
-            background: #d1d5db; border-radius: 2px;
+            width: 100%; height: 4px; background: #d1d5db; border-radius: 2px;
         }
         .dark input[type=range]::-webkit-slider-thumb { background: #4ade80; }
         .dark input[type=range]::-webkit-slider-runnable-track { background: #374151; }
 
-        /* Fullscreen styles fix */
+        /* Fullscreen Fixes */
         :fullscreen { overflow: hidden; background: white; }
         :fullscreen .bg-white { background: white; }
-        .dark :fullscreen { background: #111827; } /* gray-900 */
+        .dark :fullscreen { background: #111827; }
+
+        /* Mobile Height Fix (dvh) */
+        .h-dynamic { height: 100vh; height: 100dvh; }
     </style>
 </head>
-<body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-screen flex flex-col overflow-hidden transition-colors duration-500">
+<body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-dynamic flex flex-col overflow-hidden transition-colors duration-500">
 
     <!-- Navbar -->
-    <nav class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-10 transition-colors duration-500">
+    <nav class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-30 shrink-0 transition-colors duration-500">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Brand -->
@@ -88,7 +82,7 @@
 
     <!-- Configuration Modal -->
     <div id="configModal" class="hidden fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm h-full w-full z-50 flex items-center justify-center p-4">
-        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md animate-fade-in-down border border-green-100 dark:border-green-900 transition-colors duration-300">
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md animate-fade-in-down border border-green-100 dark:border-green-900 transition-colors duration-300 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-2">
                 <h3 class="text-xl font-bold text-green-700 dark:text-green-400 brand-font">ตั้งค่าระบบนิเวศ</h3>
                 <button onclick="toggleConfig()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-times"></i></button>
@@ -150,10 +144,10 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-hidden relative">
+    <main class="flex-1 overflow-hidden relative flex flex-col">
         
         <!-- Page: Home -->
-        <div id="page-home" class="page-transition absolute inset-0 p-8 flex flex-col items-center justify-center text-center">
+        <div id="page-home" class="page-transition absolute inset-0 p-8 flex flex-col items-center justify-center text-center overflow-y-auto">
             <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl max-w-lg w-full border border-green-100 dark:border-green-900">
                 <div class="inline-block p-4 rounded-full bg-green-100 dark:bg-green-900/30 mb-6 animate-bounce-slow">
                     <i class="fas fa-seedling text-6xl text-green-500 dark:text-green-400"></i>
@@ -171,62 +165,61 @@
             </div>
         </div>
 
-        <!-- Page: Create/Edit (With Full Screen Capability) -->
-        <div id="page-create" class="page-transition absolute inset-0 flex flex-col hidden bg-white dark:bg-gray-900">
-            <!-- Header for Create Page -->
-             <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-between">
+        <!-- Page: Create/Edit (Responsive Fixed) -->
+        <div id="page-create" class="page-transition absolute inset-0 flex flex-col hidden bg-white dark:bg-gray-900 h-full">
+            <!-- Header -->
+             <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-between shrink-0 h-14">
                 <button onclick="showPage('home')" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition flex items-center">
-                    <i class="fas fa-arrow-left mr-2"></i> ย้อนกลับ
+                    <i class="fas fa-arrow-left mr-2"></i> <span class="hidden sm:inline">ย้อนกลับ</span>
                 </button>
-                <span id="editorTitle" class="font-bold text-gray-700 dark:text-gray-200">ปลูกต้นกล้าใหม่</span>
+                <span id="editorTitle" class="font-bold text-gray-700 dark:text-gray-200 truncate mx-2">ปลูกต้นกล้าใหม่</span>
                 
-                <!-- Full Screen Toggle Button (Whole Page) -->
-                <button onclick="toggleFullScreen()" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="เต็มจอ/ย่อจอ (ทั้งหมด)">
+                <button onclick="toggleFullScreen()" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="เต็มจอ">
                     <i id="fsIcon" class="fas fa-expand"></i>
                 </button>
             </div>
 
-            <div class="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
-                <!-- Editor -->
-                <div class="w-full md:w-1/2 flex flex-col border-r border-gray-200 dark:border-gray-700">
-                    <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                        <span class="font-bold text-gray-600 dark:text-gray-300 text-sm"><i class="fas fa-code text-green-500 mr-2"></i>HTML Source</span>
-                        <div class="flex space-x-2">
-                            <button onclick="insertTemplate()" class="text-xs bg-white dark:bg-gray-700 border dark:border-gray-600 hover:bg-gray-100 px-2 py-1 rounded text-gray-600 dark:text-gray-300 transition">โครงสร้างพื้นฐาน</button>
-                        </div>
+            <!-- Editor Content Area (Flex Grow) -->
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+                <!-- Editor (Top/Left) -->
+                <div class="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 h-1/2 md:h-full">
+                    <div class="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-gray-600 dark:text-gray-300 text-sm"><i class="fas fa-code text-green-500 mr-2"></i>Code</span>
+                        <button onclick="insertTemplate()" class="text-xs bg-white dark:bg-gray-700 border dark:border-gray-600 hover:bg-gray-100 px-2 py-1 rounded text-gray-600 dark:text-gray-300 transition">โครงสร้าง</button>
                     </div>
                     <textarea id="codeEditor" class="flex-1 p-4 w-full h-full resize-none code-editor outline-none text-sm bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-green-300 focus:bg-white dark:focus:bg-black transition placeholder-gray-400 dark:placeholder-gray-600" placeholder="<!-- วางโค้ดที่นี่ได้เลยครับน้องต้นกล้า -->"></textarea>
                 </div>
-                <!-- Preview (With specific fullscreen) -->
-                <div id="previewContainer" class="w-full md:w-1/2 flex flex-col bg-white dark:bg-black relative">
-                    <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                        <span class="font-bold text-gray-600 dark:text-gray-300 text-sm"><i class="fas fa-eye text-green-500 mr-2"></i>ผลลัพธ์</span>
+                
+                <!-- Preview (Bottom/Right) -->
+                <div id="previewContainer" class="w-full md:w-1/2 flex flex-col bg-white dark:bg-black h-1/2 md:h-full relative">
+                    <div class="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-gray-600 dark:text-gray-300 text-sm"><i class="fas fa-eye text-green-500 mr-2"></i>Preview</span>
                         <div class="flex space-x-2">
-                            <!-- Button for Preview Fullscreen -->
-                            <button onclick="togglePreviewFullScreen()" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition px-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="ดูผลลัพธ์เต็มจอ">
+                            <button onclick="togglePreviewFullScreen()" class="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition px-2" title="ดูผลลัพธ์เต็มจอ">
                                 <i id="previewFsIcon" class="fas fa-expand text-xs"></i>
                             </button>
-                            <button onclick="updatePreview()" class="text-xs text-green-600 hover:text-green-800 dark:text-green-400 ml-2"><i class="fas fa-sync-alt"></i> รีเฟรช</button>
+                            <button onclick="updatePreview()" class="text-xs text-green-600 hover:text-green-800 dark:text-green-400 ml-2"><i class="fas fa-sync-alt"></i></button>
                         </div>
                     </div>
                     <iframe id="previewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
                 </div>
             </div>
-            <!-- Toolbar -->
-            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
+
+            <!-- Toolbar (Fixed Bottom) -->
+            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-30 shrink-0 h-auto">
                 <div class="text-gray-400 text-xs sm:text-sm flex items-center">
                     <div class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></div>
-                    <span id="statusMsg">พร้อมเติบโต</span>
+                    <span id="statusMsg">พร้อม</span>
                 </div>
                 <button onclick="saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg hover:shadow-green-500/40 transition flex items-center">
-                    <i class="fas fa-save mr-2"></i> บันทึกข้อมูล
+                    <i class="fas fa-save mr-2"></i> บันทึก
                 </button>
             </div>
         </div>
 
         <!-- Page: List -->
         <div id="page-list" class="page-transition absolute inset-0 overflow-y-auto hidden bg-gray-50 dark:bg-gray-900 p-4 sm:p-8">
-            <div class="max-w-4xl mx-auto">
+            <div class="max-w-4xl mx-auto pb-20"> <!-- Added padding bottom for mobile -->
                 <div class="flex items-center mb-6">
                     <button onclick="showPage('home')" class="mr-4 bg-white dark:bg-gray-800 p-2 rounded-full shadow hover:bg-green-50 dark:hover:bg-gray-700 text-gray-500 hover:text-green-600 dark:text-gray-400 transition">
                         <i class="fas fa-arrow-left"></i>
@@ -245,7 +238,7 @@
 
         <!-- Page: View -->
         <div id="page-view" class="page-transition absolute inset-0 hidden flex flex-col bg-white">
-            <div class="bg-green-800 text-white px-4 py-2 flex justify-between items-center shadow-md z-20">
+            <div class="bg-green-800 text-white px-4 py-2 flex justify-between items-center shadow-md z-20 shrink-0">
                 <button onclick="showPage('list')" class="bg-green-700 hover:bg-green-600 text-white px-3 py-1 rounded-full text-sm transition shadow-sm">
                     <i class="fas fa-arrow-left mr-1"></i> ย้อนกลับ
                 </button>
@@ -279,113 +272,6 @@
     <script>
         // Global variables for State
         let currentEditingId = null;
-
-        // --- Full Screen Logic ---
-        function toggleFullScreen() {
-            const page = document.getElementById('page-create');
-            // Check for standard and vendor prefixed fullscreen states
-            const isFullScreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-
-            if (!isFullScreen) {
-                // เข้าโหมดเต็มจอ
-                try {
-                    if (page.requestFullscreen) {
-                        page.requestFullscreen().catch(err => {
-                            console.warn("Fullscreen blocked:", err);
-                            showToast("โหมดเต็มจอไม่รองรับในพรีวิวนี้ครับ", "info");
-                        });
-                    } else if (page.webkitRequestFullscreen) { // Safari
-                        page.webkitRequestFullscreen();
-                    } else if (page.msRequestFullscreen) { // IE11
-                        page.msRequestFullscreen();
-                    }
-                } catch (err) {
-                    console.error(err);
-                    showToast("เกิดข้อผิดพลาดในการขยายจอ", "info");
-                }
-            } else {
-                // ออกจากโหมดเต็มจอ
-                try {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen().catch(err => console.error(err));
-                    } else if (document.webkitExitFullscreen) { 
-                        document.webkitExitFullscreen();
-                    } else if (document.msExitFullscreen) { 
-                        document.msExitFullscreen();
-                    }
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-        }
-
-        // --- Preview Full Screen Logic ---
-        function togglePreviewFullScreen() {
-            const el = document.getElementById('previewContainer');
-            const isFullScreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-
-            if (!isFullScreen) {
-                 try {
-                    if (el.requestFullscreen) {
-                        el.requestFullscreen().catch(err => {
-                            console.warn("Fullscreen blocked:", err);
-                            showToast("โหมดเต็มจอไม่รองรับในพรีวิวนี้ครับ", "info");
-                        });
-                    } else if (el.webkitRequestFullscreen) {
-                        el.webkitRequestFullscreen();
-                    } else if (el.msRequestFullscreen) {
-                        el.msRequestFullscreen();
-                    }
-                } catch (err) {
-                    console.error(err);
-                    showToast("เกิดข้อผิดพลาดในการขยายจอ", "info");
-                }
-            } else {
-                try {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen().catch(err => console.error(err));
-                    } else if (document.webkitExitFullscreen) { 
-                        document.webkitExitFullscreen();
-                    } else if (document.msExitFullscreen) { 
-                        document.msExitFullscreen();
-                    }
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-        }
-
-        // ฟังเหตุการณ์เมื่อจอเปลี่ยนขนาด เพื่อเปลี่ยนไอคอน
-        document.addEventListener('fullscreenchange', updateFsIcon);
-        document.addEventListener('webkitfullscreenchange', updateFsIcon);
-        document.addEventListener('mozfullscreenchange', updateFsIcon);
-        document.addEventListener('MSFullscreenChange', updateFsIcon);
-
-        function updateFsIcon() {
-            const fsElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-            
-            // Icon for Main Editor Fullscreen
-            const mainIcon = document.getElementById('fsIcon');
-            if (fsElement && fsElement.id === 'page-create') {
-                mainIcon.classList.remove('fa-expand');
-                mainIcon.classList.add('fa-compress');
-            } else {
-                mainIcon.classList.remove('fa-compress');
-                mainIcon.classList.add('fa-expand');
-            }
-
-            // Icon for Preview Fullscreen
-            const previewIcon = document.getElementById('previewFsIcon');
-            if (previewIcon) {
-                if (fsElement && fsElement.id === 'previewContainer') {
-                    previewIcon.classList.remove('fa-expand');
-                    previewIcon.classList.add('fa-compress');
-                } else {
-                    previewIcon.classList.remove('fa-compress');
-                    previewIcon.classList.add('fa-expand');
-                }
-            }
-        }
 
         // --- Theme & Settings ---
         function initTheme() {
@@ -427,362 +313,4 @@
         const volumeLabel = document.getElementById('volumeLabel');
 
         volumeSlider.addEventListener('input', (e) => {
-            const val = e.target.value;
-            bgMusic.volume = val / 100;
-
-            if (val > 0) {
-                if (bgMusic.paused) {
-                    bgMusic.play().catch(e => console.log("Audio play failed (interaction needed first)"));
-                }
-                volumeLabel.textContent = `บรรยากาศ (${val}%)`;
-                volumeLabel.className = "text-xs text-green-600 dark:text-green-400 font-bold animate-pulse";
-            } else {
-                bgMusic.pause();
-                volumeLabel.textContent = "เงียบสงบ";
-                volumeLabel.className = "text-xs text-gray-400 font-bold";
-            }
-        });
-
-        // --- Core Logic ---
-        function saveConfig() {
-            const url = document.getElementById('apiUrlInput').value.trim();
-            const pass = document.getElementById('apiPassInput').value.trim();
             
-            try {
-                localStorage.setItem('codeKeeper_url', url);
-                localStorage.setItem('codeKeeper_pass', pass);
-            } catch (e) {}
-            
-            toggleConfig();
-            showToast('บันทึกการตั้งค่าเรียบร้อย', 'success');
-        }
-
-        function toggleConfig() {
-            const modal = document.getElementById('configModal');
-            modal.classList.toggle('hidden');
-        }
-
-        function showPage(pageId) {
-            ['home', 'create', 'list', 'view'].forEach(p => {
-                document.getElementById('page-' + p).classList.add('hidden');
-            });
-            document.getElementById('page-' + pageId).classList.remove('hidden');
-            
-            if (pageId !== 'view' && pageId !== 'list') {
-                try {
-                    history.pushState("", document.title, window.location.pathname);
-                } catch (e) {
-                    console.log('Cannot push state (likely in sandbox)');
-                }
-            }
-        }
-
-        function startNewCode() {
-            currentEditingId = null;
-            document.getElementById('editorTitle').innerText = "ปลูกต้นกล้าใหม่";
-            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save mr-2"></i> ปลูกลงดิน';
-            document.getElementById('codeEditor').value = '';
-            updatePreview();
-            showPage('create');
-        }
-
-        // --- Editor ---
-        const editor = document.getElementById('codeEditor');
-        const previewFrame = document.getElementById('previewFrame');
-
-        editor.addEventListener('input', () => {
-            clearTimeout(window.previewTimeout);
-            window.previewTimeout = setTimeout(updatePreview, 800);
-        });
-
-        function updatePreview() {
-            const content = editor.value;
-            const doc = previewFrame.contentWindow.document;
-            doc.open();
-            doc.write(content);
-            doc.close();
-        }
-
-        function insertTemplate() {
-            if(editor.value && !confirm('ต้นไม้เดิมจะถูกแทนที่แน่ใจนะครับ?')) return;
-            editor.value = `<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: sans-serif; padding: 20px; color: #333; }
-        h1 { color: #16a34a; }
-        .card { background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; }
-    </style>
-</head>
-<body>
-    <h1>สวัสดี! นี่คือเว็บของต้นกล้า</h1>
-    <div class="card">
-        <p>ลองแก้ไขข้อความตรงนี้ดูสิ...</p>
-    </div>
-</body>
-</html>`;
-            updatePreview();
-        }
-
-        // --- API & List ---
-        async function saveCode() {
-            let url = '', pass = '';
-            try {
-                url = localStorage.getItem('codeKeeper_url');
-                pass = localStorage.getItem('codeKeeper_pass');
-            } catch(e) {}
-
-            if (!url || !pass) {
-                toggleConfig();
-                return showToast('ไปตั้งค่า API ก่อนนะครับ');
-            }
-            if (!editor.value.trim()) return showToast('ยังไม่ได้เขียนโค้ดเลยครับ');
-
-            const btn = document.getElementById('saveBtn');
-            const status = document.getElementById('statusMsg');
-            
-            // Determine action (create or update)
-            const isUpdate = !!currentEditingId;
-            const action = isUpdate ? 'update' : 'create';
-            const actionText = isUpdate ? 'ผลัดใบใหม่' : 'ปลูกลงดิน';
-            const processingText = isUpdate ? 'กำลังผลัดใบ...' : 'กำลังปลูก...';
-            
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ${processingText}`;
-            status.textContent = "กำลังส่งข้อมูลไปที่ราก...";
-
-            try {
-                const body = {
-                    password: pass,
-                    code: editor.value,
-                    action: action
-                };
-                if(isUpdate) body.id = currentEditingId;
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    mode: 'cors', 
-                    body: JSON.stringify(body)
-                });
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    showToast(`${actionText}เรียบร้อย!`, 'success');
-                    if (!isUpdate) editor.value = ''; 
-                    updatePreview(); 
-                    showPage('home');
-                } else {
-                    showToast('เกิดปัญหา: ' + (result.message || 'Unknown'));
-                }
-            } catch (error) {
-                showToast('เชื่อมต่อไม่ได้ เช็คเน็ตหรือ URL หน่อยครับ');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-save mr-2"></i> ${actionText}`;
-                status.textContent = "พร้อมเติบโต";
-            }
-        }
-
-        async function loadList() {
-            showPage('list');
-            const container = document.getElementById('listContainer');
-            let url = '';
-            try {
-                 url = localStorage.getItem('codeKeeper_url');
-            } catch(e) {}
-
-            if (!url) {
-                container.innerHTML = '<div class="text-center p-8 text-gray-500 dark:text-gray-400">ไปที่ตั้งค่า (รูปเฟือง) เพื่อใส่ URL ก่อนนะครับ</div>';
-                return;
-            }
-
-            container.innerHTML = '<div class="text-center p-8"><i class="fas fa-seedling fa-spin text-2xl text-green-500"></i><br><span class="text-gray-500 dark:text-gray-400">กำลังสำรวจแปลงเพาะปลูก...</span></div>';
-
-            try {
-                const response = await fetch(`${url}?action=list`);
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    if (result.data.length === 0) {
-                        container.innerHTML = '<div class="text-center p-8 text-gray-500 dark:text-gray-400">ยังไม่มีต้นไม้เลยครับ มาเริ่มปลูกกันเถอะ</div>';
-                        return;
-                    }
-                    let html = '';
-                    result.data.forEach(item => {
-                        const date = new Date(item.timestamp).toLocaleString('th-TH');
-                        html += `
-                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-green-500 dark:border-green-600 flex justify-between items-center group">
-                                <div onclick="openView('${item.id}')" class="cursor-pointer flex-1">
-                                    <div class="text-xs text-gray-400 dark:text-gray-500 mb-1">ID: ${item.id.substring(0, 6)}...</div>
-                                    <div class="font-bold text-gray-700 dark:text-gray-200">เติบโตเมื่อ: ${date}</div>
-                                </div>
-                                <div class="flex space-x-3 items-center ml-4">
-                                    <button onclick="editCode('${item.id}')" class="text-gray-400 hover:text-blue-500 transition" title="แก้ไข/ผลัดใบ">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="deleteCode('${item.id}')" class="text-gray-400 hover:text-red-500 transition" title="ถอนทิ้ง">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <button onclick="openView('${item.id}')" class="text-green-300 group-hover:text-green-500 transition-colors">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = `<div class="text-red-400 text-center">เกิดข้อผิดพลาด: ${result.message}</div>`;
-                }
-            } catch (error) {
-                container.innerHTML = `<div class="text-red-400 text-center">โหลดไม่ได้ ลองเช็ค URL ดูครับ</div>`;
-            }
-        }
-
-        async function editCode(id) {
-            // Fetch code content first (using view logic)
-            let url = '';
-            try { url = localStorage.getItem('codeKeeper_url'); } catch(e){}
-            if(!url) return;
-            
-            showToast('กำลังเตรียมดินเพื่อแก้ไข...', 'info');
-            
-            try {
-                const response = await fetch(`${url}?action=view&id=${id}`);
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    currentEditingId = id;
-                    document.getElementById('codeEditor').value = result.code;
-                    updatePreview();
-                    
-                    document.getElementById('editorTitle').innerText = "ผลัดใบ (แก้ไขงาน)";
-                    document.getElementById('saveBtn').innerHTML = '<i class="fas fa-leaf mr-2"></i> ยืนยันผลัดใบ';
-                    
-                    showPage('create');
-                } else {
-                    showToast('หาข้อมูลไม่เจอครับ');
-                }
-            } catch (e) {
-                showToast('ดึงข้อมูลมาแก้ไขไม่ได้ครับ');
-            }
-        }
-
-        async function deleteCode(id) {
-            if (!confirm('แน่ใจนะครับว่าจะถอนต้นไม้นี้ทิ้ง? (กู้คืนไม่ได้นะ)')) return;
-
-            let url = '', pass = '';
-            try {
-                url = localStorage.getItem('codeKeeper_url');
-                pass = localStorage.getItem('codeKeeper_pass');
-            } catch(e){}
-            
-            if (!url || !pass) return showToast('API Error');
-
-            showToast('กำลังถอนราก...', 'info');
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    mode: 'cors',
-                    body: JSON.stringify({
-                        password: pass,
-                        action: 'delete',
-                        id: id
-                    })
-                });
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    showToast('นำไปทำปุ๋ยเรียบร้อย (ลบแล้ว)', 'success');
-                    loadList(); // Refresh list
-                } else {
-                    showToast('ลบไม่สำเร็จ: ' + result.message);
-                }
-            } catch (e) {
-                showToast('ลบไม่ได้ เช็คเน็ตหน่อยครับ');
-            }
-        }
-
-        async function openView(id) {
-            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
-            try {
-                history.pushState({path: newUrl}, '', newUrl);
-            } catch (e) {}
-            loadViewFromUrl(id);
-        }
-
-        async function loadViewFromUrl(id) {
-            showPage('view');
-            const loader = document.getElementById('viewLoading');
-            const frame = document.getElementById('fullViewFrame');
-            let url = '';
-            try { url = localStorage.getItem('codeKeeper_url'); } catch(e){}
-
-            loader.classList.remove('hidden');
-            const doc = frame.contentWindow.document;
-            doc.open(); doc.write(''); doc.close();
-
-            if (!url) {
-                alert("ต้องตั้งค่า API URL ก่อนนะครับ");
-                showPage('home');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${url}?action=view&id=${id}`);
-                const result = await response.json();
-                if (result.status === 'success') {
-                    const doc = frame.contentWindow.document;
-                    doc.open(); doc.write(result.code); doc.close();
-                } else {
-                    alert('หาต้นไม้ต้นนี้ไม่เจอครับ'); showPage('home');
-                }
-            } catch (error) {
-                alert('โหลดไม่ได้ครับผม');
-            } finally {
-                loader.classList.add('hidden');
-            }
-        }
-
-        function showToast(message, type='info') {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = message;
-            toast.classList.remove('hidden', 'translate-y-10', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.classList.add('hidden'), 300);
-            }, 3000);
-        }
-
-        function copyCurrentUrl() {
-            try {
-                const el = document.createElement('textarea');
-                el.value = window.location.href;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-                showToast('ก๊อปปี้เส้นทางแล้ว!', 'success');
-            } catch (e) {
-                showToast('ก๊อปปี้ไม่ได้ (ติดระบบความปลอดภัย)', 'info');
-            }
-        }
-
-        // Init
-        window.addEventListener('load', () => {
-            initTheme();
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-            if (id) {
-                let url = '';
-                try { url = localStorage.getItem('codeKeeper_url'); } catch(e){}
-                if(!url) { toggleConfig(); showToast('ใส่ API URL ก่อนดูงานนะครับ'); } 
-                else { loadViewFromUrl(id); }
-            } else {
-                showPage('home');
-            }
-        });
-    </script>
-</body>
-</html>
