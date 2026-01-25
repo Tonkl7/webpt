@@ -128,10 +128,13 @@
         <!-- 2. CREATE PAGE (Editor) -->
         <div id="page-create" class="page-section bg-white dark:bg-gray-900">
             <!-- Toolbar Top -->
-            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-12 md:h-16 flex items-center justify-between px-3 md:px-6 shrink-0 transition-all">
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-14 md:h-16 flex items-center justify-between px-3 md:px-6 shrink-0 transition-all gap-2">
                 <button type="button" onclick="window.showPage('home')" class="text-gray-500 p-2 md:p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"><i class="fas fa-arrow-left md:text-lg"></i></button>
-                <span id="editorTitle" class="font-bold text-sm md:text-xl text-gray-700 dark:text-gray-200 truncate">งานใหม่</span>
-                <button type="button" onclick="window.insertTemplate()" class="text-xs md:text-base bg-green-100 text-green-700 px-2 md:px-4 py-1 md:py-2 rounded hover:bg-green-200 transition">Template</button>
+                
+                <!-- ช่องใส่ชื่อผลงาน -->
+                <input type="text" id="codeTitle" placeholder="ตั้งชื่อผลงาน..." class="flex-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-green-500 text-gray-700 dark:text-gray-200 text-center font-bold text-sm md:text-xl focus:outline-none transition-colors px-2 py-1 placeholder-gray-400" autocomplete="off">
+                
+                <button type="button" onclick="window.insertTemplate()" class="text-xs md:text-base bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 transition font-bold">Template</button>
             </div>
 
             <!-- Editor Split Area -->
@@ -187,20 +190,17 @@
 
         <!-- 4. VIEW PAGE (Full Screen) -->
         <div id="page-view" class="page-section bg-white w-full h-full relative">
-            <!-- Full Screen Iframe -->
             <iframe id="fullViewFrame" class="w-full h-full border-none block"></iframe>
-            
-            <!-- Loading Overlay -->
             <div id="viewLoading" class="absolute inset-0 bg-white flex items-center justify-center z-20 hidden">
                 <i class="fas fa-seedling fa-spin text-4xl md:text-6xl text-green-500"></i>
             </div>
-
-            <!-- Floating Controls (Bottom Right) -->
+            <!-- Floating Controls -->
             <div class="absolute bottom-6 right-6 flex gap-3 z-30">
                 <button onclick="window.shareCurrentView()" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="แชร์หน้านี้">
                     <i class="fas fa-share-alt text-xl"></i>
                 </button>
-                <button onclick="window.showPage('list')" class="bg-gray-800 hover:bg-gray-900 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="กลับหน้ารายการ">
+                <!-- ปุ่มย้อนกลับที่เมื่อกดจะไปโหลดรายการใหม่ -->
+                <button id="viewBackButton" onclick="window.goBackToList()" class="bg-gray-800 hover:bg-gray-900 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="กลับหน้ารายการ">
                     <i class="fas fa-arrow-left text-xl"></i>
                 </button>
             </div>
@@ -256,7 +256,7 @@
     <script>
         // --- GLOBAL VARIABLES ---
         window.currentEditingId = null;
-        window.currentViewId = null; // เก็บ ID งานที่กำลังดูอยู่
+        window.currentViewId = null;
 
         // --- NAVIGATION LOGIC ---
         window.showPage = function(pageId) {
@@ -266,22 +266,22 @@
             const target = document.getElementById('page-' + pageId);
             if(target) target.classList.add('active');
             
-            // ซ่อน Navbar หลักเมื่อดูงานเต็มจอ
             const navbar = document.getElementById('mainNavbar');
-            if (pageId === 'view') {
-                navbar.classList.add('hidden');
-            } else {
-                navbar.classList.remove('hidden');
-            }
+            if (pageId === 'view') navbar.classList.add('hidden');
+            else navbar.classList.remove('hidden');
             
             if (pageId !== 'view' && pageId !== 'list') {
                 try { history.pushState("", document.title, window.location.pathname); } catch(e){}
             }
         }
 
-        window.toggleConfig = function() {
-            document.getElementById('configModal').classList.toggle('hidden');
+        // ฟังก์ชันใหม่: กดย้อนกลับจากหน้า View -> ไปหน้า List และรีโหลด
+        window.goBackToList = function() {
+            window.showPage('list');
+            window.loadList(); // สั่งโหลดรายการใหม่ทันที
         }
+
+        window.toggleConfig = function() { document.getElementById('configModal').classList.toggle('hidden'); }
 
         // --- THEME & CONFIG ---
         window.initTheme = function() {
@@ -289,7 +289,6 @@
                 const isDark = localStorage.getItem('tonkla_theme') === 'dark';
                 if(isDark) document.documentElement.classList.add('dark');
                 document.getElementById('darkModeToggle').checked = isDark;
-                
                 document.getElementById('apiUrlInput').value = localStorage.getItem('codeKeeper_url') || '';
                 document.getElementById('apiPassInput').value = localStorage.getItem('codeKeeper_pass') || '';
             } catch(e){}
@@ -303,10 +302,8 @@
         }
 
         window.saveConfig = function() {
-            const url = document.getElementById('apiUrlInput').value.trim();
-            const pass = document.getElementById('apiPassInput').value.trim();
-            localStorage.setItem('codeKeeper_url', url);
-            localStorage.setItem('codeKeeper_pass', pass);
+            localStorage.setItem('codeKeeper_url', document.getElementById('apiUrlInput').value.trim());
+            localStorage.setItem('codeKeeper_pass', document.getElementById('apiPassInput').value.trim());
             window.toggleConfig();
             window.showToast('บันทึกการตั้งค่าแล้ว ✅');
         }
@@ -314,9 +311,9 @@
         // --- EDITOR LOGIC & LINE NUMBERS ---
         window.startNewCode = function() {
             window.currentEditingId = null;
-            document.getElementById('editorTitle').innerText = "ปลูกต้นกล้าใหม่";
             document.getElementById('saveBtn').innerText = "บันทึก";
             document.getElementById('codeEditor').value = '';
+            document.getElementById('codeTitle').value = ''; // เคลียร์ชื่อ
             window.updateLineNumbers();
             window.updatePreview();
             window.showPage('create');
@@ -342,30 +339,13 @@
         });
 
         window.updatePreview = function() {
-            const content = editor.value;
             const doc = previewFrame.contentWindow.document;
-            doc.open();
-            doc.write(content);
-            doc.close();
+            doc.open(); doc.write(editor.value); doc.close();
         }
 
         window.insertTemplate = function() {
             if(editor.value && !confirm('ทับโค้ดเดิมไหม?')) return;
-            editor.value = `<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  body { font-family: sans-serif; padding: 20px; text-align: center; }
-  h1 { color: #16a34a; }
-  .box { border: 2px dashed #16a34a; padding: 20px; border-radius: 10px; margin-top: 20px; }
-</style>
-</head>
-<body>
-  <h1>สวัสดีต้นกล้า!</h1>
-  <div class="box"><p>เขียนโค้ดที่นี่...</p></div>
-</body>
-</html>`;
+            editor.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; padding: 20px; text-align: center; }\n  h1 { color: #16a34a; }\n</style>\n</head>\n<body>\n  <h1>สวัสดีต้นกล้า!</h1>\n  <p>เขียนโค้ดที่นี่...</p>\n</body>\n</html>`;
             window.updateLineNumbers();
             window.updatePreview();
         }
@@ -374,47 +354,33 @@
         window.saveCode = async function() {
             const url = localStorage.getItem('codeKeeper_url');
             const pass = localStorage.getItem('codeKeeper_pass');
+            const title = document.getElementById('codeTitle').value.trim() || 'ไม่ได้ตั้งชื่อ'; // รับค่าชื่อ
 
-            if (!url || !pass) {
-                window.toggleConfig();
-                return window.showToast('⚠️ ตั้งค่า API ก่อนนะ');
-            }
+            if (!url || !pass) { window.toggleConfig(); return window.showToast('⚠️ ตั้งค่า API ก่อนนะ'); }
             if (!editor.value.trim()) return window.showToast('⚠️ ยังไม่ได้เขียนโค้ด');
 
             const btn = document.getElementById('saveBtn');
-            const status = document.getElementById('statusMsg');
-            
             const isUpdate = !!window.currentEditingId;
             const action = isUpdate ? 'update' : 'create';
             
             btn.disabled = true;
             btn.innerText = "กำลังส่ง...";
-            status.textContent = "กำลังส่งข้อมูล...";
 
             try {
-                const body = { password: pass, code: editor.value, action: action };
+                const body = { password: pass, code: editor.value, title: title, action: action };
                 if(isUpdate) body.id = window.currentEditingId;
 
-                const response = await fetch(url, {
-                    method: 'POST', body: JSON.stringify(body)
-                });
+                const response = await fetch(url, { method: 'POST', body: JSON.stringify(body) });
                 const result = await response.json();
 
                 if (result.status === 'success') {
                     window.showToast('บันทึกเรียบร้อย! 🎉');
-                    if (!isUpdate) { editor.value = ''; window.updateLineNumbers(); }
+                    if (!isUpdate) { editor.value = ''; document.getElementById('codeTitle').value = ''; window.updateLineNumbers(); }
                     window.updatePreview(); 
                     window.showPage('home');
-                } else {
-                    window.showToast('❌ ผิดพลาด: ' + (result.message || 'Unknown'));
-                }
-            } catch (error) {
-                window.showToast('❌ เชื่อมต่อไม่ได้');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "บันทึก";
-                status.textContent = "พร้อม";
-            }
+                } else { window.showToast('❌ ' + result.message); }
+            } catch (error) { window.showToast('❌ เชื่อมต่อไม่ได้'); } 
+            finally { btn.disabled = false; btn.innerText = "บันทึก"; }
         }
 
         window.loadList = async function() {
@@ -422,11 +388,7 @@
             const container = document.getElementById('listContainer');
             const url = localStorage.getItem('codeKeeper_url');
 
-            if (!url) {
-                container.innerHTML = '<div class="text-center text-gray-400 p-10">ไปตั้งค่า API ก่อนครับ</div>';
-                return;
-            }
-
+            if (!url) { container.innerHTML = '<div class="text-center text-gray-400 p-10">ไปตั้งค่า API ก่อนครับ</div>'; return; }
             container.innerHTML = '<div class="text-center mt-10 text-green-600"><i class="fas fa-spinner fa-spin text-3xl"></i><br>กำลังโหลด...</div>';
 
             try {
@@ -434,33 +396,29 @@
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    if (result.data.length === 0) {
-                        container.innerHTML = '<div class="text-center text-gray-400 p-10">ไม่มีข้อมูล</div>';
-                        return;
-                    }
+                    if (result.data.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 p-10">ไม่มีข้อมูล</div>'; return; }
                     let html = '';
                     result.data.forEach(item => {
-                        const date = new Date(item.timestamp).toLocaleString('th-TH');
+                        const date = new Date(item.timestamp).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
                         html += `
                             <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex justify-between items-center hover:shadow-md transition">
-                                <div onclick="window.openView('${item.id}')" class="cursor-pointer flex-1">
-                                    <div class="text-xs md:text-sm text-gray-400 mb-1">ID: ${item.id.substring(0, 6)}</div>
-                                    <div class="font-bold text-base md:text-xl text-gray-700 dark:text-gray-200">${date}</div>
+                                <div onclick="window.openView('${item.id}', true)" class="cursor-pointer flex-1 overflow-hidden">
+                                    <div class="font-bold text-lg md:text-xl text-gray-800 dark:text-white truncate mb-1">${item.title || 'ไม่ได้ตั้งชื่อ'}</div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 text-[10px] md:text-xs px-2 py-0.5 rounded font-mono font-bold tracking-wide">ID: ${item.id.substring(0, 6)}</span>
+                                        <span class="text-xs text-gray-400 font-light"><i class="far fa-clock mr-1"></i>${date}</span>
+                                    </div>
                                 </div>
-                                <div class="flex gap-2 pl-3">
-                                    <button onclick="window.shareCode('${item.id}')" class="text-purple-500 p-2 md:p-3 bg-purple-50 hover:bg-purple-100 rounded-full transition" title="สร้างลิงก์"><i class="fas fa-share-alt md:text-lg"></i></button>
-                                    <button onclick="window.editCode('${item.id}')" class="text-blue-500 p-2 md:p-3 bg-blue-50 hover:bg-blue-100 rounded-full transition"><i class="fas fa-edit md:text-lg"></i></button>
-                                    <button onclick="window.deleteCode('${item.id}')" class="text-red-500 p-2 md:p-3 bg-red-50 hover:bg-red-100 rounded-full transition"><i class="fas fa-trash md:text-lg"></i></button>
+                                <div class="flex gap-2 pl-3 shrink-0">
+                                    <button onclick="event.stopPropagation(); window.shareCode('${item.id}')" class="text-purple-500 p-2 md:p-3 bg-purple-50 hover:bg-purple-100 rounded-full transition" title="สร้างลิงก์"><i class="fas fa-share-alt md:text-lg"></i></button>
+                                    <button onclick="event.stopPropagation(); window.editCode('${item.id}')" class="text-blue-500 p-2 md:p-3 bg-blue-50 hover:bg-blue-100 rounded-full transition"><i class="fas fa-edit md:text-lg"></i></button>
+                                    <button onclick="event.stopPropagation(); window.deleteCode('${item.id}')" class="text-red-500 p-2 md:p-3 bg-red-50 hover:bg-red-100 rounded-full transition"><i class="fas fa-trash md:text-lg"></i></button>
                                 </div>
                             </div>`;
                     });
                     container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<div class="text-center text-red-500 p-10">Server Error</div>';
-                }
-            } catch (e) {
-                container.innerHTML = '<div class="text-center text-red-500 p-10">Connect Error</div>';
-            }
+                } else { container.innerHTML = '<div class="text-center text-red-500 p-10">Server Error</div>'; }
+            } catch (e) { container.innerHTML = '<div class="text-center text-red-500 p-10">Connect Error</div>'; }
         }
 
         window.editCode = async function(id) {
@@ -473,9 +431,9 @@
                 if(result.status === 'success') {
                     window.currentEditingId = id;
                     editor.value = result.code;
+                    document.getElementById('codeTitle').value = result.title || '';
                     window.updateLineNumbers();
                     window.updatePreview();
-                    document.getElementById('editorTitle').innerText = "แก้ไขงาน";
                     window.showPage('create');
                 }
             } catch(e) { window.showToast('Error loading'); }
@@ -497,17 +455,19 @@
             } catch(e) { window.showToast('Error deleting'); }
         }
 
-        window.openView = async function(id) {
-            window.currentViewId = id; // เก็บ ID ไว้แชร์ในหน้า View
+        window.openView = async function(id, fromApp = false) {
+            window.currentViewId = id; 
             window.showPage('view');
+            // ซ่อน/แสดงปุ่มกลับ ตามที่มา (fromApp = true -> กดจากรายการ -> แสดงปุ่มกลับ)
+            const backBtn = document.getElementById('viewBackButton');
+            if(backBtn) backBtn.style.display = fromApp ? 'flex' : 'none';
+
             const loader = document.getElementById('viewLoading');
             const frame = document.getElementById('fullViewFrame');
             const url = localStorage.getItem('codeKeeper_url');
 
             loader.classList.remove('hidden');
-            frame.contentWindow.document.open();
-            frame.contentWindow.document.write('');
-            frame.contentWindow.document.close();
+            frame.contentWindow.document.open(); frame.contentWindow.document.write(''); frame.contentWindow.document.close();
 
             try {
                 const response = await fetch(`${url}?action=view&id=${id}`);
@@ -516,64 +476,33 @@
                     frame.contentWindow.document.open();
                     frame.contentWindow.document.write(result.code);
                     frame.contentWindow.document.close();
-                } else {
-                    alert('Not Found');
-                    window.showPage('home');
-                }
+                } else { alert('Not Found'); window.showPage('home'); }
             } catch(e) { alert('Error'); }
             finally { loader.classList.add('hidden'); }
         }
 
-        // --- SHARING LOGIC ---
         window.shareCode = async function(id) {
             window.showToast('กำลังสร้างลิงก์... ⏳');
-            await new Promise(r => setTimeout(r, 800)); // จำลองการโหลดให้ดูเท่
+            await new Promise(r => setTimeout(r, 800));
             const link = `${window.location.origin}${window.location.pathname}?id=${id}`;
-            
-            try {
-                await navigator.clipboard.writeText(link);
-                window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success');
-            } catch (err) {
-                // Fallback สำหรับบาง Browser
-                const el = document.createElement('textarea');
-                el.value = link;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
+            try { await navigator.clipboard.writeText(link); window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success'); }
+            catch (err) {
+                const el = document.createElement('textarea'); el.value = link; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
                 window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success');
             }
         }
-
-        window.shareCurrentView = function() {
-            if(window.currentViewId) {
-                window.shareCode(window.currentViewId);
-            }
-        }
-
-        // --- UTILS ---
+        window.shareCurrentView = function() { if(window.currentViewId) window.shareCode(window.currentViewId); }
         window.showToast = function(msg, type='info') {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            
-            if(type === 'success') toast.classList.replace('bg-gray-800', 'bg-green-600');
-            else toast.classList.replace('bg-green-600', 'bg-gray-800');
-
-            toast.classList.remove('hidden');
-            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+            const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('hidden'); setTimeout(() => { toast.classList.add('hidden'); }, 3000);
         }
+        window.copyCurrentUrl = function() { window.shareCode(new URLSearchParams(window.location.search).get('id')); }
 
-        window.copyCurrentUrl = function() {
-            // ฟังก์ชันเก่า (ไม่ใช้แล้วแต่เก็บไว้กันเหนียว)
-            window.shareCode(new URLSearchParams(window.location.search).get('id'));
-        }
-
-        // --- INIT ---
         window.addEventListener('load', () => {
-            console.log("Tonkla Mobile Ready 📱");
             window.initTheme();
             const urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.get('id')) window.openView(urlParams.get('id'));
+            // ถ้ามี ID ใน URL ให้เปิดดูเลย (fromApp = false เพื่อซ่อนปุ่มกลับ)
+            if(urlParams.get('id')) window.openView(urlParams.get('id'), false);
         });
     </script>
 </body>
