@@ -34,19 +34,15 @@
         }
         h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
         
-        /* Font สำหรับเขียนโค้ดโดยเฉพาะ อ่านง่าย วงเล็บชัด */
         .code-font { font-family: 'JetBrains Mono', 'Courier New', monospace; }
         
-        /* คลาสสำหรับซ่อนหน้าเว็บแบบเด็ดขาด */
         .page-section { display: none; width: 100%; height: 100%; }
         .page-section.active { display: flex; flex-direction: column; }
         
-        /* Scrollbar */
         .dark ::-webkit-scrollbar { width: 6px; }
         .dark ::-webkit-scrollbar-track { background: #0f172a; }
         .dark ::-webkit-scrollbar-thumb { background: #166534; border-radius: 4px; }
         
-        /* Slider */
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
@@ -56,7 +52,6 @@
             width: 100%; height: 4px; background: #d1d5db; border-radius: 2px;
         }
 
-        /* พื้นหลังเส้นบรรทัด (Grid Lines) แบบเส้นสมุด */
         .grid-background {
             background-image: linear-gradient(to bottom, transparent calc(1.5rem - 1px), #e5e7eb calc(1.5rem - 1px));
             background-size: 100% 1.5rem;
@@ -66,35 +61,18 @@
             background-image: linear-gradient(to bottom, transparent calc(1.5rem - 1px), #1f2937 calc(1.5rem - 1px));
         }
 
-        #codeEditor {
-            line-height: 1.5rem !important;
-            background-color: transparent;
-            z-index: 1;
-        }
-
-        #lineNumbers {
-            font-family: 'JetBrains Mono', monospace;
-            line-height: 1.5rem !important;
-            text-align: right;
-            user-select: none;
-        }
-
-        /* Fullscreen styles fix */
-        :fullscreen { overflow: hidden; background: white; }
-        :fullscreen .bg-white { background: white; }
-        .dark :fullscreen { background: #111827; }
+        #codeEditor { line-height: 1.5rem !important; background-color: transparent; z-index: 1; }
+        #lineNumbers { font-family: 'JetBrains Mono', monospace; line-height: 1.5rem !important; text-align: right; user-select: none; }
     </style>
 </head>
 <body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-[100dvh] w-screen flex flex-col overflow-hidden transition-colors duration-300">
 
-    <!-- Navbar (Fixed Top) -->
+    <!-- Navbar -->
     <nav id="mainNavbar" class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-50 shrink-0 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-300">
-        <!-- Brand -->
         <div class="flex items-center cursor-pointer select-none" onclick="window.showPage('home')">
             <i class="fas fa-code-branch fa-lg md:text-2xl mr-2 text-green-200"></i>
             <span class="font-bold text-lg xs:text-xl md:text-2xl brand-font">Tonkla's Space</span>
         </div>
-        <!-- Menu Buttons -->
         <div class="flex space-x-1 md:space-x-4">
             <button type="button" onclick="window.showPage('create')" class="p-2 md:px-4 md:py-2 rounded-full hover:bg-green-500 active:scale-95 transition flex items-center">
                 <i class="fas fa-pen md:text-lg"></i> <span class="hidden sm:inline ml-1 md:ml-2 md:text-lg">เขียน</span>
@@ -108,10 +86,10 @@
         </div>
     </nav>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main class="flex-1 relative w-full overflow-hidden z-0">
         
-        <!-- 1. HOME PAGE -->
+        <!-- 1. HOME -->
         <div id="page-home" class="page-section active bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm overflow-y-auto">
             <div class="min-h-full flex flex-col items-center justify-center p-6 text-center">
                 <div class="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-3xl shadow-xl w-full max-w-sm md:max-w-2xl border border-green-100 dark:border-green-800 transition-all">
@@ -130,45 +108,27 @@
             </div>
         </div>
 
-        <!-- 2. CREATE PAGE (Editor) -->
+        <!-- 2. CREATE -->
         <div id="page-create" class="page-section bg-white dark:bg-gray-900">
-            <!-- Toolbar Top -->
             <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-14 md:h-16 flex items-center justify-between px-3 md:px-6 shrink-0 transition-all gap-2">
                 <button type="button" onclick="window.showPage('home')" class="text-gray-500 p-2 md:p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"><i class="fas fa-arrow-left md:text-lg"></i></button>
-                
-                <!-- ช่องใส่ชื่อผลงาน -->
                 <input type="text" id="codeTitle" placeholder="ตั้งชื่อผลงาน..." class="flex-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-green-500 text-gray-700 dark:text-gray-200 text-center font-bold text-sm md:text-xl focus:outline-none transition-colors px-2 py-1 placeholder-gray-400" autocomplete="off">
-                
                 <button type="button" onclick="window.insertTemplate()" class="text-xs md:text-base bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 transition font-bold">Template</button>
             </div>
 
-            <!-- Editor Split Area -->
             <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-                <!-- Code Area with Line Numbers & Grid -->
                 <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 relative">
                     <div class="flex-1 flex relative overflow-hidden bg-gray-50 dark:bg-[#0d1117]">
-                        <!-- Line Numbers -->
-                        <div id="lineNumbers" class="w-10 md:w-12 pt-4 md:pt-6 pb-20 px-1 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-sm md:text-base overflow-hidden border-r border-gray-300 dark:border-gray-700 font-mono text-right select-none">
-                            1
-                        </div>
-                        <!-- Textarea with Grid Background -->
+                        <div id="lineNumbers" class="w-10 md:w-12 pt-4 md:pt-6 pb-20 px-1 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-sm md:text-base overflow-hidden border-r border-gray-300 dark:border-gray-700 font-mono text-right select-none">1</div>
                         <textarea id="codeEditor" class="flex-1 p-4 md:p-6 pb-20 w-full h-full resize-none code-font text-sm md:text-base text-gray-800 dark:text-green-400 focus:outline-none whitespace-pre overflow-auto grid-background" placeholder="<!-- เขียนโค้ดที่นี่ -->" spellcheck="false"></textarea>
-                        
-                        <!-- Line Count Summary -->
-                        <div id="lineCountSummary" class="absolute bottom-4 right-4 bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 text-xs px-3 py-1 rounded-full shadow-md border border-gray-200 dark:border-gray-700 select-none pointer-events-none backdrop-blur-sm z-10">
-                            1 บรรทัด
-                        </div>
+                        <div id="lineCountSummary" class="absolute bottom-4 right-4 bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 text-xs px-3 py-1 rounded-full shadow-md border border-gray-200 dark:border-gray-700 select-none pointer-events-none backdrop-blur-sm z-10">1 บรรทัด</div>
                     </div>
                 </div>
-                
-                <!-- Preview Area -->
                 <div id="previewContainer" class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col bg-white dark:bg-black">
                     <div class="h-8 md:h-12 bg-gray-100 dark:bg-gray-800 flex items-center justify-between px-3 md:px-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
                         <span class="text-[10px] md:text-sm font-bold uppercase text-gray-500 tracking-wider">Preview</span>
                         <div class="flex items-center gap-2">
-                            <!-- ปุ่มขยายเต็มจอ -->
                             <button onclick="window.togglePreviewFullScreen()" class="text-gray-500 hover:text-green-600 transition p-1" title="ดูผลลัพธ์เต็มจอ"><i class="fas fa-expand text-xs md:text-base"></i></button>
-                            <!-- ปุ่มรีเฟรช -->
                             <button onclick="window.updatePreview()" class="text-gray-500 hover:text-green-600 transition p-1" title="รีเฟรช"><i class="fas fa-sync-alt text-xs md:text-base"></i></button>
                         </div>
                     </div>
@@ -176,16 +136,13 @@
                 </div>
             </div>
 
-            <!-- Action Bar (Bottom) -->
             <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 md:p-5 flex justify-between items-center shadow-lg shrink-0 z-20">
                 <div class="text-xs md:text-base text-gray-400 flex items-center"><div class="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-500 mr-2"></div> <span id="statusMsg">พร้อม</span></div>
-                <button type="button" onclick="window.saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-6 md:px-10 rounded-lg shadow active:scale-95 transition w-32 md:w-auto md:min-w-[150px] md:text-lg">
-                    บันทึก
-                </button>
+                <button type="button" onclick="window.saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-6 md:px-10 rounded-lg shadow active:scale-95 transition w-32 md:w-auto md:min-w-[150px] md:text-lg">บันทึก</button>
             </div>
         </div>
 
-        <!-- 3. LIST PAGE -->
+        <!-- 3. LIST -->
         <div id="page-list" class="page-section bg-gray-50 dark:bg-gray-900 overflow-y-auto">
             <div class="max-w-4xl mx-auto p-4 md:p-8 pb-20">
                 <div class="flex items-center mb-4 md:mb-8">
@@ -198,18 +155,16 @@
             </div>
         </div>
 
-        <!-- 4. VIEW PAGE (Full Screen) -->
+        <!-- 4. VIEW (Full Screen) -->
         <div id="page-view" class="page-section bg-white w-full h-full relative">
             <iframe id="fullViewFrame" class="w-full h-full border-none block"></iframe>
             <div id="viewLoading" class="absolute inset-0 bg-white flex items-center justify-center z-20 hidden">
                 <i class="fas fa-seedling fa-spin text-4xl md:text-6xl text-green-500"></i>
             </div>
-            <!-- Floating Controls -->
             <div class="absolute bottom-6 right-6 flex gap-3 z-30">
                 <button onclick="window.shareCurrentView()" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="แชร์หน้านี้">
                     <i class="fas fa-share-alt text-xl"></i>
                 </button>
-                <!-- ปุ่มย้อนกลับที่เมื่อกดจะไปโหลดรายการใหม่ -->
                 <button id="viewBackButton" onclick="window.goBackToList()" class="bg-gray-800 hover:bg-gray-900 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="กลับหน้ารายการ">
                     <i class="fas fa-arrow-left text-xl"></i>
                 </button>
@@ -225,13 +180,11 @@
                 <h3 class="font-bold text-lg brand-font">ตั้งค่า</h3>
                 <button onclick="window.toggleConfig()" class="text-gray-400 p-2"><i class="fas fa-times"></i></button>
             </div>
-            
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <span class="text-sm"><i class="fas fa-moon mr-2 text-green-600"></i>โหมดมืด</span>
                     <input type="checkbox" id="darkModeToggle" class="accent-green-600 w-5 h-5" onchange="window.toggleDarkMode()">
                 </div>
-                
                 <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
                     <div onclick="document.getElementById('apiSettings').classList.toggle('hidden')" class="text-xs text-center text-gray-500 underline cursor-pointer pb-1">ตั้งค่า API (แตะเพื่อเปิด)</div>
                     <div id="apiSettings" class="hidden space-y-2 mt-2">
@@ -239,11 +192,8 @@
                         <input type="password" id="apiPassInput" placeholder="Password" class="w-full text-xs p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
                     </div>
                 </div>
-
                 <button onclick="window.saveConfig()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg shadow active:scale-95 transition">บันทึก</button>
             </div>
-
-            <!-- Credits -->
             <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
                 <p class="text-xs text-gray-400 dark:text-gray-500">
                     Developed by<br>
@@ -254,7 +204,7 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- Toast -->
     <div id="toast" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl z-[70] text-sm font-bold whitespace-nowrap">
         <span id="toastMsg">Notification</span>
     </div>
@@ -264,15 +214,11 @@
     </audio>
 
     <script>
-        // --- GLOBAL VARIABLES ---
         window.currentEditingId = null;
         window.currentViewId = null;
 
-        // --- NAVIGATION LOGIC ---
         window.showPage = function(pageId) {
-            document.querySelectorAll('.page-section').forEach(el => {
-                el.classList.remove('active');
-            });
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById('page-' + pageId);
             if(target) target.classList.add('active');
             
@@ -285,20 +231,32 @@
             }
         }
 
-        // ฟังก์ชันใหม่: กดย้อนกลับจากหน้า View -> ไปหน้า List และรีโหลด
         window.goBackToList = function() {
             window.showPage('list');
-            window.loadList(); // สั่งโหลดรายการใหม่ทันที
+            window.loadList();
         }
 
         window.toggleConfig = function() { document.getElementById('configModal').classList.toggle('hidden'); }
 
-        // --- THEME & CONFIG ---
         window.initTheme = function() {
             try {
                 const isDark = localStorage.getItem('tonkla_theme') === 'dark';
                 if(isDark) document.documentElement.classList.add('dark');
                 document.getElementById('darkModeToggle').checked = isDark;
+                
+                // Load from URL (Encoded) first, then LocalStorage
+                const urlParams = new URLSearchParams(window.location.search);
+                const apiParam = urlParams.get('api');
+                
+                if(apiParam) {
+                    try {
+                        const decodedApi = atob(apiParam);
+                        if(decodedApi.startsWith('http')) {
+                            localStorage.setItem('codeKeeper_url', decodedApi);
+                        }
+                    } catch(e) {}
+                }
+
                 document.getElementById('apiUrlInput').value = localStorage.getItem('codeKeeper_url') || '';
                 document.getElementById('apiPassInput').value = localStorage.getItem('codeKeeper_pass') || '';
             } catch(e){}
@@ -318,12 +276,11 @@
             window.showToast('บันทึกการตั้งค่าแล้ว ✅');
         }
 
-        // --- EDITOR LOGIC & LINE NUMBERS ---
         window.startNewCode = function() {
             window.currentEditingId = null;
             document.getElementById('saveBtn').innerText = "บันทึก";
             document.getElementById('codeEditor').value = '';
-            document.getElementById('codeTitle').value = ''; // เคลียร์ชื่อ
+            document.getElementById('codeTitle').value = '';
             window.updateLineNumbers();
             window.updatePreview();
             window.showPage('create');
@@ -348,9 +305,12 @@
             window.previewTimeout = setTimeout(window.updatePreview, 800);
         });
 
+        // Use Blob URL to prevent mobile spinner
         window.updatePreview = function() {
-            const doc = previewFrame.contentWindow.document;
-            doc.open(); doc.write(editor.value); doc.close();
+            const content = editor.value;
+            const blob = new Blob([content], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            previewFrame.src = url;
         }
 
         window.insertTemplate = function() {
@@ -360,7 +320,6 @@
             window.updatePreview();
         }
 
-        // --- PREVIEW FULL SCREEN LOGIC ---
         window.togglePreviewFullScreen = function() {
             const el = document.getElementById('previewContainer');
             if (!document.fullscreenElement) {
@@ -372,11 +331,10 @@
             }
         }
 
-        // --- API & DATA ---
         window.saveCode = async function() {
             const url = localStorage.getItem('codeKeeper_url');
             const pass = localStorage.getItem('codeKeeper_pass');
-            const title = document.getElementById('codeTitle').value.trim() || 'ไม่ได้ตั้งชื่อ'; // รับค่าชื่อ
+            const title = document.getElementById('codeTitle').value.trim() || 'ไม่ได้ตั้งชื่อ';
 
             if (!url || !pass) { window.toggleConfig(); return window.showToast('⚠️ ตั้งค่า API ก่อนนะ'); }
             if (!editor.value.trim()) return window.showToast('⚠️ ยังไม่ได้เขียนโค้ด');
@@ -480,24 +438,30 @@
         window.openView = async function(id, fromApp = false) {
             window.currentViewId = id; 
             window.showPage('view');
-            // ซ่อน/แสดงปุ่มกลับ ตามที่มา (fromApp = true -> กดจากรายการ -> แสดงปุ่มกลับ)
-            const backBtn = document.getElementById('viewBackButton');
-            if(backBtn) backBtn.style.display = fromApp ? 'flex' : 'none';
+            document.getElementById('viewBackButton').style.display = fromApp ? 'flex' : 'none';
 
             const loader = document.getElementById('viewLoading');
             const frame = document.getElementById('fullViewFrame');
             const url = localStorage.getItem('codeKeeper_url');
 
+            // Reset iframe
+            frame.src = 'about:blank';
             loader.classList.remove('hidden');
-            frame.contentWindow.document.open(); frame.contentWindow.document.write(''); frame.contentWindow.document.close();
+
+            if (!url) {
+                alert("ไม่มีการตั้งค่า API ไม่สามารถดูได้");
+                window.showPage('home');
+                return;
+            }
 
             try {
                 const response = await fetch(`${url}?action=view&id=${id}`);
                 const result = await response.json();
                 if (result.status === 'success') {
-                    frame.contentWindow.document.open();
-                    frame.contentWindow.document.write(result.code);
-                    frame.contentWindow.document.close();
+                    // Use Blob to prevent spinning issue
+                    const blob = new Blob([result.code], {type: 'text/html'});
+                    const blobUrl = URL.createObjectURL(blob);
+                    frame.src = blobUrl;
                 } else { alert('Not Found'); window.showPage('home'); }
             } catch(e) { alert('Error'); }
             finally { loader.classList.add('hidden'); }
@@ -505,8 +469,19 @@
 
         window.shareCode = async function(id) {
             window.showToast('กำลังสร้างลิงก์... ⏳');
-            await new Promise(r => setTimeout(r, 800));
-            const link = `${window.location.origin}${window.location.pathname}?id=${id}`;
+            await new Promise(r => setTimeout(r, 500));
+            
+            // Encode API URL into the link so viewers can see it
+            const apiUrl = localStorage.getItem('codeKeeper_url') || '';
+            let paramString = `?id=${id}`;
+            if(apiUrl) {
+                try {
+                    const encodedApi = btoa(apiUrl);
+                    paramString += `&api=${encodedApi}`;
+                } catch(e) {}
+            }
+            
+            const link = `${window.location.origin}${window.location.pathname}${paramString}`;
             try { await navigator.clipboard.writeText(link); window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success'); }
             catch (err) {
                 const el = document.createElement('textarea'); el.value = link; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
@@ -523,7 +498,7 @@
         window.addEventListener('load', () => {
             window.initTheme();
             const urlParams = new URLSearchParams(window.location.search);
-            // ถ้ามี ID ใน URL ให้เปิดดูเลย (fromApp = false เพื่อซ่อนปุ่มกลับ)
+            // Check for ID and open view (fromApp = false)
             if(urlParams.get('id')) window.openView(urlParams.get('id'), false);
         });
     </script>
