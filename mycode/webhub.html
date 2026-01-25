@@ -78,6 +78,11 @@
             text-align: right;
             user-select: none;
         }
+
+        /* Fullscreen styles fix */
+        :fullscreen { overflow: hidden; background: white; }
+        :fullscreen .bg-white { background: white; }
+        .dark :fullscreen { background: #111827; }
     </style>
 </head>
 <body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-[100dvh] w-screen flex flex-col overflow-hidden transition-colors duration-300">
@@ -157,12 +162,17 @@
                 </div>
                 
                 <!-- Preview Area -->
-                <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col bg-white">
+                <div id="previewContainer" class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col bg-white dark:bg-black">
                     <div class="h-8 md:h-12 bg-gray-100 dark:bg-gray-800 flex items-center justify-between px-3 md:px-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
                         <span class="text-[10px] md:text-sm font-bold uppercase text-gray-500 tracking-wider">Preview</span>
-                        <button onclick="window.updatePreview()" class="text-gray-500 hover:text-green-600 transition p-1"><i class="fas fa-sync-alt text-xs md:text-base"></i></button>
+                        <div class="flex items-center gap-2">
+                            <!-- ปุ่มขยายเต็มจอ -->
+                            <button onclick="window.togglePreviewFullScreen()" class="text-gray-500 hover:text-green-600 transition p-1" title="ดูผลลัพธ์เต็มจอ"><i class="fas fa-expand text-xs md:text-base"></i></button>
+                            <!-- ปุ่มรีเฟรช -->
+                            <button onclick="window.updatePreview()" class="text-gray-500 hover:text-green-600 transition p-1" title="รีเฟรช"><i class="fas fa-sync-alt text-xs md:text-base"></i></button>
+                        </div>
                     </div>
-                    <iframe id="previewFrame" class="flex-1 w-full h-full border-none"></iframe>
+                    <iframe id="previewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
                 </div>
             </div>
 
@@ -348,6 +358,18 @@
             editor.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; padding: 20px; text-align: center; }\n  h1 { color: #16a34a; }\n</style>\n</head>\n<body>\n  <h1>สวัสดีต้นกล้า!</h1>\n  <p>เขียนโค้ดที่นี่...</p>\n</body>\n</html>`;
             window.updateLineNumbers();
             window.updatePreview();
+        }
+
+        // --- PREVIEW FULL SCREEN LOGIC ---
+        window.togglePreviewFullScreen = function() {
+            const el = document.getElementById('previewContainer');
+            if (!document.fullscreenElement) {
+                el.requestFullscreen().catch(err => {
+                    window.showToast('ไม่สามารถขยายเต็มจอได้');
+                });
+            } else {
+                document.exitFullscreen();
+            }
         }
 
         // --- API & DATA ---
