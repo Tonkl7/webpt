@@ -262,10 +262,11 @@
                     <div class="w-full h-full flex-shrink-0 flex items-center justify-center p-4">
                         <div class="bg-white dark:bg-gray-800 w-full max-w-md md:max-w-4xl h-full md:h-auto md:max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-purple-100 dark:border-purple-900">
                             <!-- Display -->
-                            <div class="bg-gray-100 dark:bg-black p-6 text-right shrink-0 border-b border-gray-200 dark:border-gray-700 h-32 md:h-40 flex flex-col justify-end">
-                                <div id="calcHistory" class="text-gray-500 dark:text-gray-400 text-sm md:text-lg mb-1 h-6 overflow-hidden"></div>
-                                <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-3xl md:text-5xl font-mono text-right focus:outline-none" placeholder="0" readonly>
-                                <div id="calcResultSmart" class="text-purple-600 dark:text-purple-400 text-sm md:text-lg font-mono mt-1 h-6"></div>
+                            <!-- ปรับความสูงเป็น h-auto min-h-[12rem] เพื่อแก้ปัญหาตัวอักษรซ้อนกัน -->
+                            <div class="bg-gray-100 dark:bg-black p-6 text-right shrink-0 border-b border-gray-200 dark:border-gray-700 h-auto min-h-[12rem] flex flex-col justify-end gap-1">
+                                <div id="calcHistory" class="text-gray-500 dark:text-gray-400 text-sm md:text-lg overflow-hidden whitespace-nowrap text-ellipsis"></div>
+                                <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-3xl md:text-5xl font-mono text-right focus:outline-none mb-1" placeholder="0" readonly>
+                                <div id="calcResultSmart" class="text-purple-600 dark:text-purple-400 text-sm md:text-lg font-mono min-h-[1.5rem]"></div>
                             </div>
 
                             <!-- Buttons -->
@@ -509,11 +510,13 @@
                 // Smart Display Logic
                 let smartText = "";
                 
-                // 1. Fractions
+                // 1. Fractions (Lowest Term)
                 try {
-                    const frac = math.fraction(result);
-                    if (frac.d !== 1) {
-                        smartText += `เศษส่วน: ${frac.n}/${frac.d}  `;
+                    // ใช้ format เพื่อจัดรูปแบบเป็นเศษส่วนอย่างต่ำโดยอัตโนมัติ
+                    const fracStr = math.format(result, { fraction: 'ratio' });
+                    // ตรวจสอบว่าเป็นเศษส่วนหรือไม่ (มีเครื่องหมาย /)
+                    if (fracStr.includes('/')) {
+                        smartText += `เศษส่วน: ${fracStr}  `;
                     }
                 } catch(e) {}
 
