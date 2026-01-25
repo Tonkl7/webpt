@@ -157,6 +157,7 @@
             </div>
         </div>
 
+        <!-- 1.2 CREATE & 1.3 LIST & 1.4 VIEW (Code Space Pages) -->
         <div id="page-create" class="page-section bg-white dark:bg-gray-900">
             <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-14 md:h-16 flex items-center justify-between px-3 md:px-6 shrink-0 transition-all gap-2">
                 <button onclick="window.showPage('code-home')" class="text-gray-500 p-2 md:p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"><i class="fas fa-arrow-left md:text-lg"></i></button>
@@ -447,51 +448,65 @@
                 
                 let smartText = "";
                 
-                // 1. Fractions (Lowest Term & Rationalize)
-                try {
-                    const frac = math.fraction(result);
-                    // Filter: Only show if denominator < 5000 (avoid ugly approximations)
-                    if (frac.d !== 1 && frac.d < 5000) {
-                        smartText += `เศษส่วน: ${frac.n}/${frac.d}  `;
+                // Helper: Simplify sqrt(n) -> { k, surd }
+                const simplifySqrt = (num) => {
+                    let coef = 1;
+                    let surd = num;
+                    for (let i = 2; i * i <= surd; i++) {
+                        while (surd % (i * i) === 0) {
+                            coef *= i;
+                            surd /= (i * i);
+                        }
                     }
-                } catch(e) {}
+                    return { k: coef, s: surd };
+                };
 
-                // 2. Trigonometry Inverse
-                if (Math.abs(result) <= 1) {
-                    const deg = (Math.asin(result) * 180 / Math.PI).toFixed(2);
-                    smartText += `| มุม: ${deg}°  `;
-                }
-
-                // 3. Roots & Surd Fractions (Heuristic check)
                 if (!Number.isInteger(result)) {
                     const sq = result * result;
-                    // Check if square is close to an integer
-                    if (Math.abs(Math.round(sq) - sq) < 0.0001) {
-                         smartText += `| ราก: √${Math.round(sq)}`;
+                    const roundedSq = Math.round(sq);
+                    
+                    // Case A: Pure Root (e.g. sqrt(12) -> 2√3)
+                    if (Math.abs(sq - roundedSq) < 1e-9) {
+                        const simp = simplifySqrt(roundedSq);
+                        if (simp.s !== 1) {
+                            smartText = `${simp.k !== 1 ? simp.k : ''}√${simp.s}`;
+                        }
                     } else {
-                         // Check if square is a clean fraction (e.g. 3/4 for sqrt(3)/2)
-                         try {
-                             const f = math.fraction(sq);
-                             if (f.d < 1000) { 
-                                 const n = f.n;
-                                 const d = f.d;
-                                 const rn = Math.sqrt(n);
-                                 const rd = Math.sqrt(d);
-                                 
-                                 let surd = "";
-                                 if (Number.isInteger(rd)) {
-                                     surd = `√${n}/${rd}`;
-                                 } else if (Number.isInteger(rn)) {
-                                     surd = `${rn}/√${d}`;
-                                 } else {
-                                     surd = `√${n}/√${d}`;
-                                 }
-                                 smartText += ` | รูทเศษส่วน: ${surd}`;
-                             }
-                         } catch(e) {}
+                        // Case B: Fraction with Root (e.g. sqrt(3)/2 -> sq = 3/4)
+                        try {
+                            const f = math.fraction(sq);
+                            if (f.d < 5000 && f.n < 50000) {
+                                const numSimp = simplifySqrt(f.n);
+                                const denSimp = simplifySqrt(f.d);
+                                
+                                // Rationalize: (nK√nS) / (dK√dS) -> multiply by √dS
+                                let topCoef = numSimp.k;
+                                let topSurd = numSimp.s * denSimp.s;
+                                let botVal = denSimp.k * denSimp.s;
+                                
+                                // Simplify resulting top surd
+                                const topSimp = simplifySqrt(topSurd);
+                                topCoef *= topSimp.k;
+                                topSurd = topSimp.s;
+                                
+                                // Simplify fraction
+                                const common = math.gcd(topCoef, botVal);
+                                topCoef /= common;
+                                botVal /= common;
+                                
+                                let str = "";
+                                if (topCoef !== 1 || topSurd === 1) str += topCoef;
+                                if (topSurd !== 1) str += `√${topSurd}`;
+                                if (str === "") str = "1";
+                                if (botVal !== 1) str += `/${botVal}`;
+                                
+                                smartText = str;
+                            }
+                        } catch(e) {}
                     }
                 }
-
+                
+                if (smartText) smartText = "รูปอย่างง่าย: " + smartText;
                 smartDisplay.innerText = smartText;
                 window.calcInputStr = result.toString();
 
