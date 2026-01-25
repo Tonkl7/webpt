@@ -141,6 +141,7 @@
 
         <!-- === APP 1: CODE SPACE === -->
         <div id="page-code-home" class="page-section overflow-y-auto">
+            <!-- (Code Space Dashboard) -->
             <div class="min-h-full flex flex-col items-center justify-between p-6 text-center">
                 <div class="flex-1 flex flex-col items-center justify-center w-full">
                     <div class="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-3xl shadow-xl w-full max-w-sm md:max-w-2xl border border-green-100 dark:border-green-800">
@@ -238,59 +239,84 @@
                 <button onclick="window.enterMathMode()" class="bg-white text-purple-900 font-bold py-4 px-10 rounded-full shadow-2xl hover:scale-105 transition text-xl">เริ่มคำนวณ</button>
             </div>
 
-            <div class="w-full h-full flex items-center justify-center p-4">
-                <div class="bg-white dark:bg-gray-800 w-full max-w-md md:max-w-4xl h-full md:h-auto md:max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-purple-100 dark:border-purple-900">
-                    <!-- Display -->
-                    <div class="bg-gray-100 dark:bg-black p-6 pt-10 text-right shrink-0 border-b border-gray-200 dark:border-gray-700 h-auto min-h-[16rem] flex flex-col justify-end gap-2 relative">
-                        <div id="calcHistory" class="text-gray-500 dark:text-gray-400 text-sm md:text-lg overflow-hidden whitespace-nowrap text-ellipsis h-6 mb-2"></div>
-                        <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-4xl md:text-6xl font-mono text-right focus:outline-none mb-4" placeholder="0" readonly>
-                        <div class="w-full border-t border-gray-200 dark:border-gray-700 pt-3 mt-1">
-                            <div id="calcResultSmart" class="text-purple-600 dark:text-purple-400 text-sm md:text-xl font-mono font-bold min-h-[1.5rem] break-all"></div>
+            <!-- Math Slider Container -->
+            <div class="w-full h-full flex items-center justify-center relative">
+                <!-- Navigation Buttons -->
+                <button onclick="window.slideMath('prev')" id="mathPrevBtn" class="absolute left-2 md:left-8 z-30 bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg text-purple-600 dark:text-purple-400 disabled:opacity-0 transition" disabled><i class="fas fa-chevron-left text-2xl"></i></button>
+                <button onclick="window.slideMath('next')" id="mathNextBtn" class="absolute right-2 md:right-8 z-30 bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg text-purple-600 dark:text-purple-400 transition animate-pulse"><i class="fas fa-chevron-right text-2xl"></i></button>
+
+                <!-- Slider Window -->
+                <div class="w-full h-full max-w-md md:max-w-4xl overflow-hidden relative">
+                    <div id="mathSlider" class="w-full h-full flex transition-transform duration-500 ease-in-out">
+                        
+                        <!-- Slide 1: Calculator -->
+                        <div class="w-full h-full flex-shrink-0 flex items-center justify-center p-4">
+                            <div class="bg-white dark:bg-gray-800 w-full h-full md:h-auto md:max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-purple-100 dark:border-purple-900">
+                                <!-- Display -->
+                                <div class="bg-gray-100 dark:bg-black p-6 pt-10 text-right shrink-0 border-b border-gray-200 dark:border-gray-700 h-auto min-h-[16rem] flex flex-col justify-end gap-2 relative">
+                                    <div id="calcHistory" class="text-gray-500 dark:text-gray-400 text-sm md:text-lg overflow-hidden whitespace-nowrap text-ellipsis h-6 mb-2"></div>
+                                    <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-4xl md:text-6xl font-mono text-right focus:outline-none mb-4" placeholder="0" readonly>
+                                    <div class="w-full border-t border-gray-200 dark:border-gray-700 pt-3 mt-1">
+                                        <div id="calcResultSmart" class="text-purple-600 dark:text-purple-400 text-sm md:text-xl font-mono font-bold min-h-[1.5rem] break-all"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Buttons -->
+                                <div class="flex-1 p-4 grid grid-cols-5 gap-2 md:gap-3 overflow-y-auto">
+                                    <button onclick="window.calcKey('sin(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">sin</button>
+                                    <button onclick="window.calcKey('cos(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">cos</button>
+                                    <button onclick="window.calcKey('tan(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">tan</button>
+                                    <button onclick="window.calcKey('(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">(</button>
+                                    <button onclick="window.calcKey(')')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">)</button>
+
+                                    <button onclick="window.calcKey('asin(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">asin</button>
+                                    <button onclick="window.calcKey('acos(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">acos</button>
+                                    <button onclick="window.calcKey('atan(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">atan</button>
+                                    <button onclick="window.calcKey('^')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">^</button>
+                                    <button onclick="window.calcKey('sqrt(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">√</button>
+
+                                    <button onclick="window.calcKey('7')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">7</button>
+                                    <button onclick="window.calcKey('8')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">8</button>
+                                    <button onclick="window.calcKey('9')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">9</button>
+                                    <button onclick="window.calcCmd('DEL')" class="calc-btn bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">DEL</button>
+                                    <button onclick="window.calcCmd('AC')" class="calc-btn bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">AC</button>
+
+                                    <button onclick="window.calcKey('4')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">4</button>
+                                    <button onclick="window.calcKey('5')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">5</button>
+                                    <button onclick="window.calcKey('6')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">6</button>
+                                    <button onclick="window.calcKey('*')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">×</button>
+                                    <button onclick="window.calcKey('/')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">÷</button>
+
+                                    <button onclick="window.calcKey('1')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">1</button>
+                                    <button onclick="window.calcKey('2')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">2</button>
+                                    <button onclick="window.calcKey('3')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">3</button>
+                                    <button onclick="window.calcKey('+')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">+</button>
+                                    <button onclick="window.calcKey('-')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">-</button>
+
+                                    <button onclick="window.calcKey('0')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl col-span-2">0</button>
+                                    <button onclick="window.calcKey('.')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">.</button>
+                                    <button onclick="window.calcKey('i')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 italic">i</button>
+                                    <button onclick="window.calculate()" class="calc-btn bg-purple-600 hover:bg-purple-700 text-white text-2xl shadow-lg">=</button>
+
+                                    <button onclick="window.calcKey('pi')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">π</button>
+                                    <button onclick="window.calcKey('e')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">e</button>
+                                    <button onclick="window.calcKey('abs(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">abs</button>
+                                    <button onclick="window.calcKey('true')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">T</button>
+                                    <button onclick="window.calcKey('false')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">F</button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Buttons -->
-                    <div class="flex-1 p-4 grid grid-cols-5 gap-2 md:gap-3 overflow-y-auto">
-                        <button onclick="window.calcKey('sin(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">sin</button>
-                        <button onclick="window.calcKey('cos(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">cos</button>
-                        <button onclick="window.calcKey('tan(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">tan</button>
-                        <button onclick="window.calcKey('(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">(</button>
-                        <button onclick="window.calcKey(')')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">)</button>
+                        <!-- Slide 2: Graph (Placeholder) -->
+                        <div class="w-full h-full flex-shrink-0 flex items-center justify-center p-4">
+                            <div class="bg-white dark:bg-gray-800 w-full h-full md:h-auto md:max-h-[90vh] rounded-3xl shadow-2xl flex flex-col items-center justify-center border border-purple-100 dark:border-purple-900 p-8 text-center">
+                                <i class="fas fa-chart-line text-8xl text-purple-300 mb-6 animate-pulse"></i>
+                                <h1 class="text-3xl font-bold text-gray-700 dark:text-white mb-2">ระบบกราฟอัจฉริยะ</h1>
+                                <p class="text-purple-500 text-xl font-bold">กำลังจะมาเร็วๆ นี้...</p>
+                                <p class="text-gray-400 mt-4 text-sm max-w-md">เตรียมพบกับการพล็อตกราฟ 2D/3D ที่ลื่นไหลที่สุด พร้อมเครื่องมือวิเคราะห์สมการเต็มรูปแบบ</p>
+                            </div>
+                        </div>
 
-                        <button onclick="window.calcKey('asin(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">asin</button>
-                        <button onclick="window.calcKey('acos(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">acos</button>
-                        <button onclick="window.calcKey('atan(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">atan</button>
-                        <button onclick="window.calcKey('^')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">^</button>
-                        <button onclick="window.calcKey('sqrt(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">√</button>
-
-                        <button onclick="window.calcKey('7')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">7</button>
-                        <button onclick="window.calcKey('8')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">8</button>
-                        <button onclick="window.calcKey('9')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">9</button>
-                        <button onclick="window.calcCmd('DEL')" class="calc-btn bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">DEL</button>
-                        <button onclick="window.calcCmd('AC')" class="calc-btn bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">AC</button>
-
-                        <button onclick="window.calcKey('4')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">4</button>
-                        <button onclick="window.calcKey('5')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">5</button>
-                        <button onclick="window.calcKey('6')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">6</button>
-                        <button onclick="window.calcKey('*')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">×</button>
-                        <button onclick="window.calcKey('/')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">÷</button>
-
-                        <button onclick="window.calcKey('1')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">1</button>
-                        <button onclick="window.calcKey('2')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">2</button>
-                        <button onclick="window.calcKey('3')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">3</button>
-                        <button onclick="window.calcKey('+')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">+</button>
-                        <button onclick="window.calcKey('-')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">-</button>
-
-                        <button onclick="window.calcKey('0')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl col-span-2">0</button>
-                        <button onclick="window.calcKey('.')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">.</button>
-                        <button onclick="window.calcKey('i')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 italic">i</button>
-                        <button onclick="window.calculate()" class="calc-btn bg-purple-600 hover:bg-purple-700 text-white text-2xl shadow-lg">=</button>
-
-                        <button onclick="window.calcKey('pi')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">π</button>
-                        <button onclick="window.calcKey('e')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">e</button>
-                        <button onclick="window.calcKey('abs(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">abs</button>
-                        <button onclick="window.calcKey('true')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">T</button>
-                        <button onclick="window.calcKey('false')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">F</button>
                     </div>
                 </div>
             </div>
@@ -415,6 +441,24 @@
         // --- MATH LOGIC ---
         window.enterMathMode = function() {
             document.getElementById('mathGreeting').classList.add('hidden');
+        }
+
+        window.slideMath = function(dir) {
+            const slider = document.getElementById('mathSlider');
+            const btnPrev = document.getElementById('mathPrevBtn');
+            const btnNext = document.getElementById('mathNextBtn');
+            
+            if (dir === 'next') {
+                slider.style.transform = 'translateX(-100%)';
+                btnNext.classList.add('opacity-0', 'pointer-events-none');
+                btnPrev.disabled = false;
+                btnPrev.classList.remove('opacity-0');
+            } else {
+                slider.style.transform = 'translateX(0)';
+                btnPrev.disabled = true;
+                btnPrev.classList.add('opacity-0');
+                btnNext.classList.remove('opacity-0', 'pointer-events-none');
+            }
         }
 
         window.calcInputStr = "";
