@@ -746,4 +746,54 @@
         }
         window.copyCurrentUrl = function() { window.shareCode(new URLSearchParams(window.location.search).get('id')); }
 
-        //
+        // --- EASTER EGG LOGIC ---
+        window.eeCounter = 0;
+        window.countEasterEgg = function() {
+            window.eeCounter++;
+            if(window.eeCounter === 6) {
+                document.getElementById('btnErrorEgg').classList.remove('hidden');
+                window.showToast('???', 'info');
+            }
+        }
+
+        window.startGlitch = async function() {
+            document.getElementById('configModal').classList.add('hidden');
+            const body = document.body;
+            body.classList.add('glitch-mode');
+            const errs = ["ROOT_DECAY_DETECTED", "BRANCH_SEGMENTATION_FAULT", "SYSTEM_OVERGROWN", "PHOTOSYNTHESIS_FAILURE", "FOREST_CONSUMING_MEMORY", "BARK_CORRUPTION", "LEAF_NODE_MISSING", "XYLEM_BLOCKAGE"];
+            for(let i=0; i<15; i++) {
+                await new Promise(r => setTimeout(r, 150));
+                const div = document.createElement('div');
+                div.className = "scary-text fixed z-[9999] text-red-600 font-mono font-bold text-xl md:text-3xl";
+                div.style.top = Math.random() * 90 + '%';
+                div.style.left = Math.random() * 80 + '%';
+                div.innerText = errs[Math.floor(Math.random()*errs.length)];
+                body.appendChild(div);
+            }
+            await new Promise(r => setTimeout(r, 1500));
+            body.classList.remove('glitch-mode');
+            body.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-screen w-screen bg-black text-red-600 overflow-hidden select-none cursor-none">
+                    <h1 class="text-6xl md:text-9xl font-mono font-bold animate-pulse tracking-widest" style="text-shadow: 4px 4px 0px #000, -2px -2px 0px #330000;">ERROR</h1>
+                    <p class="mt-8 font-mono text-red-800 text-lg md:text-2xl animate-bounce">THE ROOTS RUN DEEP...</p>
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-20 pointer-events-none"></div>
+                </div>
+            `;
+            body.style.overflow = 'hidden';
+        }
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            console.log("Tonkla System Loaded");
+            window.initTheme();
+            window.updateNavbar(); 
+            window.renderTodos(); 
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('id')) {
+                window.enterApp('code');
+                window.openView(urlParams.get('id'), false);
+            }
+        });
+    </script>
+</body>
+</html>
