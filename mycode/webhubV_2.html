@@ -461,6 +461,21 @@
                     return { k: coef, s: surd };
                 };
 
+                // 1. Fractions (Lowest Term & Rationalize)
+                try {
+                    const frac = math.fraction(result);
+                    if (frac.d !== 1 && frac.d < 5000) {
+                        smartText += `เศษส่วน: ${frac.n}/${frac.d}  `;
+                    }
+                } catch(e) {}
+
+                // 2. Trigonometry Inverse
+                if (Math.abs(result) <= 1) {
+                    const deg = (Math.asin(result) * 180 / Math.PI).toFixed(2);
+                    smartText += `| มุม: ${deg}°  `;
+                }
+
+                // 3. Roots & Surd Fractions (Heuristic check)
                 if (!Number.isInteger(result)) {
                     const sq = result * result;
                     const roundedSq = Math.round(sq);
@@ -468,14 +483,18 @@
                     // Case A: Pure Root (e.g. sqrt(12) -> 2√3)
                     if (Math.abs(sq - roundedSq) < 1e-9) {
                         const simp = simplifySqrt(roundedSq);
-                        if (simp.s !== 1) {
-                            smartText = `${simp.k !== 1 ? simp.k : ''}√${simp.s}`;
+                        let rootStr = `√${roundedSq}`;
+                        if (simp.k !== 1) {
+                            rootStr += ` = ${simp.k}√${simp.s}`;
                         }
+                        smartText += (smartText ? " | " : "") + `ราก: ${rootStr}`;
                     } else {
                         // Case B: Fraction with Root (e.g. sqrt(3)/2 -> sq = 3/4)
                         try {
                             const f = math.fraction(sq);
                             if (f.d < 5000 && f.n < 50000) {
+                                let rootStr = `√(${f.n}/${f.d})`;
+                                
                                 const numSimp = simplifySqrt(f.n);
                                 const denSimp = simplifySqrt(f.d);
                                 
@@ -484,12 +503,10 @@
                                 let topSurd = numSimp.s * denSimp.s;
                                 let botVal = denSimp.k * denSimp.s;
                                 
-                                // Simplify resulting top surd
                                 const topSimp = simplifySqrt(topSurd);
                                 topCoef *= topSimp.k;
                                 topSurd = topSimp.s;
                                 
-                                // Simplify fraction
                                 const common = math.gcd(topCoef, botVal);
                                 topCoef /= common;
                                 botVal /= common;
@@ -500,7 +517,8 @@
                                 if (str === "") str = "1";
                                 if (botVal !== 1) str += `/${botVal}`;
                                 
-                                smartText = str;
+                                rootStr += ` = ${str}`;
+                                smartText += (smartText ? " | " : "") + `รูทเศษส่วน: ${rootStr}`;
                             }
                         } catch(e) {}
                     }
