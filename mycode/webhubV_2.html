@@ -262,14 +262,16 @@
                     <div class="w-full h-full flex-shrink-0 flex items-center justify-center p-4">
                         <div class="bg-white dark:bg-gray-800 w-full max-w-md md:max-w-4xl h-full md:h-auto md:max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-purple-100 dark:border-purple-900">
                             <!-- Display -->
-                            <!-- ปรับแก้: เพิ่ม padding-top เพื่อกันทับกับจอเล็ก และใช้ flex-shrink-0 -->
-                            <div class="bg-gray-100 dark:bg-black p-6 pt-8 text-right shrink-0 border-b border-gray-200 dark:border-gray-700 h-auto min-h-[14rem] flex flex-col justify-end gap-3 relative">
+                            <!-- ปรับแก้: เพิ่ม padding-top เพื่อกันทับกับจอเล็ก และใช้ flex-shrink-0 และ space-y ให้ห่างกันชัดเจน -->
+                            <div class="bg-gray-100 dark:bg-black p-6 pt-10 text-right shrink-0 border-b border-gray-200 dark:border-gray-700 h-auto min-h-[16rem] flex flex-col justify-end gap-2 relative">
                                 <!-- History -->
-                                <div id="calcHistory" class="text-gray-500 dark:text-gray-400 text-sm md:text-lg overflow-hidden whitespace-nowrap text-ellipsis h-6"></div>
+                                <div id="calcHistory" class="text-gray-500 dark:text-gray-400 text-sm md:text-lg overflow-hidden whitespace-nowrap text-ellipsis h-6 mb-2"></div>
                                 <!-- Main Input (ใหญ่ชัด) -->
-                                <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-4xl md:text-6xl font-mono text-right focus:outline-none my-1" placeholder="0" readonly>
-                                <!-- Smart Result (แยกส่วนชัดเจน) -->
-                                <div id="calcResultSmart" class="text-purple-600 dark:text-purple-400 text-sm md:text-xl font-mono min-h-[1.5rem] font-bold"></div>
+                                <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-4xl md:text-6xl font-mono text-right focus:outline-none mb-4" placeholder="0" readonly>
+                                <!-- Smart Result Container (แยกส่วนชัดเจน) -->
+                                <div class="w-full border-t border-gray-200 dark:border-gray-700 pt-3 mt-1">
+                                    <div id="calcResultSmart" class="text-purple-600 dark:text-purple-400 text-sm md:text-xl font-mono font-bold min-h-[1.5rem] break-all"></div>
+                                </div>
                             </div>
 
                             <!-- Buttons -->
@@ -501,49 +503,62 @@
             const history = document.getElementById('calcHistory');
             
             try {
-                // Replace symbols for mathjs
                 let expr = window.calcInputStr;
-                
                 const result = math.evaluate(expr);
                 
-                // History Update
                 history.innerText = expr + " =";
                 display.value = result;
                 
-                // Smart Display Logic
                 let smartText = "";
                 
-                // 1. Fractions (Lowest Term) - Improved
+                // 1. Fractions (Lowest Term & Rationalize)
                 try {
-                    // แปลงเป็นเศษส่วน (math.js จะทำเป็นอย่างต่ำให้เอง)
                     const frac = math.fraction(result);
-                    // ถ้าตัวส่วนไม่เป็น 1 (คือไม่ใช่จำนวนเต็ม) ให้แสดง
-                    if (frac.d !== 1) {
-                        // แยกกรณีเศษเกินไหม? ไม่ต้องก็ได้ แสดง n/d ไปเลยตามโจทย์
-                        // math.fraction เก็บเครื่องหมายที่ตัวเศษ (n)
+                    // Filter: Only show if denominator < 5000 (avoid ugly approximations)
+                    if (frac.d !== 1 && frac.d < 5000) {
                         smartText += `เศษส่วน: ${frac.n}/${frac.d}  `;
                     }
-                } catch(e) {
-                    // กรณีแปลงไม่ได้ (เช่น infinity, complex number) ก็ข้ามไป
-                }
+                } catch(e) {}
 
-                // 2. Trigonometry Inverse (If result is small number, show potential angle)
+                // 2. Trigonometry Inverse
                 if (Math.abs(result) <= 1) {
                     const deg = (Math.asin(result) * 180 / Math.PI).toFixed(2);
                     smartText += `| มุม: ${deg}°  `;
                 }
 
-                // 3. Roots (Heuristic check)
+                // 3. Roots & Surd Fractions (Heuristic check)
                 if (!Number.isInteger(result)) {
-                    // Try to square it to see if it's a clean root
                     const sq = result * result;
+                    // Check if square is close to an integer
                     if (Math.abs(Math.round(sq) - sq) < 0.0001) {
-                        smartText += `| ราก: √${Math.round(sq)}`;
+                         smartText += `| ราก: √${Math.round(sq)}`;
+                    } else {
+                         // Check if square is a clean fraction (e.g. 3/4 for sqrt(3)/2)
+                         try {
+                             const f = math.fraction(sq);
+                             // Ensure simple fraction (limit denominator)
+                             if (f.d < 1000) { 
+                                 const n = f.n;
+                                 const d = f.d;
+                                 const rn = Math.sqrt(n);
+                                 const rd = Math.sqrt(d);
+                                 
+                                 let surd = "";
+                                 if (Number.isInteger(rd)) {
+                                     surd = `√${n}/${rd}`;
+                                 } else if (Number.isInteger(rn)) {
+                                     surd = `${rn}/√${d}`;
+                                 } else {
+                                     surd = `√${n}/√${d}`;
+                                 }
+                                 smartText += ` | รูทเศษส่วน: ${surd}`;
+                             }
+                         } catch(e) {}
                     }
                 }
 
                 smartDisplay.innerText = smartText;
-                window.calcInputStr = result.toString(); // Chain calculations
+                window.calcInputStr = result.toString();
 
             } catch (e) {
                 display.value = "Error";
@@ -796,4 +811,4 @@
         });
     </script>
 </body>
-</html>
+</html> พร้อมถ้าเป็นเศษส่วนที่ติดรากหรือมีรากอยู่ด้านบนให้แสดงผลลัพ์เศษส่วนที่เป็นไปได้สำหรับเศษส่วนนั้นด้วย คุณเข้าใจไหม
