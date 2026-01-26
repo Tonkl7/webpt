@@ -141,7 +141,6 @@
 
         <!-- === APP 1: CODE SPACE === -->
         <div id="page-code-home" class="page-section overflow-y-auto">
-            <!-- (Code Space Dashboard) -->
             <div class="min-h-full flex flex-col items-center justify-between p-6 text-center">
                 <div class="flex-1 flex flex-col items-center justify-center w-full">
                     <div class="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-3xl shadow-xl w-full max-w-sm md:max-w-2xl border border-green-100 dark:border-green-800">
@@ -255,7 +254,8 @@
                                 <!-- Display -->
                                 <div class="bg-gray-100 dark:bg-black p-6 pt-10 text-right shrink-0 border-b border-gray-200 dark:border-gray-700 h-auto min-h-[16rem] flex flex-col justify-end gap-2 relative">
                                     <div id="calcHistory" class="text-gray-500 dark:text-gray-400 text-sm md:text-lg overflow-hidden whitespace-nowrap text-ellipsis h-6 mb-2"></div>
-                                    <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-4xl md:text-6xl font-mono text-right focus:outline-none mb-4" placeholder="0" readonly>
+                                    <!-- Editable Input: Removed readonly and added autocomplete off -->
+                                    <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-4xl md:text-6xl font-mono text-right focus:outline-none mb-4 caret-purple-500" placeholder="0" autocomplete="off">
                                     <div class="w-full border-t border-gray-200 dark:border-gray-700 pt-3 mt-1">
                                         <div id="calcResultSmart" class="text-purple-600 dark:text-purple-400 text-sm md:text-xl font-mono font-bold min-h-[1.5rem] break-all"></div>
                                     </div>
@@ -441,6 +441,11 @@
         // --- MATH LOGIC ---
         window.enterMathMode = function() {
             document.getElementById('mathGreeting').classList.add('hidden');
+            // Focus on input
+            const input = document.getElementById('calcInput');
+            if (input) {
+                input.focus();
+            }
         }
 
         window.slideMath = function(dir) {
@@ -819,6 +824,24 @@
             if(urlParams.get('id')) {
                 window.enterApp('code');
                 window.openView(urlParams.get('id'), false);
+            }
+
+            // Keyboard support for calculator
+            const calcInput = document.getElementById('calcInput');
+            if (calcInput) {
+                calcInput.addEventListener('input', (e) => {
+                    window.calcInputStr = e.target.value;
+                });
+
+                calcInput.addEventListener('keydown', (e) => {
+                    if(e.key === 'Enter') {
+                        e.preventDefault();
+                        window.calculate();
+                    }
+                    if(e.key === 'Escape') {
+                        window.calcCmd('AC');
+                    }
+                });
             }
         });
     </script>
