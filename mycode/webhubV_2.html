@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tonkla's Workspaces</title>
+    <title>Tonkla's Workspace</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -88,8 +88,18 @@
         .glitch-mode { animation: glitch-anim 0.1s infinite; pointer-events: none; }
         .scary-text { font-family: 'Courier New', Courier, monospace; text-shadow: 2px 2px #ff0000; }
 
-        /* Calendar Grid Only */
+        /* Calendar Styles */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .calendar-day { @apply text-center text-xs py-1.5 rounded-lg transition-colors cursor-default relative; }
+        
+        /* Highlight Classes */
+        .cal-today { @apply bg-green-500 text-white font-bold shadow-md z-10; }
+        .cal-target { @apply ring-2 ring-red-500 ring-offset-1 dark:ring-offset-gray-800 text-red-600 dark:text-red-400 font-bold z-10; }
+        .cal-range { @apply bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300; }
+        .cal-holiday { @apply text-red-500 font-semibold; }
+        .cal-weekend { @apply text-gray-400 dark:text-gray-500; }
+        
+        .calendar-header { @apply text-center text-xs font-bold text-gray-400 mb-2 uppercase; }
         
         /* Rainbow Animation for Chill Mode */
         @keyframes rainbow { 
@@ -174,7 +184,7 @@
     <nav id="mainNavbar" class="bg-gray-800 text-white shadow-lg z-50 shrink-0 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-colors duration-500">
         <div class="flex items-center cursor-pointer select-none" onclick="window.backToSelection()">
             <i id="navIcon" class="fas fa-cubes fa-lg md:text-2xl mr-3"></i>
-            <span id="navTitle" class="font-bold text-lg xs:text-xl md:text-2xl brand-font">Tonkla's Space</span>
+            <span id="navTitle" class="font-bold text-lg xs:text-xl md:text-2xl brand-font">Tonkla's Workspace</span>
         </div>
         <div id="navMenu" class="flex space-x-1 md:space-x-2"></div>
     </nav>
@@ -575,7 +585,7 @@
                 const holiday = window.holidays.find(h => h.d === dateKey);
                 const isTarget = day === targetDay;
                 
-                // Base classes
+                // --- FIXED STYLES (No @apply) ---
                 let classes = "text-center text-xs py-2 rounded-lg cursor-default relative transition-colors ";
                 let title = "";
 
@@ -592,7 +602,7 @@
                     classes += "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300";
                 }
 
-                // Range Highlight (Connect today to target)
+                // Range Highlight
                 if (targetDay && day > todayDate && day < targetDay) {
                     classes += " bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300";
                 }
@@ -665,7 +675,7 @@
 
             if (window.currentApp === 'select') {
                 navbar.classList.add('bg-gray-800');
-                navTitle.innerText = "Tonkla's Space";
+                navTitle.innerText = "Tonkla's Workspace";
                 navIcon.className = "fas fa-cubes fa-lg md:text-2xl mr-3";
                 navMenu.innerHTML = `<button onclick="window.toggleConfig()" class="p-2 rounded-full hover:bg-gray-700 transition"><i class="fas fa-cog text-xl"></i></button>`;
             } 
