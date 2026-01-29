@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tonkla's Space</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { 
+                        primary: { DEFAULT: '#16a34a' },
+                        secondary: { DEFAULT: '#2563eb' },
+                        tertiary: { DEFAULT: '#9333ea' }
+                    },
+                    screens: { 'xs': '375px' },
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Math.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Mitr:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            overscroll-behavior-y: none;
+        }
+        h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
+        .code-font { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+        
+        .page-section { display: none; width: 100%; height: 100%; animation: fadeIn 0.3s ease-out; }
+        .page-section.active { display: flex; flex-direction: column; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .dark ::-webkit-scrollbar { width: 6px; }
+        .dark ::-webkit-scrollbar-track { background: #0f172a; }
+        .dark ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        
+        .todo-checkbox:checked + div { text-decoration: line-through; color: #9ca3af; }
+        
+        .grid-background {
+            background-image: linear-gradient(to bottom, transparent calc(1.5rem - 1px), #e5e7eb calc(1.5rem - 1px));
+            background-size: 100% 1.5rem;
+            background-attachment: local;
+        }
+        .dark .grid-background {
+            background-image: linear-gradient(to bottom, transparent calc(1.5rem - 1px), #1f2937 calc(1.5rem - 1px));
+        }
+        #codeEditor { line-height: 1.5rem !important; background-color: transparent; z-index: 1; }
+        #lineNumbers { font-family: 'JetBrains Mono', monospace; line-height: 1.5rem !important; text-align: right; user-select: none; }
+        
+        :fullscreen { overflow: hidden; background: white; }
+        :fullscreen .bg-white { background: white; }
+        .dark :fullscreen { background: #111827; }
+
+        .calc-btn {
+            @apply rounded-xl font-bold text-lg transition active:scale-90 flex items-center justify-center shadow-sm select-none;
+        }
+        
+        /* Glitch Effect */
+        @keyframes glitch-anim {
+            0% { transform: translate(0) }
+            20% { transform: translate(-5px, 5px) skew(10deg); filter: hue-rotate(90deg); }
+            40% { transform: translate(-5px, -5px) skew(-10deg); filter: invert(1); }
+            60% { transform: translate(5px, 5px) skew(5deg); }
+            80% { transform: translate(5px, -5px) skew(-5deg); filter: grayscale(1); }
+            100% { transform: translate(0) }
+        }
+        .glitch-mode { animation: glitch-anim 0.1s infinite; pointer-events: none; }
+        .scary-text { font-family: 'Courier New', Courier, monospace; text-shadow: 2px 2px #ff0000; }
+
+        /* Calendar Styles */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        
+        /* Highlight Classes for Calendar */
+        .cal-today { @apply bg-green-500 text-white font-bold shadow-md z-10; }
+        .cal-target { @apply ring-2 ring-red-500 ring-offset-1 dark:ring-offset-gray-800 text-red-600 dark:text-red-400 font-bold z-10; }
+        .cal-range { @apply bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300; }
+        .cal-holiday { @apply text-red-500 font-semibold; }
+        .cal-weekend { @apply text-gray-400 dark:text-gray-500; }
+
+        /* Rainbow Animation */
+        @keyframes rainbow { 
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .bg-rainbow {
+            background: linear-gradient(270deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
+            background-size: 400% 400%;
+            animation: rainbow 3s ease infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-[100dvh] w-screen flex flex-col overflow-hidden transition-colors duration-300 relative">
+
+    <!-- Right Sidebar Toggle Button -->
+    <button onclick="window.toggleRightSidebar()" class="fixed right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 p-3 pl-4 rounded-l-2xl shadow-xl z-40 text-gray-500 hover:text-green-600 transition-transform hover:scale-105 border-l border-y border-gray-200 dark:border-gray-700 group">
+        <i class="fas fa-calendar-alt text-xl group-hover:rotate-12 transition-transform"></i>
+    </button>
+
+    <!-- Right Sidebar (Time & Holiday) -->
+    <div id="rightSidebar" class="fixed inset-y-0 right-0 w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-2xl z-[100] transform translate-x-full transition-transform duration-300 p-6 flex flex-col overflow-y-auto border-l border-gray-200 dark:border-gray-700">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold brand-font text-gray-800 dark:text-white"><i class="fas fa-clock mr-2 text-green-500"></i>เวลา & วันหยุด</h2>
+            <button onclick="window.toggleRightSidebar()" class="text-gray-400 hover:text-green-600 transition p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full" title="ปิดแถบ"><i class="fas fa-arrow-right text-xl"></i></button>
+        </div>
+        
+        <!-- Realtime Clock -->
+        <div class="text-center mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+            <div id="sidebarTime" class="text-4xl font-mono font-bold text-gray-800 dark:text-white mb-1 tracking-wider">00:00:00</div>
+            <div id="sidebarDate" class="text-sm text-gray-500 dark:text-gray-400 font-light">กำลังโหลด...</div>
+        </div>
+
+        <!-- Holiday Progress -->
+        <div class="mb-8">
+            <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide flex justify-between">
+                <span>เส้นทางสู่วันหยุด</span>
+                <i class="fas fa-flag-checkered text-gray-300"></i>
+            </h3>
+            <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <div class="flex justify-between text-xs mb-2 text-gray-500 dark:text-gray-400">
+                    <span>วันนี้</span>
+                    <span id="holidayTargetName" class="font-bold text-green-600 dark:text-green-400 truncate ml-2">...</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700 mb-3 overflow-hidden relative">
+                    <!-- Progress Bar with Dynamic Color -->
+                    <div id="holidayProgress" class="h-3 rounded-full transition-all duration-1000 shadow-lg relative overflow-hidden" style="width: 0%">
+                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-end">
+                    <span id="holidayCountdown" class="text-lg font-bold text-gray-800 dark:text-gray-100">...</span>
+                    <span id="holidayPercent" class="text-xs text-gray-400 font-mono">0%</span>
+                </div>
+                <div id="longWeekendInfo" class="hidden mt-3 p-2.5 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-center text-xs text-purple-600 dark:text-purple-300 font-bold border border-purple-100 dark:border-purple-800 animate-pulse flex items-center justify-center gap-2">
+                    <i class="fas fa-umbrella-beach"></i> <span>เย้! วันหยุดยาว <span id="longWeekendDetail"></span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="flex-1">
+            <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">ปฏิทิน</h3>
+            <div id="sidebarCalendar" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <!-- JS Generated -->
+            </div>
+            <!-- Legend -->
+            <div class="mt-3 flex justify-center gap-4 text-[10px] text-gray-400">
+                <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-green-500"></div> วันนี้</div>
+                <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full border border-red-500"></div> วันหยุด</div>
+                <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-green-100 dark:bg-green-900/50"></div> รอคอย</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for Sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-[90] hidden transition-opacity" onclick="window.toggleRightSidebar()"></div>
+
+
+    <!-- Navbar -->
+    <nav id="mainNavbar" class="bg-gray-800 text-white shadow-lg z-50 shrink-0 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-colors duration-500">
+        <!-- Brand -->
+        <div class="flex items-center cursor-pointer select-none" onclick="window.backToSelection()">
+            <i id="navIcon" class="fas fa-cubes fa-lg md:text-2xl mr-3"></i>
+            <span id="navTitle" class="font-bold text-lg xs:text-xl md:text-2xl brand-font">Tonkla's Space</span>
+        </div>
+        <!-- Menu Buttons (Dynamic) -->
+        <div id="navMenu" class="flex space-x-1 md:space-x-2">
+            <!-- Buttons injected by JS -->
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 relative w-full overflow-hidden z-0">
+        
+        <!-- 0. SELECTION HUB (หน้าเลือกพื้นที่) -->
+        <div id="page-select" class="page-section active overflow-y-auto">
+            <div class="min-h-full flex flex-col items-center justify-between p-6 text-center animate-fade-in">
+                
+                <!-- Content Wrapper (Center) -->
+                <div class="flex-1 flex flex-col items-center justify-center w-full">
+                    <h1 class="text-2xl md:text-4xl font-bold mb-8 brand-font text-gray-700 dark:text-white">เลือกพื้นที่ที่คุณต้องการแสดง</h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
+                        <!-- Code Space Button -->
+                        <div onclick="window.enterApp('code')" class="group bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer border-b-8 border-green-500 flex flex-col items-center justify-center h-64 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-green-500 opacity-0 group-hover:opacity-5 transition-opacity"></div>
+                            <i class="fas fa-code-branch text-5xl md:text-7xl text-green-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                            <h2 class="text-xl md:text-2xl font-bold brand-font text-gray-800 dark:text-white">Code Space</h2>
+                            <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">เขียนและเก็บโค้ด</p>
+                        </div>
+
+                        <!-- To Do List Button -->
+                        <div onclick="window.enterApp('todo')" class="group bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer border-b-8 border-blue-500 flex flex-col items-center justify-center h-64 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-5 transition-opacity"></div>
+                            <i class="fas fa-check-circle text-5xl md:text-7xl text-blue-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                            <h2 class="text-xl md:text-2xl font-bold brand-font text-gray-800 dark:text-white">To Do List</h2>
+                            <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">รายการสิ่งที่ต้องทำ</p>
+                        </div>
+
+                        <!-- Mathematics Button -->
+                        <div onclick="window.enterApp('math')" class="group bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer border-b-8 border-purple-500 flex flex-col items-center justify-center h-64 relative overflow-hidden">
+                            <div class="absolute top-4 right-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 animate-pulse">BETA</div>
+                            <div class="absolute inset-0 bg-purple-500 opacity-0 group-hover:opacity-5 transition-opacity"></div>
+                            <i class="fas fa-calculator text-5xl md:text-7xl text-purple-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                            <h2 class="text-xl md:text-2xl font-bold brand-font text-gray-800 dark:text-white">Mathematics</h2>
+                            <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">คำนวณอัจฉริยะ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Credit -->
+                <footer class="mt-8 text-xs md:text-sm text-gray-500 dark:text-gray-400 animate-fade-in pb-4">
+                    Developed by <span class="font-bold text-gray-700 dark:text-gray-300">Sarayut Angko</span><br>
+                    <span class="opacity-75">Nongphai School</span>
+                </footer>
+
+            </div>
+        </div>
+
+        <!-- === APP 1: CODE SPACE === -->
+
+        <!-- 1.1 CODE DASHBOARD -->
+        <div id="page-code-home" class="page-section overflow-y-auto">
+            <div class="min-h-full flex flex-col items-center justify-between p-6 text-center">
+                <div class="flex-1 flex flex-col items-center justify-center w-full">
+                    <div class="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-3xl shadow-xl w-full max-w-sm md:max-w-2xl border border-green-100 dark:border-green-800">
+                        <i class="fas fa-laptop-code text-6xl md:text-8xl text-green-500 mb-6 inline-block animate-bounce"></i>
+                        <h1 class="text-2xl md:text-4xl font-bold mb-2 brand-font">ยินดีต้อนรับสู่ Code Space</h1>
+                        <p class="text-gray-600 dark:text-gray-400 mb-8 text-sm md:text-lg">เริ่มสร้างสรรค์ผลงานใหม่ได้เลย</p>
+                        <div class="flex flex-col md:flex-row gap-3 md:gap-6 justify-center">
+                            <button onclick="window.startNewCode()" class="w-full md:w-auto md:px-10 bg-green-600 text-white font-bold py-3 md:py-4 rounded-xl shadow active:scale-95 transition md:text-lg">
+                                <i class="fas fa-plus mr-2"></i> สร้างงานใหม่
+                            </button>
+                            <button onclick="window.loadList()" class="w-full md:w-auto md:px-10 bg-white text-green-600 border border-green-600 font-bold py-3 md:py-4 rounded-xl shadow active:scale-95 transition md:text-lg">
+                                <i class="fas fa-folder-open mr-2"></i> ดูงานเก่า
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Footer Credit -->
+                <footer class="mt-8 text-xs md:text-sm text-gray-500 dark:text-gray-400 pb-4">
+                    Developed by <span class="font-bold text-gray-700 dark:text-gray-300">Sarayut Angko</span><br>
+                    <span class="opacity-75">Nongphai School</span>
+                </footer>
+            </div>
+        </div>
+
+        <!-- 1.2 CREATE -->
+        <div id="page-create" class="page-section bg-white dark:bg-gray-900">
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-14 md:h-16 flex items-center justify-between px-3 md:px-6 shrink-0 transition-all gap-2">
+                <button onclick="window.showPage('code-home')" class="text-gray-500 p-2 md:p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"><i class="fas fa-arrow-left md:text-lg"></i></button>
+                <input type="text" id="codeTitle" placeholder="ตั้งชื่อผลงาน..." class="flex-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-green-500 text-gray-700 dark:text-gray-200 text-center font-bold text-sm md:text-xl focus:outline-none transition-colors px-2 py-1 placeholder-gray-400" autocomplete="off">
+                <button onclick="window.insertTemplate()" class="text-xs md:text-base bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 transition font-bold">Template</button>
+            </div>
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+                <div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 relative">
+                    <div class="flex-1 flex relative overflow-hidden bg-gray-50 dark:bg-[#0d1117]">
+                        <div id="lineNumbers" class="w-10 md:w-12 pt-4 md:pt-6 pb-20 px-1 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-sm md:text-base overflow-hidden border-r border-gray-300 dark:border-gray-700 font-mono text-right select-none">1</div>
+                        <textarea id="codeEditor" class="flex-1 p-4 md:p-6 pb-20 w-full h-full resize-none code-font text-sm md:text-base text-gray-800 dark:text-green-400 focus:outline-none whitespace-pre overflow-auto grid-background" placeholder="<!-- เขียนโค้ดที่นี่ -->" spellcheck="false"></textarea>
+                        <div id="lineCountSummary" class="absolute bottom-4 right-4 bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 text-xs px-3 py-1 rounded-full shadow-md border border-gray-200 dark:border-gray-700 select-none pointer-events-none backdrop-blur-sm z-10">1 บรรทัด</div>
+                    </div>
+                </div>
+                <div id="previewContainer" class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col bg-white dark:bg-black">
+                    <div class="h-8 md:h-12 bg-gray-100 dark:bg-gray-800 flex items-center justify-between px-3 md:px-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
+                        <span class="text-[10px] md:text-sm font-bold uppercase text-gray-500 tracking-wider">Preview</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="window.togglePreviewFullScreen()" class="text-gray-500 hover:text-green-600 transition p-1" title="ดูผลลัพธ์เต็มจอ"><i class="fas fa-expand text-xs md:text-base"></i></button>
+                            <button onclick="window.updatePreview()" class="text-gray-500 hover:text-green-600 transition p-1" title="รีเฟรช"><i class="fas fa-sync-alt text-xs md:text-base"></i></button>
+                        </div>
+                    </div>
+                    <iframe id="previewFrame" class="flex-1 w-full h-full border-none bg-white"></iframe>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 md:p-5 flex justify-between items-center shadow-lg shrink-0 z-20">
+                <div class="text-xs md:text-base text-gray-400 flex items-center"><div class="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-500 mr-2"></div> <span id="statusMsg">พร้อม</span></div>
+                <button onclick="window.saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-6 md:px-10 rounded-lg shadow active:scale-95 transition w-32 md:w-auto md:min-w-[150px] md:text-lg">บันทึก</button>
+            </div>
+        </div>
+
+        <div id="page-list" class="page-section bg-gray-50 dark:bg-gray-900 overflow-y-auto">
+            <div class="max-w-4xl mx-auto p-4 md:p-8 pb-20 flex flex-col min-h-full">
+                <div class="flex items-center mb-4 md:mb-8">
+                    <button onclick="window.showPage('code-home')" class="mr-3 md:mr-5 bg-white dark:bg-gray-800 p-2 md:p-3 rounded-full shadow hover:scale-105 transition"><i class="fas fa-arrow-left md:text-xl"></i></button>
+                    <h2 class="text-xl md:text-3xl font-bold brand-font">รายการงาน</h2>
+                </div>
+                <div id="listContainer" class="grid gap-3 md:gap-5">
+                    <div class="text-center py-10 text-gray-400 col-span-full"><i class="fas fa-circle-notch fa-spin text-2xl md:text-4xl"></i><br>กำลังโหลด...</div>
+                </div>
+                <div class="flex-1"></div>
+                <footer class="mt-8 text-xs md:text-sm text-gray-500 dark:text-gray-400 text-center">Developed by <span class="font-bold text-gray-700 dark:text-gray-300">Sarayut Angko</span><br><span class="opacity-75">Nongphai School</span></footer>
+            </div>
+        </div>
+
+        <div id="page-view" class="page-section bg-white w-full h-full relative">
+            <iframe id="fullViewFrame" class="w-full h-full border-none block"></iframe>
+            <div id="viewLoading" class="absolute inset-0 bg-white flex items-center justify-center z-20 hidden"><i class="fas fa-seedling fa-spin text-4xl md:text-6xl text-green-500"></i></div>
+            <div class="absolute bottom-6 right-6 flex gap-3 z-30">
+                <button onclick="window.shareCurrentView()" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="แชร์หน้านี้"><i class="fas fa-share-alt text-xl"></i></button>
+                <button id="viewBackButton" onclick="window.goBackToList()" class="bg-gray-800 hover:bg-gray-900 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="กลับหน้ารายการ"><i class="fas fa-arrow-left text-xl"></i></button>
+            </div>
+        </div>
+
+        <!-- === APP 2: TO DO LIST === -->
+        <div id="page-todo" class="page-section bg-gray-50 dark:bg-gray-900 overflow-hidden">
+            <div class="flex flex-col h-full max-w-4xl mx-auto w-full p-4 md:p-8">
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl md:text-4xl font-bold brand-font text-blue-600 dark:text-blue-400 mb-2">สิ่งที่ต้องทำ</h1>
+                    <p class="text-gray-500 text-sm">จัดการงานของคุณอย่างเป็นระเบียบ</p>
+                </div>
+                <div class="flex gap-3 mb-6">
+                    <input type="text" id="todoInput" placeholder="เพิ่มงานใหม่..." class="flex-1 bg-white dark:bg-gray-800 border-none shadow-md rounded-xl px-6 py-4 focus:ring-2 focus:ring-blue-500 outline-none text-lg" onkeypress="if(event.key === 'Enter') window.addTodo()">
+                    <button onclick="window.addTodo()" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl shadow-md transition active:scale-95"><i class="fas fa-plus fa-lg"></i></button>
+                </div>
+                <div id="todoContainer" class="flex-1 overflow-y-auto space-y-3 pr-2 pb-2"></div>
+                <footer class="mt-4 text-xs md:text-sm text-gray-500 dark:text-gray-400 text-center shrink-0">Developed by <span class="font-bold text-gray-700 dark:text-gray-300">Sarayut Angko</span><br><span class="opacity-75">Nongphai School</span></footer>
+            </div>
+        </div>
+
+        <!-- === APP 3: MATHEMATICS === -->
+        <div id="page-math" class="page-section bg-gray-50 dark:bg-gray-900 overflow-hidden">
+            <!-- Greeting Overlay -->
+            <div id="mathGreeting" class="absolute inset-0 bg-purple-900/90 backdrop-blur-md z-40 flex flex-col items-center justify-center text-center p-8 text-white">
+                <i class="fas fa-calculator text-8xl mb-6 animate-pulse"></i>
+                <h1 class="text-4xl md:text-6xl font-bold brand-font mb-4">ยินดีต้อนรับสู่ Math Zone</h1>
+                <p class="text-lg md:text-2xl mb-8 max-w-xl text-purple-200">เครื่องมือคำนวณอัจฉริยะ พร้อมฟังก์ชันทางคณิตศาสตร์ครบครัน</p>
+                <button onclick="window.enterMathMode()" class="bg-white text-purple-900 font-bold py-4 px-10 rounded-full shadow-2xl hover:scale-105 transition text-xl">เริ่มคำนวณ</button>
+            </div>
+
+            <div class="w-full h-full flex items-center justify-center p-4">
+                <div class="bg-white dark:bg-gray-800 w-full max-w-md md:max-w-4xl h-full md:h-auto md:max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-purple-100 dark:border-purple-900">
+                    <!-- Display -->
+                    <div class="bg-gray-100 dark:bg-black p-6 pt-10 text-right shrink-0 border-b border-gray-200 dark:border-gray-700 h-auto min-h-[16rem] flex flex-col justify-end gap-2 relative">
+                        <div id="calcHistory" class="text-gray-500 dark:text-gray-400 text-sm md:text-lg overflow-hidden whitespace-nowrap text-ellipsis h-6 mb-2"></div>
+                        <input type="text" id="calcInput" class="w-full bg-transparent text-gray-800 dark:text-white text-4xl md:text-6xl font-mono text-right focus:outline-none mb-4 caret-purple-500" placeholder="0" autocomplete="off">
+                        <div class="w-full border-t border-gray-200 dark:border-gray-700 pt-3 mt-1">
+                            <div id="calcResultSmart" class="text-purple-600 dark:text-purple-400 text-sm md:text-xl font-mono font-bold min-h-[1.5rem] break-all"></div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex-1 p-4 grid grid-cols-5 gap-2 md:gap-3 overflow-y-auto">
+                        <button onclick="window.calcKey('sin(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">sin</button>
+                        <button onclick="window.calcKey('cos(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">cos</button>
+                        <button onclick="window.calcKey('tan(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">tan</button>
+                        <button onclick="window.calcKey('(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">(</button>
+                        <button onclick="window.calcKey(')')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">)</button>
+
+                        <button onclick="window.calcKey('asin(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">asin</button>
+                        <button onclick="window.calcKey('acos(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">acos</button>
+                        <button onclick="window.calcKey('atan(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs md:text-base">atan</button>
+                        <button onclick="window.calcKey('^')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">^</button>
+                        <button onclick="window.calcKey('sqrt(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">√</button>
+
+                        <button onclick="window.calcKey('7')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">7</button>
+                        <button onclick="window.calcKey('8')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">8</button>
+                        <button onclick="window.calcKey('9')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">9</button>
+                        <button onclick="window.calcCmd('DEL')" class="calc-btn bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">DEL</button>
+                        <button onclick="window.calcCmd('AC')" class="calc-btn bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">AC</button>
+
+                        <button onclick="window.calcKey('4')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">4</button>
+                        <button onclick="window.calcKey('5')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">5</button>
+                        <button onclick="window.calcKey('6')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">6</button>
+                        <button onclick="window.calcKey('*')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">×</button>
+                        <button onclick="window.calcKey('/')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">÷</button>
+
+                        <button onclick="window.calcKey('1')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">1</button>
+                        <button onclick="window.calcKey('2')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">2</button>
+                        <button onclick="window.calcKey('3')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">3</button>
+                        <button onclick="window.calcKey('+')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">+</button>
+                        <button onclick="window.calcKey('-')" class="calc-btn bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xl">-</button>
+
+                        <button onclick="window.calcKey('0')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl col-span-2">0</button>
+                        <button onclick="window.calcKey('.')" class="calc-btn bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white text-xl">.</button>
+                        <button onclick="window.calcKey('i')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 italic">i</button>
+                        <button onclick="window.calculate()" class="calc-btn bg-purple-600 hover:bg-purple-700 text-white text-2xl shadow-lg">=</button>
+
+                        <button onclick="window.calcKey('pi')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">π</button>
+                        <button onclick="window.calcKey('e')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300">e</button>
+                        <button onclick="window.calcKey('abs(')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">abs</button>
+                        <button onclick="window.calcKey('true')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">T</button>
+                        <button onclick="window.calcKey('false')" class="calc-btn bg-purple-50 dark:bg-gray-700 text-purple-700 dark:text-purple-300 text-xs">F</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Config Modal -->
+    <div id="configModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onclick="if(event.target === this) window.toggleConfig()">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-xs rounded-2xl p-5 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg brand-font select-none" onclick="window.countEasterEgg()">ตั้งค่า</h3>
+                <button onclick="window.toggleConfig()" class="text-gray-400 p-2"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm"><i class="fas fa-moon mr-2 text-green-600"></i>โหมดมืด</span>
+                    <input type="checkbox" id="darkModeToggle" class="accent-green-600 w-5 h-5" onchange="window.toggleDarkMode()">
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                    <div onclick="document.getElementById('apiSettings').classList.toggle('hidden')" class="text-xs text-center text-gray-500 underline cursor-pointer pb-1">ตั้งค่า API (แตะเพื่อเปิด)</div>
+                    <div id="apiSettings" class="hidden space-y-2 mt-2">
+                        <input type="text" id="apiUrlInput" placeholder="Web App URL" class="w-full text-xs p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
+                        <input type="password" id="apiPassInput" placeholder="Password" class="w-full text-xs p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
+                    </div>
+                </div>
+                <button onclick="window.saveConfig()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg shadow active:scale-95 transition">บันทึก</button>
+                <button id="btnErrorEgg" onclick="window.startGlitch()" class="hidden w-full bg-red-600 hover:bg-red-800 text-white font-bold font-mono py-2 mt-4 rounded-lg shadow-lg animate-pulse transition">ROOTS</button>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
+                <p class="text-xs text-gray-400 dark:text-gray-500">Developed by <span class="font-semibold text-gray-600 dark:text-gray-300">Sarayut Angko</span><br>Nongphai School</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl z-[70] text-sm font-bold whitespace-nowrap">
+        <span id="toastMsg">Notification</span>
+    </div>
+
+    <script>
+        window.currentEditingId = null;
+        window.currentViewId = null;
+        window.currentApp = 'select';
+        
+        // --- SIDEBAR LOGIC ---
+        window.targetHoliday = null;
+
+        window.toggleRightSidebar = function() {
+            const sidebar = document.getElementById('rightSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar.classList.contains('translate-x-full')) {
+                sidebar.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+                window.initSidebar();
+            } else {
+                sidebar.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        window.initSidebar = function() {
+            window.updateTime();
+            window.updateHolidayInfo();
+            window.generateCalendar();
+            
+            if(!window.clockInterval) {
+                window.clockInterval = setInterval(() => {
+                    window.updateTime();
+                    window.updateHolidayInfo();
+                }, 1000);
+            }
+        }
+
+        window.updateTime = function() {
+            const now = new Date();
+            document.getElementById('sidebarTime').innerText = now.toLocaleTimeString('th-TH');
+            document.getElementById('sidebarDate').innerText = now.toLocaleDateString('th-TH', { 
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+            });
+        }
+        
+        // Thai Holidays
+        window.holidays = [
+            // 2025
+            { d: '2025-01-01', n: 'วันขึ้นปีใหม่' }, { d: '2025-02-12', n: 'วันมาฆบูชา' }, { d: '2025-04-06', n: 'วันจักรี' }, { d: '2025-04-13', n: 'วันสงกรานต์' }, { d: '2025-04-14', n: 'วันสงกรานต์' }, { d: '2025-04-15', n: 'วันสงกรานต์' }, { d: '2025-05-04', n: 'วันฉัตรมงคล' }, { d: '2025-05-11', n: 'วันวิสาขบูชา' }, { d: '2025-06-03', n: 'วันเฉลิมฯ ราชินี' }, { d: '2025-07-10', n: 'วันอาสาฬหบูชา' }, { d: '2025-07-11', n: 'วันเข้าพรรษา' }, { d: '2025-07-28', n: 'วันเฉลิมฯ ร.10' }, { d: '2025-08-12', n: 'วันแม่แห่งชาติ' }, { d: '2025-10-13', n: 'วันคล้ายวันสวรรคต ร.9' }, { d: '2025-10-23', n: 'วันปิยมหาราช' }, { d: '2025-12-05', n: 'วันพ่อแห่งชาติ' }, { d: '2025-12-10', n: 'วันรัฐธรรมนูญ' }, { d: '2025-12-31', n: 'วันสิ้นปี' },
+            // 2026
+            { d: '2026-01-01', n: 'วันขึ้นปีใหม่' }, { d: '2026-03-03', n: 'วันมาฆบูชา' }, { d: '2026-04-06', n: 'วันจักรี' }, { d: '2026-04-13', n: 'วันสงกรานต์' }, { d: '2026-04-14', n: 'วันสงกรานต์' }, { d: '2026-04-15', n: 'วันสงกรานต์' }, { d: '2026-05-01', n: 'วันแรงงาน' }, { d: '2026-05-04', n: 'วันฉัตรมงคล' }, { d: '2026-05-31', n: 'วันวิสาขบูชา' }, { d: '2026-06-03', n: 'วันเฉลิมฯ ราชินี' }, { d: '2026-07-28', n: 'วันเฉลิมฯ ร.10' }, { d: '2026-07-29', n: 'วันอาสาฬหบูชา' }, { d: '2026-07-30', n: 'วันเข้าพรรษา' }, { d: '2026-08-12', n: 'วันแม่แห่งชาติ' }, { d: '2026-10-13', n: 'วันคล้ายวันสวรรคต ร.9' }, { d: '2026-10-23', n: 'วันปิยมหาราช' }, { d: '2026-12-05', n: 'วันพ่อแห่งชาติ' }, { d: '2026-12-10', n: 'วันรัฐธรรมนูญ' }, { d: '2026-12-31', n: 'วันสิ้นปี' }
+        ];
+
+        window.updateHolidayInfo = function() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            let targetDate = null;
+            let targetName = "";
+            let isLongWeekend = false;
+
+            for (let i = 1; i <= 365; i++) {
+                const nextDate = new Date(today);
+                nextDate.setDate(today.getDate() + i);
+                
+                const year = nextDate.getFullYear();
+                const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+                const day = String(nextDate.getDate()).padStart(2, '0');
+                const dateKey = `${year}-${month}-${day}`;
+                
+                const holiday = window.holidays.find(h => h.d === dateKey);
+                const dayOfWeek = nextDate.getDay();
+
+                if (holiday) {
+                    targetDate = nextDate;
+                    targetName = holiday.n;
+                    const prevDate = new Date(nextDate); prevDate.setDate(nextDate.getDate() - 1);
+                    const nextNextDate = new Date(nextDate); nextNextDate.setDate(nextDate.getDate() + 1);
+                    if (dayOfWeek === 1 || dayOfWeek === 5 || prevDate.getDay() === 0 || nextNextDate.getDay() === 6) isLongWeekend = true;
+                    break; 
+                }
+                if (dayOfWeek === 6 || dayOfWeek === 0) {
+                     targetDate = nextDate;
+                     targetName = "วันหยุดสุดสัปดาห์";
+                     break;
+                }
+            }
+            
+            window.targetHoliday = targetDate;
+
+            if (targetDate) {
+                const diffMs = targetDate.getTime() - now.getTime();
+                const diffDaysCeil = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                const totalMsIn5Days = 5 * 24 * 60 * 60 * 1000;
+                let percent = Math.max(0, Math.min(100, (1 - (diffMs / totalMsIn5Days)) * 100));
+                
+                document.getElementById('holidayTargetName').innerText = targetName;
+                const countdownEl = document.getElementById('holidayCountdown');
+                countdownEl.innerText = `อีก ${diffDaysCeil} วัน`;
+                countdownEl.className = "text-lg font-bold text-gray-800 dark:text-gray-100";
+                
+                document.getElementById('holidayPercent').innerText = `${Math.round(percent)}%`;
+                
+                const progressEl = document.getElementById('holidayProgress');
+                progressEl.style.width = `${percent}%`;
+                
+                // Color Logic
+                progressEl.className = "h-3 rounded-full transition-all duration-1000 shadow-lg relative overflow-hidden " + 
+                    (percent > 80 ? "bg-green-500" : percent > 40 ? "bg-yellow-500" : "bg-red-500");
+
+                const isDayBefore = diffDaysCeil <= 1;
+                const isChillTime = now.getHours() > 15 || (now.getHours() === 15 && now.getMinutes() >= 30);
+                
+                if (isDayBefore && isChillTime) {
+                    countdownEl.innerText = "เวลาพักผ่อนของคุณกำลังมา! 🏖️";
+                    countdownEl.className = "text-lg font-bold text-purple-600 dark:text-purple-400 animate-pulse";
+                    progressEl.className = "h-3 rounded-full shadow-lg relative overflow-hidden bg-rainbow"; 
+                    progressEl.style.width = "100%";
+                }
+                
+                const longWkInfo = document.getElementById('longWeekendInfo');
+                if (isLongWeekend) {
+                    longWkInfo.classList.remove('hidden');
+                    document.getElementById('longWeekendDetail').innerText = targetName;
+                } else {
+                    longWkInfo.classList.add('hidden');
+                }
+            }
+        }
+
+        window.generateCalendar = function() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const todayDate = now.getDate();
+            
+            const firstDay = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const startingDay = firstDay.getDay(); 
+
+            const container = document.getElementById('sidebarCalendar');
+            let html = `
+                <div class="text-center font-bold mb-3 text-gray-700 dark:text-gray-300 text-lg">
+                    ${now.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}
+                </div>
+                <div class="calendar-grid mb-4">
+                    <div class="text-center text-xs font-bold text-red-500 mb-2 uppercase">อา</div>
+                    <div class="text-center text-xs font-bold text-gray-400 mb-2 uppercase">จ</div>
+                    <div class="text-center text-xs font-bold text-gray-400 mb-2 uppercase">อ</div>
+                    <div class="text-center text-xs font-bold text-gray-400 mb-2 uppercase">พ</div>
+                    <div class="text-center text-xs font-bold text-gray-400 mb-2 uppercase">พฤ</div>
+                    <div class="text-center text-xs font-bold text-gray-400 mb-2 uppercase">ศ</div>
+                    <div class="text-center text-xs font-bold text-purple-500 mb-2 uppercase">ส</div>
+            `;
+
+            for (let i = 0; i < startingDay; i++) {
+                html += `<div></div>`;
+            }
+
+            // Target holiday for range highlight
+            const target = window.targetHoliday;
+            const targetDay = target && target.getMonth() === month && target.getFullYear() === year ? target.getDate() : null;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = day === todayDate;
+                const holiday = window.holidays.find(h => h.d === dateKey);
+                const isTarget = day === targetDay;
+                
+                // --- FIXED STYLES (No @apply) ---
+                let classes = "text-center text-xs py-2 rounded-lg cursor-default relative transition-colors ";
+                let title = "";
+
+                if (isToday) {
+                    classes += "bg-green-600 text-white font-bold shadow-md ring-2 ring-green-300 z-20";
+                    title = "วันนี้";
+                } else if (isTarget) {
+                    classes += "ring-2 ring-red-500 text-red-600 font-bold bg-red-50 dark:bg-red-900/30 z-10";
+                    title = "วันหยุดเป้าหมาย";
+                } else if (holiday) {
+                    classes += "bg-red-100 text-red-600 font-bold dark:bg-red-900/50 dark:text-red-300";
+                    title = holiday.n;
+                } else {
+                    classes += "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300";
+                }
+
+                // Range Highlight
+                if (targetDay && day > todayDate && day < targetDay) {
+                    classes += " bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300";
+                }
+
+                html += `<div class="${classes}" title="${title}">${day}</div>`;
+            }
+
+            html += `</div>`;
+
+            // List upcoming holidays
+            html += `<div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+                <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">วันหยุดเร็วๆ นี้</h4>
+                <div class="space-y-2">`;
+            
+            let count = 0;
+            const todayStr = new Date().toISOString().split('T')[0];
+            const sortedHolidays = window.holidays.sort((a, b) => new Date(a.d) - new Date(b.d));
+            
+            for (const h of sortedHolidays) {
+                if (h.d >= todayStr && count < 3) {
+                    const hDate = new Date(h.d);
+                    const dayStr = hDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+                    const diffDays = Math.ceil((hDate - now) / (1000 * 60 * 60 * 24));
+                    
+                    let badge = diffDays === 0 ? '<span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">วันนี้</span>' : 
+                               (diffDays <= 7 ? `<span class="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded">อีก ${diffDays} วัน</span>` : '');
+                    
+                    html += `
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                                <span class="text-gray-700 dark:text-gray-300 truncate max-w-[120px]">${h.n}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                ${badge}
+                                <span class="text-gray-400 text-xs font-mono">${dayStr}</span>
+                            </div>
+                        </div>`;
+                    count++;
+                }
+            }
+            if (count === 0) html += `<div class="text-xs text-gray-400 text-center py-2">ไม่มีวันหยุดเร็วๆ นี้</div>`;
+            html += `</div></div>`;
+            
+            container.innerHTML = html;
+        }
+
+        // --- NAVIGATION ---
+        window.enterApp = function(app) {
+            window.currentApp = app;
+            window.updateNavbar();
+            if (app === 'code') window.showPage('code-home');
+            else if (app === 'todo') window.showPage('todo');
+            else if (app === 'math') window.showPage('math');
+        }
+
+        window.backToSelection = function() {
+            window.currentApp = 'select';
+            window.updateNavbar();
+            window.showPage('select');
+        }
+
+        window.updateNavbar = function() {
+            const navbar = document.getElementById('mainNavbar');
+            const navMenu = document.getElementById('navMenu');
+            const navTitle = document.getElementById('navTitle');
+            const navIcon = document.getElementById('navIcon');
+
+            navbar.className = "text-white shadow-lg z-50 shrink-0 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-colors duration-500";
+
+            if (window.currentApp === 'select') {
+                navbar.classList.add('bg-gray-800');
+                navTitle.innerText = "Tonkla's Space";
+                navIcon.className = "fas fa-cubes fa-lg md:text-2xl mr-3";
+                navMenu.innerHTML = `<button onclick="window.toggleConfig()" class="p-2 rounded-full hover:bg-gray-700 transition"><i class="fas fa-cog text-xl"></i></button>`;
+            } 
+            else if (window.currentApp === 'code') {
+                navbar.classList.add('bg-green-600');
+                navTitle.innerText = "Code Space";
+                navIcon.className = "fas fa-code fa-lg md:text-2xl mr-3";
+                navMenu.innerHTML = `
+                    <button onclick="window.backToSelection()" class="p-2 rounded-full hover:bg-green-500 transition mr-2" title="Home"><i class="fas fa-home"></i></button>
+                    <button onclick="window.showPage('create')" class="p-2 rounded-full hover:bg-green-500 transition"><i class="fas fa-pen"></i></button>
+                    <button onclick="window.loadList()" class="p-2 rounded-full hover:bg-green-500 transition"><i class="fas fa-folder"></i></button>
+                    <button onclick="window.toggleConfig()" class="p-2 rounded-full hover:bg-green-500 transition"><i class="fas fa-cog"></i></button>
+                `;
+            } 
+            else if (window.currentApp === 'todo') {
+                navbar.classList.add('bg-blue-600');
+                navTitle.innerText = "To Do List";
+                navIcon.className = "fas fa-check-double fa-lg md:text-2xl mr-3";
+                navMenu.innerHTML = `
+                    <button onclick="window.backToSelection()" class="p-2 rounded-full hover:bg-blue-500 transition mr-2"><i class="fas fa-home"></i></button>
+                    <button onclick="window.toggleConfig()" class="p-2 rounded-full hover:bg-blue-500 transition"><i class="fas fa-cog"></i></button>
+                `;
+            }
+            else if (window.currentApp === 'math') {
+                navbar.classList.add('bg-purple-600');
+                navTitle.innerText = "Mathematics";
+                navIcon.className = "fas fa-calculator fa-lg md:text-2xl mr-3";
+                navMenu.innerHTML = `
+                    <button onclick="window.backToSelection()" class="p-2 rounded-full hover:bg-purple-500 transition mr-2"><i class="fas fa-home"></i></button>
+                    <button onclick="window.toggleConfig()" class="p-2 rounded-full hover:bg-purple-500 transition"><i class="fas fa-cog"></i></button>
+                `;
+            }
+        }
+
+        window.showPage = function(pageId) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('page-' + pageId);
+            if(target) target.classList.add('active');
+            
+            const navbar = document.getElementById('mainNavbar');
+            if (pageId === 'view') navbar.classList.add('hidden');
+            else navbar.classList.remove('hidden');
+            
+            if (pageId !== 'view' && pageId !== 'list') {
+                try { history.pushState("", document.title, window.location.pathname); } catch(e){}
+            }
+        }
+
+        window.goBackToList = function() { window.showPage('list'); window.loadList(); }
+
+        // --- MATH LOGIC ---
+        window.enterMathMode = function() {
+            document.getElementById('mathGreeting').classList.add('hidden');
+            const input = document.getElementById('calcInput');
+            if (input) {
+                input.focus();
+            }
+        }
+
+        window.calcInputStr = "";
+        
+        window.calcKey = function(key) {
+            window.calcInputStr += key;
+            document.getElementById('calcInput').value = window.calcInputStr;
+        }
+
+        window.calcCmd = function(cmd) {
+            if (cmd === 'AC') {
+                window.calcInputStr = "";
+                document.getElementById('calcResultSmart').innerText = "";
+            } else if (cmd === 'DEL') {
+                window.calcInputStr = window.calcInputStr.slice(0, -1);
+            }
+            document.getElementById('calcInput').value = window.calcInputStr;
+        }
+
+        window.calculate = function() {
+            const display = document.getElementById('calcInput');
+            const smartDisplay = document.getElementById('calcResultSmart');
+            const history = document.getElementById('calcHistory');
+            
+            try {
+                let expr = window.calcInputStr;
+                const result = math.evaluate(expr);
+                
+                history.innerText = expr + " =";
+                display.value = result;
+                
+                let smartText = "";
+                
+                // Helper: Simplify sqrt(n) -> { k, surd }
+                const simplifySqrt = (num) => {
+                    let coef = 1;
+                    let surd = num;
+                    for (let i = 2; i * i <= surd; i++) {
+                        while (surd % (i * i) === 0) {
+                            coef *= i;
+                            surd /= (i * i);
+                        }
+                    }
+                    return { k: coef, s: surd };
+                };
+
+                // 1. Fractions (Lowest Term & Rationalize)
+                try {
+                    const frac = math.fraction(result);
+                    if (frac.d !== 1 && frac.d < 5000) {
+                        smartText += `เศษส่วน: ${frac.n}/${frac.d}  `;
+                    }
+                } catch(e) {}
+
+                // 2. Trigonometry Inverse
+                if (Math.abs(result) <= 1) {
+                    const deg = (Math.asin(result) * 180 / Math.PI).toFixed(2);
+                    smartText += `| มุม: ${deg}°  `;
+                }
+
+                // 3. Roots & Surd Fractions (Heuristic check)
+                if (!Number.isInteger(result)) {
+                    const sq = result * result;
+                    const roundedSq = Math.round(sq);
+                    
+                    // Case A: Pure Root (e.g. sqrt(12) -> 2√3)
+                    if (Math.abs(sq - roundedSq) < 1e-9) {
+                        const simp = simplifySqrt(roundedSq);
+                        let rootStr = `√${roundedSq}`;
+                        if (simp.k !== 1) {
+                            rootStr += ` = ${simp.k}√${simp.s}`;
+                        }
+                        smartText += (smartText ? " | " : "") + `ราก: ${rootStr}`;
+                    } else {
+                        // Case B: Fraction with Root (e.g. sqrt(3)/2 -> sq = 3/4)
+                        try {
+                            const f = math.fraction(sq);
+                            if (f.d < 5000 && f.n < 50000) {
+                                let rootStr = `√(${f.n}/${f.d})`;
+                                
+                                const numSimp = simplifySqrt(f.n);
+                                const denSimp = simplifySqrt(f.d);
+                                
+                                // Rationalize: (nK√nS) / (dK√dS) -> multiply by √dS
+                                let topCoef = numSimp.k;
+                                let topSurd = numSimp.s * denSimp.s;
+                                let botVal = denSimp.k * denSimp.s;
+                                
+                                const topSimp = simplifySqrt(topSurd);
+                                topCoef *= topSimp.k;
+                                topSurd = topSimp.s;
+                                
+                                const common = math.gcd(topCoef, botVal);
+                                topCoef /= common;
+                                botVal /= common;
+                                
+                                let str = "";
+                                if (topCoef !== 1 || topSurd === 1) str += topCoef;
+                                if (topSurd !== 1) str += `√${topSurd}`;
+                                if (str === "") str = "1";
+                                if (botVal !== 1) str += `/${botVal}`;
+                                
+                                rootStr += ` = ${str}`;
+                                smartText += (smartText ? " | " : "") + `รูทเศษส่วน: ${rootStr}`;
+                            }
+                        } catch(e) {}
+                    }
+                }
+                
+                if (smartText) smartText = "รูปอย่างง่าย: " + smartText;
+                smartDisplay.innerText = smartText;
+                window.calcInputStr = result.toString();
+
+            } catch (e) {
+                display.value = "Error";
+                window.calcInputStr = "";
+            }
+        }
+
+        // --- TODO LOGIC (Same as before) ---
+        window.todos = JSON.parse(localStorage.getItem('tonkla_todos')) || [];
+        window.renderTodos = function() {
+            const container = document.getElementById('todoContainer');
+            if (window.todos.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 mt-10">ไม่มีงานค้าง สบายจัง!</div>'; return; }
+            let html = '';
+            window.todos.forEach((todo, index) => {
+                html += `
+                    <div class="flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm hover:shadow-md transition group border-l-4 border-blue-500">
+                        <label class="flex items-center gap-4 cursor-pointer flex-1">
+                            <input type="checkbox" class="todo-checkbox w-6 h-6 accent-blue-600 rounded cursor-pointer" ${todo.done ? 'checked' : ''} onchange="window.toggleTodo(${index})">
+                            <div class="${todo.done ? 'text-gray-400 line-through' : 'text-gray-800 dark:text-gray-200 text-lg'} transition-all">${todo.text}</div>
+                        </label>
+                        <button onclick="window.deleteTodo(${index})" class="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-trash"></i></button>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+        window.addTodo = function() {
+            const input = document.getElementById('todoInput');
+            if (input.value.trim()) { window.todos.unshift({ text: input.value.trim(), done: false }); localStorage.setItem('tonkla_todos', JSON.stringify(window.todos)); input.value = ''; window.renderTodos(); }
+        }
+        window.toggleTodo = function(i) { window.todos[i].done = !window.todos[i].done; localStorage.setItem('tonkla_todos', JSON.stringify(window.todos)); window.renderTodos(); }
+        window.deleteTodo = function(i) { window.todos.splice(i, 1); localStorage.setItem('tonkla_todos', JSON.stringify(window.todos)); window.renderTodos(); }
+
+        // --- CODE SPACE LOGIC ---
+        window.toggleConfig = function() { document.getElementById('configModal').classList.toggle('hidden'); }
+        window.initTheme = function() {
+            try {
+                const isDark = localStorage.getItem('tonkla_theme') === 'dark';
+                if(isDark) document.documentElement.classList.add('dark');
+                document.getElementById('darkModeToggle').checked = isDark;
+                const urlParams = new URLSearchParams(window.location.search);
+                const apiParam = urlParams.get('api');
+                if(apiParam) { try { const d = atob(apiParam); if(d.startsWith('http')) localStorage.setItem('codeKeeper_url', d); } catch(e){} }
+                document.getElementById('apiUrlInput').value = localStorage.getItem('codeKeeper_url') || '';
+                document.getElementById('apiPassInput').value = localStorage.getItem('codeKeeper_pass') || '';
+            } catch(e){}
+        }
+        window.toggleDarkMode = function() {
+            const isDark = document.getElementById('darkModeToggle').checked;
+            if(isDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark');
+            localStorage.setItem('tonkla_theme', isDark ? 'dark' : 'light');
+        }
+        window.saveConfig = function() {
+            localStorage.setItem('codeKeeper_url', document.getElementById('apiUrlInput').value.trim());
+            localStorage.setItem('codeKeeper_pass', document.getElementById('apiPassInput').value.trim());
+            window.toggleConfig(); window.showToast('บันทึกการตั้งค่าแล้ว ✅');
+        }
+        window.startNewCode = function() {
+            window.currentEditingId = null;
+            document.getElementById('saveBtn').innerText = "บันทึก";
+            document.getElementById('codeEditor').value = '';
+            document.getElementById('codeTitle').value = '';
+            window.updateLineNumbers(); window.updatePreview(); window.showPage('create');
+        }
+        const editor = document.getElementById('codeEditor');
+        const lineNumbers = document.getElementById('lineNumbers');
+        const lineCountSummary = document.getElementById('lineCountSummary');
+        const previewFrame = document.getElementById('previewFrame');
+        window.updateLineNumbers = function() {
+            const lines = editor.value.split('\n').length;
+            lineNumbers.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
+            lineCountSummary.innerText = `${lines} บรรทัด`;
+        };
+        editor.addEventListener('scroll', () => { lineNumbers.scrollTop = editor.scrollTop; });
+        editor.addEventListener('input', () => { window.updateLineNumbers(); clearTimeout(window.previewTimeout); window.previewTimeout = setTimeout(window.updatePreview, 800); });
+        window.updatePreview = function() {
+            const blob = new Blob([editor.value], {type: 'text/html'});
+            previewFrame.src = URL.createObjectURL(blob);
+        }
+        window.insertTemplate = function() {
+            if(editor.value && !confirm('ทับโค้ดเดิมไหม?')) return;
+            editor.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; padding: 20px; text-align: center; }\n  h1 { color: #16a34a; }\n</style>\n</head>\n<body>\n  <h1>สวัสดีต้นกล้า!</h1>\n  <p>เขียนโค้ดที่นี่...</p>\n</body>\n</html>`;
+            window.updateLineNumbers(); window.updatePreview();
+        }
+        window.togglePreviewFullScreen = function() {
+            const el = document.getElementById('previewContainer');
+            if (!document.fullscreenElement) el.requestFullscreen().catch(err=>{}); else document.exitFullscreen();
+        }
+        window.saveCode = async function() {
+            const url = localStorage.getItem('codeKeeper_url');
+            const pass = localStorage.getItem('codeKeeper_pass');
+            const title = document.getElementById('codeTitle').value.trim() || 'ไม่ได้ตั้งชื่อ';
+            if (!url || !pass) { window.toggleConfig(); return window.showToast('⚠️ ตั้งค่า API ก่อนนะ'); }
+            if (!editor.value.trim()) return window.showToast('⚠️ ยังไม่ได้เขียนโค้ด');
+            const btn = document.getElementById('saveBtn');
+            const isUpdate = !!window.currentEditingId;
+            const action = isUpdate ? 'update' : 'create';
+            btn.disabled = true; btn.innerText = "กำลังส่ง...";
+            try {
+                const body = { password: pass, code: editor.value, title: title, action: action };
+                if(isUpdate) body.id = window.currentEditingId;
+                const response = await fetch(url, { method: 'POST', body: JSON.stringify(body) });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    window.showToast('บันทึกเรียบร้อย! 🎉');
+                    if (!isUpdate) { editor.value = ''; document.getElementById('codeTitle').value = ''; window.updateLineNumbers(); }
+                    window.updatePreview(); window.showPage('code-home');
+                } else { window.showToast('❌ ' + result.message); }
+            } catch (error) { window.showToast('❌ เชื่อมต่อไม่ได้'); } finally { btn.disabled = false; btn.innerText = "บันทึก"; }
+        }
+        window.loadList = async function() {
+            window.showPage('list');
+            const container = document.getElementById('listContainer');
+            const url = localStorage.getItem('codeKeeper_url');
+            if (!url) { container.innerHTML = '<div class="text-center text-gray-400 p-10">ไปตั้งค่า API ก่อนครับ</div>'; return; }
+            container.innerHTML = '<div class="text-center mt-10 text-green-600"><i class="fas fa-spinner fa-spin text-3xl"></i><br>กำลังโหลด...</div>';
+            try {
+                const response = await fetch(`${url}?action=list`);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    if (result.data.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 p-10">ไม่มีข้อมูล</div>'; return; }
+                    let html = '';
+                    result.data.forEach(item => {
+                        const date = new Date(item.timestamp).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+                        html += `
+                            <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex justify-between items-center hover:shadow-md transition">
+                                <div onclick="window.openView('${item.id}', true)" class="cursor-pointer flex-1 overflow-hidden">
+                                    <div class="font-bold text-lg md:text-xl text-gray-800 dark:text-white truncate mb-1">${item.title || 'ไม่ได้ตั้งชื่อ'}</div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 text-[10px] md:text-xs px-2 py-0.5 rounded font-mono font-bold tracking-wide">ID: ${item.id.substring(0, 6)}</span>
+                                        <span class="text-xs text-gray-400 font-light"><i class="far fa-clock mr-1"></i>${date}</span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 pl-3 shrink-0">
+                                    <button onclick="event.stopPropagation(); window.shareCode('${item.id}')" class="text-purple-500 p-2 md:p-3 bg-purple-50 hover:bg-purple-100 rounded-full transition" title="สร้างลิงก์"><i class="fas fa-share-alt md:text-lg"></i></button>
+                                    <button onclick="event.stopPropagation(); window.editCode('${item.id}')" class="text-blue-500 p-2 md:p-3 bg-blue-50 hover:bg-blue-100 rounded-full transition"><i class="fas fa-edit md:text-lg"></i></button>
+                                    <button onclick="event.stopPropagation(); window.deleteCode('${item.id}')" class="text-red-500 p-2 md:p-3 bg-red-50 hover:bg-red-100 rounded-full transition"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>`;
+                    });
+                    container.innerHTML = html;
+                } else { container.innerHTML = '<div class="text-center text-red-500 p-10">Server Error</div>'; }
+            } catch (e) { container.innerHTML = '<div class="text-center text-red-500 p-10">Connect Error</div>'; }
+        }
+        window.editCode = async function(id) {
+            const url = localStorage.getItem('codeKeeper_url');
+            if(!url) return;
+            window.showToast('กำลังโหลดข้อมูล...');
+            try {
+                const response = await fetch(`${url}?action=view&id=${id}`);
+                const result = await response.json();
+                if(result.status === 'success') {
+                    window.currentEditingId = id;
+                    editor.value = result.code;
+                    document.getElementById('codeTitle').value = result.title || '';
+                    window.updateLineNumbers(); window.updatePreview(); window.showPage('create');
+                }
+            } catch(e) { window.showToast('Error loading'); }
+        }
+        window.deleteCode = async function(id) {
+            if(!confirm('ลบจริงๆ นะ?')) return;
+            const url = localStorage.getItem('codeKeeper_url');
+            const pass = localStorage.getItem('codeKeeper_pass');
+            try {
+                const response = await fetch(url, { method: 'POST', body: JSON.stringify({ password: pass, action: 'delete', id: id }) });
+                const result = await response.json();
+                if(result.status === 'success') { window.showToast('ลบแล้ว 🗑️'); window.loadList(); }
+            } catch(e) { window.showToast('Error deleting'); }
+        }
+        window.openView = async function(id, fromApp = false) {
+            window.currentViewId = id; window.showPage('view');
+            document.getElementById('viewBackButton').style.display = fromApp ? 'flex' : 'none';
+            const loader = document.getElementById('viewLoading');
+            const frame = document.getElementById('fullViewFrame');
+            const url = localStorage.getItem('codeKeeper_url');
+            frame.src = 'about:blank'; loader.classList.remove('hidden');
+            if (!url) { alert("ไม่มีการตั้งค่า API"); window.showPage('home'); return; }
+            try {
+                const response = await fetch(`${url}?action=view&id=${id}`);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    const blob = new Blob([result.code], {type: 'text/html'});
+                    frame.src = URL.createObjectURL(blob);
+                } else { alert('Not Found'); window.showPage('home'); }
+            } catch(e) { alert('Error'); } finally { loader.classList.add('hidden'); }
+        }
+        window.shareCode = async function(id) {
+            window.showToast('กำลังสร้างลิงก์... ⏳');
+            await new Promise(r => setTimeout(r, 500));
+            const apiUrl = localStorage.getItem('codeKeeper_url') || '';
+            let paramString = `?id=${id}`;
+            if(apiUrl) { try { const e = btoa(apiUrl); paramString += `&api=${e}`; } catch(e){} }
+            const link = `${window.location.origin}${window.location.pathname}${paramString}`;
+            try { await navigator.clipboard.writeText(link); window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success'); }
+            catch (err) { const el = document.createElement('textarea'); el.value = link; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success'); }
+        }
+        window.shareCurrentView = function() { if(window.currentViewId) window.shareCode(window.currentViewId); }
+        window.showToast = function(msg, type='info') {
+            const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('hidden'); setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+        }
+        window.copyCurrentUrl = function() { window.shareCode(new URLSearchParams(window.location.search).get('id')); }
+
+        // --- EASTER EGG LOGIC ---
+        window.eeCounter = 0;
+        window.countEasterEgg = function() {
+            window.eeCounter++;
+            if(window.eeCounter === 6) {
+                document.getElementById('btnErrorEgg').classList.remove('hidden');
+                window.showToast('???', 'info');
+            }
+        }
+
+        window.startGlitch = async function() {
+            document.getElementById('configModal').classList.add('hidden');
+            const body = document.body;
+            body.classList.add('glitch-mode');
+            const errs = ["ROOT_DECAY_DETECTED", "BRANCH_SEGMENTATION_FAULT", "SYSTEM_OVERGROWN", "PHOTOSYNTHESIS_FAILURE", "FOREST_CONSUMING_MEMORY", "BARK_CORRUPTION", "LEAF_NODE_MISSING", "XYLEM_BLOCKAGE"];
+            for(let i=0; i<15; i++) {
+                await new Promise(r => setTimeout(r, 150));
+                const div = document.createElement('div');
+                div.className = "scary-text fixed z-[9999] text-red-600 font-mono font-bold text-xl md:text-3xl";
+                div.style.top = Math.random() * 90 + '%';
+                div.style.left = Math.random() * 80 + '%';
+                div.innerText = errs[Math.floor(Math.random()*errs.length)];
+                body.appendChild(div);
+            }
+            await new Promise(r => setTimeout(r, 1500));
+            body.classList.remove('glitch-mode');
+            body.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-screen w-screen bg-black text-red-600 overflow-hidden select-none cursor-none">
+                    <h1 class="text-6xl md:text-9xl font-mono font-bold animate-pulse tracking-widest" style="text-shadow: 4px 4px 0px #000, -2px -2px 0px #330000;">ERROR</h1>
+                    <p class="mt-8 font-mono text-red-800 text-lg md:text-2xl animate-bounce">THE ROOTS RUN DEEP...</p>
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-20 pointer-events-none"></div>
+                </div>
+            `;
+            body.style.overflow = 'hidden';
+        }
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            console.log("Tonkla System Loaded");
+            window.initTheme();
+            window.updateNavbar(); 
+            window.renderTodos(); 
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('id')) {
+                window.enterApp('code');
+                window.openView(urlParams.get('id'), false);
+            }
+
+            // Keyboard support for calculator
+            const calcInput = document.getElementById('calcInput');
+            if (calcInput) {
+                calcInput.addEventListener('input', (e) => {
+                    window.calcInputStr = e.target.value;
+                });
+
+                calcInput.addEventListener('keydown', (e) => {
+                    if(e.key === 'Enter') {
+                        e.preventDefault();
+                        window.calculate();
+                    }
+                    if(e.key === 'Escape') {
+                        window.calcCmd('AC');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
