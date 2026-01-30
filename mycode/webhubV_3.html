@@ -23,6 +23,7 @@
                     },
                     animation: {
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite',
                     }
                 }
             }
@@ -55,7 +56,7 @@
         /* Transition Curtain */
         #transition-curtain {
             position: fixed; inset: 0; 
-            background: #10b981; /* Green Brand Color */
+            background: #10b981;
             z-index: 100;
             transform: translateY(100%);
             transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
@@ -70,7 +71,7 @@
             z-index: 50;
             background: white;
             transform: translateX(100%);
-            transition: transform 0.1s; /* Instant switch handled by curtain */
+            transition: transform 0.1s;
         }
         #app-frame-layer.active { transform: translateX(0); }
 
@@ -82,17 +83,38 @@
             background-image: radial-gradient(circle, #ffffff08 1px, transparent 1px);
         }
 
-        /* Right Drawer */
-        #time-drawer {
+        /* Drawers */
+        .drawer-panel {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #time-drawer.open { transform: translateX(0); }
+        .drawer-panel.open { transform: translateX(0); }
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Tutorial Hint Bubble */
+        .tutorial-hint {
+            position: absolute;
+            right: 110%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ef4444;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: bold;
+        }
+        .tutorial-hint::after {
+            content: ''; position: absolute; right: -6px; top: 50%; margin-top: -6px;
+            border-width: 6px; border-style: solid;
+            border-color: transparent transparent transparent #ef4444;
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-[#0f172a] text-gray-800 dark:text-gray-100 h-[100dvh] w-screen overflow-hidden">
@@ -109,7 +131,10 @@
         <nav class="h-16 px-6 md:px-10 flex items-center justify-between bg-white/80 dark:bg-slate-850/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shrink-0 sticky top-0 z-20">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white shadow-lg"><i class="fas fa-leaf"></i></div>
-                <h1 class="text-xl font-brand font-bold tracking-tight">Tonkla's <span class="text-green-600">Hub</span></h1>
+                <h1 class="text-xl font-brand font-bold tracking-tight flex items-center">
+                    Tonkla's <span class="text-green-600 mx-1">Hub</span>
+                    <span class="bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 border border-yellow-400/30 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1">Alpha</span>
+                </h1>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="hub.toggleTheme()" class="w-9 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition"><i class="fas fa-adjust"></i></button>
@@ -123,7 +148,7 @@
             <div id="app-grid" class="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 pb-20 w-full max-w-6xl">
                 <!-- Dynamic Apps will be injected here -->
                 
-                <!-- Add Button (Always last) -->
+                <!-- Add Button -->
                 <div onclick="hub.openAddModal()" class="btn-3d aspect-square border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-all border-b-gray-300 dark:border-b-gray-700 group">
                     <i class="fas fa-plus text-3xl mb-2 group-hover:scale-110 transition-transform"></i>
                     <span class="text-xs font-bold">Add Project</span>
@@ -136,33 +161,54 @@
         </footer>
     </div>
 
-    <!-- LAYER 2: APP FRAME (Web Viewer) -->
+    <!-- LAYER 2: APP FRAME -->
     <div id="app-frame-layer" class="flex flex-col bg-white dark:bg-gray-900">
-        <!-- Floating Home Button -->
         <button onclick="hub.goHome()" class="fixed top-4 left-4 z-[60] w-10 h-10 bg-black/50 hover:bg-black/70 backdrop-blur text-white rounded-full flex items-center justify-center shadow-lg transition hover:scale-110">
             <i class="fas fa-home"></i>
         </button>
-        
         <iframe id="web-frame" class="w-full h-full border-none bg-white"></iframe>
     </div>
 
-    <!-- RIGHT DRAWER (Time) -->
-    <button onclick="hub.toggleDrawer()" class="fixed right-0 top-24 z-30 bg-green-600 text-white p-3 rounded-l-xl shadow-lg hover:pr-5 transition-all duration-300 flex items-center gap-2 group animate-pulse-slow">
+    <!-- RIGHT DRAWERS -->
+    
+    <!-- 1. Time Drawer Button -->
+    <button onclick="hub.toggleDrawer('time')" class="fixed right-0 top-24 z-30 bg-green-600 text-white p-3 rounded-l-xl shadow-lg hover:pr-5 transition-all duration-300 flex items-center gap-2 group">
         <i class="fas fa-chevron-left group-hover:animate-bounce"></i><i class="far fa-clock"></i>
     </button>
 
-    <div id="time-drawer" class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-slate-800 shadow-2xl z-[40] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
+    <!-- 2. Help Drawer Button -->
+    <button onclick="hub.toggleDrawer('help')" id="help-btn" class="fixed right-0 top-40 z-30 bg-blue-600 text-white p-3 rounded-l-xl shadow-lg hover:pr-5 transition-all duration-300 flex items-center gap-2 group">
+        <div id="help-hint" class="tutorial-hint hidden animate-bounce-slow">กดเพื่อดูวิธีใช้</div>
+        <i class="fas fa-question-circle"></i>
+    </button>
+
+    <!-- Time Drawer Panel -->
+    <div id="time-drawer" class="drawer-panel fixed top-0 right-0 h-full w-80 bg-white dark:bg-slate-800 shadow-2xl z-[40] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
         <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-slate-900">
-            <h3 class="font-brand font-bold text-lg text-green-600"><i class="far fa-calendar-alt mr-2"></i>Time</h3>
-            <button onclick="hub.toggleDrawer()" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-lg"></i></button>
+            <h3 class="font-brand font-bold text-lg text-green-600"><i class="far fa-calendar-alt mr-2"></i>Time & Holiday</h3>
+            <button onclick="hub.toggleDrawer('time')" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-lg"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto p-5 space-y-6">
+            <!-- Clock -->
             <div class="text-center">
                 <div id="drawer-greeting" class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">HELLO</div>
-                <h2 id="drawer-clock" class="text-5xl font-mono font-bold text-gray-800 dark:text-white mb-1">00:00</h2>
-                <p id="drawer-date" class="text-sm text-green-600 dark:text-green-400 font-medium">Loading...</p>
+                <h2 id="drawer-clock" class="text-4xl font-mono font-bold text-gray-800 dark:text-white mb-1">00:00:00</h2>
+                <p id="drawer-date" class="text-xs text-green-600 dark:text-green-400 font-medium">Loading...</p>
             </div>
-            <!-- Calendar Grid -->
+            
+            <!-- Progress -->
+            <div class="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-xl">
+                <div class="flex justify-between text-xs font-bold mb-2">
+                    <span class="text-gray-500 dark:text-gray-400">Road to Freedom</span>
+                    <span id="weekend-text" class="text-blue-500">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 overflow-hidden">
+                    <div id="weekend-progress" class="bg-blue-500 h-2.5 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+                <p id="next-break-info" class="text-[10px] text-gray-400 mt-2 text-right">Next: Weekend</p>
+            </div>
+
+            <!-- Calendar -->
             <div>
                 <p id="calendar-month" class="text-center font-bold mb-3 text-gray-800 dark:text-white text-sm"></p>
                 <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-1">
@@ -172,15 +218,53 @@
             </div>
         </div>
     </div>
-    <div id="drawer-backdrop" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[35] hidden transition-opacity" onclick="hub.toggleDrawer()"></div>
+
+    <!-- Help Drawer Panel -->
+    <div id="help-drawer" class="drawer-panel fixed top-0 right-0 h-full w-80 bg-white dark:bg-slate-800 shadow-2xl z-[40] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
+        <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-slate-900">
+            <h3 class="font-brand font-bold text-lg text-blue-600"><i class="fas fa-book mr-2"></i>คู่มือการใช้งาน</h3>
+            <button onclick="hub.toggleDrawer('help')" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-lg"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                <h4 class="font-bold text-blue-700 dark:text-blue-300 mb-2">ยินดีต้อนรับสู่ Tonkla's Hub!</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">นี่คือ Web Portal ส่วนตัวของคุณ สำหรับรวมลิงก์โปรเจกต์ต่างๆ ไว้ในที่เดียว</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <h5 class="font-bold text-sm text-gray-800 dark:text-white mb-1">1. วิธีเพิ่มโปรเจกต์</h5>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">กดปุ่ม <span class="bg-gray-200 dark:bg-gray-700 px-1 rounded font-bold">+</span> แล้วใส่ชื่อและลิงก์ (GitHub Pages) ระบบจะเลือกไอคอนให้เอง!</p>
+                </div>
+                <div>
+                    <h5 class="font-bold text-sm text-gray-800 dark:text-white mb-1">2. วิธีลบ/แก้ไข</h5>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">กดปุ่ม <span class="bg-gray-200 dark:bg-gray-700 px-1 rounded"><i class="fas fa-pen"></i></span> ด้านบนเพื่อจัดการลิงก์</p>
+                </div>
+                <div>
+                    <h5 class="font-bold text-sm text-gray-800 dark:text-white mb-1">3. ดูเวลาและวันหยุด</h5>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">กดปุ่ม <span class="bg-green-600 text-white px-1 rounded text-[10px]">Time</span> ด้านขวาเพื่อดู Progress Bar สู่วันหยุด</p>
+                </div>
+            </div>
+
+            <a href="https://github.com/Tonkl7/ToolExtensions" target="_blank" class="block w-full py-3 bg-gray-900 text-white text-center rounded-xl font-bold shadow-lg hover:bg-black transition flex items-center justify-center gap-2">
+                <i class="fab fa-github text-xl"></i> ไปที่ GitHub Repo
+            </a>
+        </div>
+    </div>
+
+    <!-- Backdrop -->
+    <div id="drawer-backdrop" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[35] hidden transition-opacity" onclick="hub.closeAllDrawers()"></div>
 
     <!-- MODALS -->
     <!-- Add Modal -->
     <div id="addModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl shadow-2xl p-6">
-            <h3 class="font-bold text-xl font-brand mb-4">Add Web Link</h3>
-            <input type="text" id="addName" placeholder="Project Name" class="w-full mb-3 p-3 bg-gray-50 dark:bg-slate-900 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white">
-            <input type="url" id="addUrl" placeholder="https://..." class="w-full mb-4 p-3 bg-gray-50 dark:bg-slate-900 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white">
+            <h3 class="font-bold text-xl font-brand mb-4">Add Project Link</h3>
+            <input type="text" id="addName" placeholder="Project Name (e.g. YouTube)" class="w-full mb-3 p-3 bg-gray-50 dark:bg-slate-900 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white" oninput="hub.previewIcon()">
+            <div class="flex items-center gap-2 mb-4">
+                <div id="iconPreview" class="w-10 h-10 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-500"><i class="fas fa-globe"></i></div>
+                <input type="url" id="addUrl" placeholder="https://..." class="flex-1 p-3 bg-gray-50 dark:bg-slate-900 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white">
+            </div>
             <div class="flex justify-end gap-2">
                 <button onclick="hub.closeAddModal()" class="px-4 py-2 text-gray-500 font-bold">Cancel</button>
                 <button onclick="hub.addLink()" class="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700">Add</button>
@@ -202,11 +286,38 @@
     <script>
         const hub = {
             links: [],
+            // Thai Holidays (Official + Festivals + Semesters approx)
+            holidays: [
+                { d: 1, m: 1, name: "วันขึ้นปีใหม่" },
+                { d: 14, m: 2, name: "วันวาเลนไทน์" },
+                { d: 26, m: 2, name: "วันมาฆบูชา" }, 
+                { d: 6, m: 4, name: "วันจักรี" },
+                { d: 13, m: 4, name: "วันสงกรานต์" },
+                { d: 14, m: 4, name: "วันสงกรานต์" },
+                { d: 15, m: 4, name: "วันสงกรานต์" },
+                { d: 1, m: 5, name: "วันแรงงาน" },
+                { d: 4, m: 5, name: "วันฉัตรมงคล" },
+                { d: 22, m: 5, name: "วันวิสาขบูชา" }, 
+                { d: 3, m: 6, name: "เฉลิมฯ พระราชินี" },
+                { d: 20, m: 7, name: "วันอาสาฬหบูชา" }, 
+                { d: 21, m: 7, name: "วันเข้าพรรษา" }, 
+                { d: 28, m: 7, name: "เฉลิมฯ ร.10" },
+                { d: 12, m: 8, name: "วันแม่แห่งชาติ" },
+                { d: 13, m: 10, name: "วันคล้ายวันสวรรคต ร.9" },
+                { d: 23, m: 10, name: "วันปิยมหาราช" },
+                { d: 31, m: 10, name: "วันฮาโลวีน" },
+                { d: 27, m: 11, name: "วันลอยกระทง" },
+                { d: 5, m: 12, name: "วันพ่อแห่งชาติ" },
+                { d: 10, m: 12, name: "วันรัฐธรรมนูญ" },
+                { d: 25, m: 12, name: "วันคริสต์มาส" },
+                { d: 31, m: 12, name: "วันสิ้นปี" }
+            ],
             
             init: function() {
                 this.loadLinks();
                 this.renderGrid();
                 this.startClock();
+                this.checkFirstVisit();
                 
                 const isDark = localStorage.getItem('tonkla_theme') === 'dark';
                 if(isDark) document.documentElement.classList.add('dark');
@@ -221,6 +332,26 @@
                 localStorage.setItem('webhub_links', JSON.stringify(this.links));
             },
             
+            getIconClass: function(name) {
+                const n = name.toLowerCase();
+                if (n.includes('youtu')) return 'fa-youtube';
+                if (n.includes('github') || n.includes('git')) return 'fa-github';
+                if (n.includes('facebook') || n.includes('face')) return 'fa-facebook';
+                if (n.includes('twitter') || n.includes('x')) return 'fa-twitter';
+                if (n.includes('instagram') || n.includes('ig')) return 'fa-instagram';
+                if (n.includes('discord')) return 'fa-discord';
+                if (n.includes('google')) return 'fa-google';
+                if (n.includes('drive')) return 'fa-google-drive';
+                if (n.includes('mail')) return 'fa-envelope';
+                if (n.includes('shop') || n.includes('store')) return 'fa-shopping-cart';
+                if (n.includes('game') || n.includes('play')) return 'fa-gamepad';
+                if (n.includes('music') || n.includes('song')) return 'fa-music';
+                if (n.includes('code') || n.includes('dev')) return 'fa-code';
+                if (n.includes('book') || n.includes('read')) return 'fa-book';
+                if (n.includes('tool')) return 'fa-tools';
+                return 'fa-globe'; // Default
+            },
+
             getRandomColor: function() {
                 const colors = ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-lime-500', 'bg-emerald-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-violet-500', 'bg-pink-500', 'bg-rose-500'];
                 return colors[Math.floor(Math.random() * colors.length)];
@@ -229,22 +360,23 @@
             // --- UI RENDER ---
             renderGrid: function() {
                 const grid = document.getElementById('app-grid');
-                // Keep only the "Add Button" (last child)
                 const addBtn = grid.lastElementChild;
                 grid.innerHTML = '';
                 
                 this.links.forEach(link => {
                     const el = document.createElement('div');
-                    // Random color for icon background
                     const bgClass = link.color || this.getRandomColor();
                     if(!link.color) { link.color = bgClass; this.saveLinks(); }
+                    
+                    // Smart Icon Logic
+                    const iconClass = this.getIconClass(link.name);
 
                     el.className = "btn-3d group relative aspect-square bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 rounded-2xl cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 flex flex-col items-center justify-center p-4 shadow-sm hover:shadow-md transition-all border-b-gray-300 dark:border-b-slate-600 overflow-hidden";
                     el.onclick = () => this.openLink(link.url);
                     
                     el.innerHTML = `
                         <div class="w-16 h-16 ${bgClass} rounded-xl flex items-center justify-center mb-3 text-white group-hover:scale-110 transition-transform duration-300 shadow-md">
-                            <i class="fas fa-globe text-3xl"></i>
+                            <i class="fab ${iconClass} text-3xl"></i>
                         </div>
                         <span class="font-bold font-brand text-gray-700 dark:text-gray-200 text-sm text-center truncate w-full px-1">${link.name}</span>
                     `;
@@ -259,56 +391,43 @@
                 const curtain = document.getElementById('transition-curtain');
                 const appLayer = document.getElementById('app-frame-layer');
                 const frame = document.getElementById('web-frame');
-
-                // 1. Curtain Up
                 curtain.classList.add('active');
-
-                // 2. Load URL behind curtain
                 setTimeout(() => {
                     frame.src = url;
                     appLayer.classList.add('active');
-                    
-                    // 3. Curtain Down (reveal app)
-                    setTimeout(() => {
-                        curtain.classList.remove('active');
-                    }, 800); // Wait for transition
-                }, 600); // Wait for curtain to cover
+                    setTimeout(() => curtain.classList.remove('active'), 800);
+                }, 600);
             },
 
             goHome: function() {
                 const curtain = document.getElementById('transition-curtain');
                 const appLayer = document.getElementById('app-frame-layer');
                 const frame = document.getElementById('web-frame');
-
-                // 1. Curtain Up
                 curtain.classList.add('active');
-
                 setTimeout(() => {
                     appLayer.classList.remove('active');
-                    frame.src = 'about:blank'; // Clear iframe
-                    
-                    // 2. Curtain Down (reveal hub)
-                    setTimeout(() => {
-                        curtain.classList.remove('active');
-                    }, 600);
+                    frame.src = 'about:blank';
+                    setTimeout(() => curtain.classList.remove('active'), 600);
                 }, 600);
             },
 
             // --- ADD / MANAGE ---
             openAddModal: () => document.getElementById('addModal').classList.remove('hidden'),
             closeAddModal: () => document.getElementById('addModal').classList.add('hidden'),
+            previewIcon: function() {
+                const name = document.getElementById('addName').value;
+                const icon = this.getIconClass(name);
+                document.getElementById('iconPreview').innerHTML = `<i class="fab ${icon} text-xl"></i>`;
+            },
             
             addLink: function() {
                 const name = document.getElementById('addName').value.trim();
                 let url = document.getElementById('addUrl').value.trim();
-                
                 if(!name || !url) return alert("Please fill all fields");
                 if(!url.startsWith('http')) url = 'https://' + url;
-
                 this.links.push({ id: Date.now(), name, url });
                 this.saveLinks();
                 this.renderGrid();
-                
                 document.getElementById('addName').value = '';
                 document.getElementById('addUrl').value = '';
                 this.closeAddModal();
@@ -324,13 +443,12 @@
                 const list = document.getElementById('manageList');
                 list.innerHTML = '';
                 if(this.links.length === 0) list.innerHTML = '<p class="text-center text-gray-400">No links yet.</p>';
-                
                 this.links.forEach(link => {
                     const div = document.createElement('div');
                     div.className = "flex justify-between items-center bg-gray-50 dark:bg-slate-900 p-3 rounded-lg border border-gray-100 dark:border-gray-700";
                     div.innerHTML = `
                         <div class="truncate mr-2">
-                            <div class="font-bold text-sm dark:text-white">${link.name}</div>
+                            <div class="font-bold text-sm dark:text-white"><i class="fab ${this.getIconClass(link.name)} mr-2 text-gray-400"></i>${link.name}</div>
                             <div class="text-xs text-gray-400 truncate">${link.url}</div>
                         </div>
                         <button onclick="hub.deleteLink(${link.id})" class="text-red-500 hover:bg-red-50 p-2 rounded"><i class="fas fa-trash"></i></button>
@@ -348,34 +466,97 @@
                 }
             },
 
-            // --- THEME & DRAWER ---
+            // --- THEME & DRAWERS ---
             toggleTheme: function() {
                 document.documentElement.classList.toggle('dark');
                 const isDark = document.documentElement.classList.contains('dark');
                 localStorage.setItem('tonkla_theme', isDark ? 'dark' : 'light');
             },
-            toggleDrawer: function() {
-                const d = document.getElementById('time-drawer');
-                const b = document.getElementById('drawer-backdrop');
-                if(d.classList.contains('open')) {
-                    d.classList.remove('open'); b.classList.add('hidden');
-                } else {
-                    d.classList.add('open'); b.classList.remove('hidden');
-                    this.renderCalendar();
+            
+            toggleDrawer: function(type) {
+                this.closeAllDrawers();
+                const drawer = document.getElementById(`${type}-drawer`);
+                const backdrop = document.getElementById('drawer-backdrop');
+                drawer.classList.add('open');
+                backdrop.classList.remove('hidden');
+                
+                if(type === 'time') this.renderCalendar();
+                if(type === 'help') {
+                    // Hide hint forever once opened
+                    localStorage.setItem('tonkla_hub_help_seen', 'true');
+                    document.getElementById('help-hint').classList.add('hidden');
                 }
             },
             
-            // --- TIME & CALENDAR ---
+            closeAllDrawers: function() {
+                document.querySelectorAll('.drawer-panel').forEach(d => d.classList.remove('open'));
+                document.getElementById('drawer-backdrop').classList.add('hidden');
+            },
+            
+            checkFirstVisit: function() {
+                if(!localStorage.getItem('tonkla_hub_help_seen')) {
+                    document.getElementById('help-hint').classList.remove('hidden');
+                    // Auto open help drawer after 1 sec
+                    setTimeout(() => this.toggleDrawer('help'), 1000);
+                }
+            },
+            
+            // --- TIME & CALENDAR (UPDATED) ---
             startClock: function() {
                 setInterval(() => {
                     const now = new Date();
-                    document.getElementById('drawer-clock').innerText = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-                    document.getElementById('drawer-date').innerText = now.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long' });
+                    document.getElementById('drawer-clock').innerText = now.toLocaleTimeString('th-TH', { hour12: false });
+                    document.getElementById('drawer-date').innerText = now.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
                     
                     const h = now.getHours();
                     document.getElementById('drawer-greeting').innerText = h < 12 ? "GOOD MORNING" : h < 17 ? "GOOD AFTERNOON" : "GOOD EVENING";
+                    
+                    this.updateProgress(now);
                 }, 1000);
             },
+
+            updateProgress: function(now) {
+                const day = now.getDay(); // 0-6
+                const isWeekend = (day === 0 || day === 6);
+                
+                // Check if today is a holiday
+                const d = now.getDate();
+                const m = now.getMonth() + 1;
+                const isHoliday = this.holidays.some(h => h.d === d && h.m === m);
+
+                let percent = 0;
+                let text = "";
+                let nextInfo = "";
+
+                if (isWeekend || isHoliday) {
+                    percent = 100;
+                    text = "FREEDOM! 🎉";
+                    nextInfo = "Enjoy your break!";
+                } else {
+                    // Work week progress (Mon 00:00 to Fri 17:00 approx)
+                    // Mon=1, Fri=5. Target is Fri end (or next holiday)
+                    
+                    // Simple logic: % of week passed
+                    // Total seconds in 5 days = 5 * 24 * 3600 = 432,000
+                    // Current second in week = (day-1)*86400 + h*3600 + m*60 + s
+                    const totalSecs = 5 * 24 * 60 * 60;
+                    const currentSecs = (day - 1) * 24 * 60 * 60 + now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+                    
+                    percent = Math.min(100, Math.max(0, (currentSecs / totalSecs) * 100));
+                    text = `${percent.toFixed(2)}%`;
+                    
+                    // Find next break
+                    let next = this.holidays.find(h => (h.m > m) || (h.m === m && h.d > d)) || this.holidays[0];
+                    // Compare with Weekend
+                    const daysToSat = 6 - day;
+                    nextInfo = `Next: Weekend in ${daysToSat} days`;
+                }
+
+                document.getElementById('weekend-text').innerText = text;
+                document.getElementById('weekend-progress').style.width = `${percent}%`;
+                document.getElementById('next-break-info').innerText = nextInfo;
+            },
+
             renderCalendar: function() {
                 const now = new Date();
                 const y = now.getFullYear(), m = now.getMonth();
@@ -389,9 +570,19 @@
                 for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
                 for(let i=1; i<=daysInMonth; i++) {
                     const d = document.createElement('div');
-                    d.className = "aspect-square flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700";
-                    if(i===now.getDate()) d.className += " bg-green-500 text-white font-bold";
+                    d.className = "aspect-square flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 cursor-default text-xs relative";
                     d.innerText = i;
+                    
+                    // Highlights
+                    if(i===now.getDate()) d.className += " bg-green-500 text-white font-bold";
+                    
+                    // Check Holiday
+                    const isHol = this.holidays.find(h => h.d === i && h.m === (m + 1));
+                    if(isHol) {
+                        d.classList.add('text-red-500', 'font-bold');
+                        d.title = isHol.name;
+                    }
+                    
                     grid.appendChild(d);
                 }
             }
