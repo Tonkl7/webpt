@@ -24,6 +24,13 @@
                     animation: {
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'bounce-slow': 'bounce 2s infinite',
+                        'slide-in': 'slideIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
                     }
                 }
             }
@@ -429,6 +436,11 @@
                     </div>
                 </div>
                 
+                <!-- NEW: Change Password Button -->
+                <button onclick="hub.openProfileReset()" class="w-full py-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 rounded-xl font-bold hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition">
+                    <i class="fas fa-key mr-2"></i> เปลี่ยนรหัสผ่าน
+                </button>
+
                 <div class="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2">
                     <button onclick="hub.handleLogout()" class="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                         <i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ
@@ -465,14 +477,13 @@
 
         const hub = {
             links: [], selectedIcon: 'fas fa-globe', selectedColor: 'bg-green-500', currentAppColor: null, editingId: null, 
-            currentUser: null, isLoginMode: true, tempAvatarBase64: null, tempUserId: null,
+            currentUser: null, isLoginMode: true, tempAvatarBase64: null, tempUserId: null, isProfileReset: false,
 
             icons: ['fas fa-globe', 'fab fa-youtube', 'fab fa-github', 'fab fa-facebook', 'fab fa-twitter', 'fab fa-instagram', 'fab fa-discord', 'fab fa-google', 'fas fa-envelope', 'fas fa-shopping-cart', 'fas fa-gamepad', 'fas fa-music', 'fas fa-code', 'fas fa-book', 'fas fa-tools', 'fas fa-graduation-cap', 'fas fa-briefcase', 'fas fa-video', 'fas fa-comment', 'fas fa-camera', 'fas fa-heart', 'fas fa-star', 'fas fa-lightbulb', 'fas fa-rocket'],
             colors: ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500', 'bg-rose-500', 'bg-slate-500'],
             holidays: [{ d: 1, m: 1, name: "วันขึ้นปีใหม่" }, { d: 14, m: 2, name: "วันวาเลนไทน์" }, { d: 26, m: 2, name: "วันมาฆบูชา" }, { d: 6, m: 4, name: "วันจักรี" }, { d: 13, m: 4, name: "วันสงกรานต์" }, { d: 14, m: 4, name: "วันสงกรานต์" }, { d: 15, m: 4, name: "วันสงกรานต์" }, { d: 1, m: 5, name: "วันแรงงาน" }, { d: 4, m: 5, name: "วันฉัตรมงคล" }, { d: 22, m: 5, name: "วันวิสาขบูชา" }, { d: 3, m: 6, name: "เฉลิมฯ พระราชินี" }, { d: 20, m: 7, name: "วันอาสาฬหบูชา" }, { d: 21, m: 7, name: "วันเข้าพรรษา" }, { d: 28, m: 7, name: "เฉลิมฯ ร.10" }, { d: 12, m: 8, name: "วันแม่แห่งชาติ" }, { d: 13, m: 10, name: "วันคล้ายวันสวรรคต ร.9" }, { d: 23, m: 10, name: "วันปิยมหาราช" }, { d: 31, m: 10, name: "วันฮาโลวีน" }, { d: 27, m: 11, name: "วันลอยกระทง" }, { d: 5, m: 12, name: "วันพ่อแห่งชาติ" }, { d: 10, m: 12, name: "วันรัฐธรรมนูญ" }, { d: 25, m: 12, name: "วันคริสต์มาส" }, { d: 31, m: 12, name: "วันสิ้นปี" }],
             
             init: function() {
-                // Ensure latest API URL is used if key is missing or old default
                 if(!localStorage.getItem('hub_api_url') || localStorage.getItem('hub_api_url').includes('1qg')) {
                     localStorage.setItem('hub_api_url', DEFAULT_API_URL);
                 }
@@ -500,8 +511,13 @@
             toggleAuthMode: function() {
                 this.isLoginMode = !this.isLoginMode;
                 const title = document.getElementById('authTitle'); const btn = document.getElementById('authSubmitBtn'); const switchText = document.getElementById('authSwitchText'); const toggleBtn = switchText.nextElementSibling;
-                if(this.isLoginMode) { title.innerText = 'เข้าสู่ระบบ'; btn.innerText = 'เข้าสู่ระบบ'; switchText.innerText = 'ยังไม่มีบัญชี?'; toggleBtn.innerText = 'สมัครสมาชิก'; } 
-                else { title.innerText = 'สมัครสมาชิก'; btn.innerText = 'สมัครสมาชิก'; switchText.innerText = 'มีบัญชีแล้ว?'; toggleBtn.innerText = 'เข้าสู่ระบบ'; }
+                if(this.isLoginMode) { 
+                    title.innerText = 'เข้าสู่ระบบ'; btn.innerText = 'เข้าสู่ระบบ'; switchText.innerText = 'ยังไม่มีบัญชี?'; toggleBtn.innerText = 'สมัครสมาชิก'; 
+                    btn.className = "w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition transform active:scale-95 mt-2";
+                } else { 
+                    title.innerText = 'สมัครสมาชิก'; btn.innerText = 'สมัครสมาชิก'; switchText.innerText = 'มีบัญชีแล้ว?'; toggleBtn.innerText = 'เข้าสู่ระบบ'; 
+                    btn.className = "w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/30 transition transform active:scale-95 mt-2";
+                }
             },
 
             handleAuthSubmit: async function() {
@@ -513,6 +529,10 @@
                     const response = await fetch(url, { method: 'POST', body: JSON.stringify({ action, email, password: pass }) });
                     const result = await response.json();
                     if(result.status === 'success') {
+                        // Clear Inputs
+                        document.getElementById('authEmail').value = '';
+                        document.getElementById('authPass').value = '';
+
                         if (action === 'register') {
                             this.tempUserId = result.user.id;
                             this.closeAuthModal();
@@ -582,6 +602,7 @@
                 const ans = document.getElementById('recAnswer').value;
                 const newPass = document.getElementById('recNewPass').value;
                 const url = localStorage.getItem('hub_api_url');
+                
                 if(!ans || !newPass) return alert('กรุณากรอกให้ครบ');
                 
                 const btn = document.getElementById('recStep2Btn'); btn.disabled = true; btn.innerText = 'กำลังเปลี่ยน...';
@@ -626,16 +647,24 @@
             },
             closeProfileModal: function() { document.getElementById('profileModal').classList.add('hidden'); },
             
+            // New Function: Reset Password from Profile
+            openProfileReset: function() {
+                this.closeProfileModal();
+                this.isProfileReset = true; // Mark as internal reset
+                document.getElementById('recoveryModal').classList.remove('hidden');
+                document.getElementById('recTitle').innerText = 'เปลี่ยนรหัสผ่าน';
+                // Trigger step 1 automatically with known email
+                this.fetchSecurityQuestion(this.currentUser.email);
+            },
+
             handleAvatarSelect: function(input) {
                 if (input.files && input.files[0]) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        const img = new Image();
-                        img.src = e.target.result;
+                        const img = new Image(); img.src = e.target.result;
                         img.onload = () => {
                             const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-                            const maxSize = 120;
-                            let width = img.width, height = img.height;
+                            const maxSize = 120; let width = img.width, height = img.height;
                             if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
                             canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
                             this.tempAvatarBase64 = canvas.toDataURL('image/jpeg', 0.6);
@@ -748,9 +777,68 @@
 
             startClock: function() { setInterval(() => { const now = new Date(); document.getElementById('drawer-clock').innerText = now.toLocaleTimeString('th-TH', { hour12: false }); document.getElementById('drawer-date').innerText = now.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); const h = now.getHours(); document.getElementById('drawer-greeting').innerText = h < 12 ? "GOOD MORNING" : h < 17 ? "GOOD AFTERNOON" : "GOOD EVENING"; this.updateProgress(now); }, 1000); },
             updateProgress: function(now) { const day = now.getDay(); const isWeekend = (day === 0 || day === 6); const d = now.getDate(); const m = now.getMonth() + 1; const isHoliday = this.holidays.some(h => h.d === d && h.m === m); let percent = 0; let text = ""; let nextInfo = ""; if (isWeekend || isHoliday) { percent = 100; text = "FREEDOM! 🎉"; nextInfo = "Enjoy your break!"; } else { const totalSecs = 5 * 24 * 60 * 60; const currentSecs = (day - 1) * 24 * 60 * 60 + now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds(); percent = Math.min(100, Math.max(0, (currentSecs / totalSecs) * 100)); text = `${percent.toFixed(2)}%`; const daysToSat = 6 - day; nextInfo = `Next: Weekend in ${daysToSat} days`; } document.getElementById('weekend-text').innerText = text; document.getElementById('weekend-progress').style.width = `${percent}%`; document.getElementById('next-break-info').innerText = nextInfo; },
-            renderCalendar: function() { const now = new Date(); const y = now.getFullYear(), m = now.getMonth(); document.getElementById('calendar-month').innerText = now.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' }); const firstDay = new Date(y, m, 1).getDay(); const daysInMonth = new Date(y, m + 1, 0).getDate(); const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')); for(let i=1; i<=daysInMonth; i++) { const d = document.createElement('div'); d.className = "aspect-square flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 cursor-default text-xs relative"; d.innerText = i; if(i===now.getDate()) d.className += " bg-green-500 text-white font-bold"; const isHol = this.holidays.find(h => h.d === i && h.m === (m + 1)); if(isHol) { d.classList.add('text-red-500', 'font-bold'); d.title = isHol.name; } grid.appendChild(d); } }
+            renderCalendar: function() { const now = new Date(); const y = now.getFullYear(), m = now.getMonth(); document.getElementById('calendar-month').innerText = now.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' }); const firstDay = new Date(y, m, 1).getDay(); const daysInMonth = new Date(y, m + 1, 0).getDate(); const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')); for(let i=1; i<=daysInMonth; i++) { const d = document.createElement('div'); d.className = "aspect-square flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 cursor-default text-xs relative"; d.innerText = i; if(i===now.getDate()) d.className += " bg-green-500 text-white font-bold"; const isHol = this.holidays.find(h => h.d === i && h.m === (m + 1)); if(isHol) { d.classList.add('text-red-500', 'font-bold'); d.title = isHol.name; } grid.appendChild(d); } },
+            
+            // --- MISSING FUNCTIONS ADDED HERE ---
+            openDeleteAccountModal: function() {
+                this.closeProfileModal();
+                document.getElementById('deleteAccountModal').classList.remove('hidden');
+            },
+            
+            closeDeleteAccountModal: function() {
+                document.getElementById('deleteAccountModal').classList.add('hidden');
+            },
+            
+            handleDeleteAccount: async function() {
+                const pass = document.getElementById('delAccPass').value; 
+                const url = localStorage.getItem('hub_api_url');
+                
+                if(!pass) return alert('กรุณากรอกรหัสผ่าน');
+                if(!confirm('ยืนยันครั้งสุดท้าย? ข้อมูลจะหายไปตลอดกาล')) return;
+                
+                const btn = document.getElementById('delAccBtn'); 
+                btn.disabled = true; 
+                btn.innerText = 'กำลังลบ...';
+                
+                try {
+                    const res = await fetch(url, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ 
+                            action: 'deleteAccount', 
+                            userId: this.currentUser.id, 
+                            password: pass 
+                        }) 
+                    });
+                    const result = await res.json();
+                    
+                    if(result.status === 'success') {
+                        localStorage.clear(); // Clear all local data
+                        location.reload(); // Reload page to reset state
+                    } else { 
+                        alert(result.message); 
+                    }
+                } catch(e) { 
+                    alert(e); 
+                } finally { 
+                    btn.disabled = false; 
+                    btn.innerText = 'ลบถาวร'; 
+                }
+            }
         };
         window.addEventListener('load', () => hub.init());
     </script>
+    <div id="deleteAccountModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col">
+            <h3 class="font-bold text-2xl font-brand mb-2 text-red-600">ยืนยันการลบบัญชี</h3>
+            <p class="text-xs text-gray-500 mb-6">ข้อมูลทั้งหมดจะถูกลบและไม่สามารถกู้คืนได้</p>
+            <div class="space-y-4">
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">กรอกรหัสผ่านเพื่อยืนยัน</label><input type="password" id="delAccPass" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 dark:text-white transition"></div>
+                <div class="flex gap-2">
+                    <button onclick="hub.closeDeleteAccountModal()" class="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">ยกเลิก</button>
+                    <button onclick="hub.handleDeleteAccount()" id="delAccBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg">ลบถาวร</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
