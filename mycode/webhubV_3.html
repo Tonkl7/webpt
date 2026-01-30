@@ -460,7 +460,8 @@
     <div id="toast" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg z-[150] text-sm font-bold flex items-center gap-3 transition-all duration-300 translate-y-0"><i class="fas fa-info-circle text-blue-400"></i> <span id="toastMsg">Notification</span></div>
 
     <script>
-        const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbysWLA7RVRVQe70JdbJS0RcjszA2EDp8zBaN3pAub7wGG3ZCshqRauuXEc0w31lPqL1qg/exec';
+        // Updated API URL (V14)
+        const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzmAiU9CBi774mMCCiTHxfoBdfKPv_af93lHJTqEK1543-rJR1wytVhlsyb30bQDQCOVA/exec';
 
         const hub = {
             links: [], selectedIcon: 'fas fa-globe', selectedColor: 'bg-green-500', currentAppColor: null, editingId: null, 
@@ -471,10 +472,14 @@
             holidays: [{ d: 1, m: 1, name: "วันขึ้นปีใหม่" }, { d: 14, m: 2, name: "วันวาเลนไทน์" }, { d: 26, m: 2, name: "วันมาฆบูชา" }, { d: 6, m: 4, name: "วันจักรี" }, { d: 13, m: 4, name: "วันสงกรานต์" }, { d: 14, m: 4, name: "วันสงกรานต์" }, { d: 15, m: 4, name: "วันสงกรานต์" }, { d: 1, m: 5, name: "วันแรงงาน" }, { d: 4, m: 5, name: "วันฉัตรมงคล" }, { d: 22, m: 5, name: "วันวิสาขบูชา" }, { d: 3, m: 6, name: "เฉลิมฯ พระราชินี" }, { d: 20, m: 7, name: "วันอาสาฬหบูชา" }, { d: 21, m: 7, name: "วันเข้าพรรษา" }, { d: 28, m: 7, name: "เฉลิมฯ ร.10" }, { d: 12, m: 8, name: "วันแม่แห่งชาติ" }, { d: 13, m: 10, name: "วันคล้ายวันสวรรคต ร.9" }, { d: 23, m: 10, name: "วันปิยมหาราช" }, { d: 31, m: 10, name: "วันฮาโลวีน" }, { d: 27, m: 11, name: "วันลอยกระทง" }, { d: 5, m: 12, name: "วันพ่อแห่งชาติ" }, { d: 10, m: 12, name: "วันรัฐธรรมนูญ" }, { d: 25, m: 12, name: "วันคริสต์มาส" }, { d: 31, m: 12, name: "วันสิ้นปี" }],
             
             init: function() {
-                if(!localStorage.getItem('hub_api_url')) localStorage.setItem('hub_api_url', DEFAULT_API_URL);
+                // Ensure latest API URL is used if key is missing or old default
+                if(!localStorage.getItem('hub_api_url') || localStorage.getItem('hub_api_url').includes('1qg')) {
+                    localStorage.setItem('hub_api_url', DEFAULT_API_URL);
+                }
+                document.getElementById('apiUrlInput').value = localStorage.getItem('hub_api_url') || DEFAULT_API_URL;
+
                 this.checkSession(); this.loadLinks(); this.renderGrid(); this.startClock(); this.checkFirstVisit(); this.initAddModal();
                 const isDark = localStorage.getItem('tonkla_theme') === 'dark'; if(isDark) document.documentElement.classList.add('dark');
-                document.getElementById('apiUrlInput').value = localStorage.getItem('hub_api_url') || '';
             },
 
             checkSession: function() { const savedUser = localStorage.getItem('webhub_user'); if(savedUser) { this.currentUser = JSON.parse(savedUser); this.updateAuthUI(); } },
@@ -509,12 +514,10 @@
                     const result = await response.json();
                     if(result.status === 'success') {
                         if (action === 'register') {
-                            // Register success -> Force Security Setup
                             this.tempUserId = result.user.id;
                             this.closeAuthModal();
                             document.getElementById('securityModal').classList.remove('hidden');
                         } else {
-                            // Login success
                             this.currentUser = result.user; localStorage.setItem('webhub_user', JSON.stringify(this.currentUser));
                             this.updateAuthUI(); this.closeAuthModal(); this.showToast(`ยินดีต้อนรับ ${this.currentUser.name || this.currentUser.email} 🎉`); this.loadLinks();
                         }
@@ -524,10 +527,19 @@
                 } catch(e) { alert('เชื่อมต่อไม่สำเร็จ: ' + e); } finally { btn.disabled = false; btn.innerText = this.isLoginMode ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'; }
             },
 
-            // --- SECURITY & RECOVERY ---
+            // --- SECURITY & RECOVERY (Improved Error Handling) ---
             handleSecuritySetup: async function() {
                 const q = document.getElementById('secQuestion').value; const a = document.getElementById('secAnswer').value; const url = localStorage.getItem('hub_api_url');
                 if(!q || !a) return alert('กรุณากรอกให้ครบ');
+                
+                // FIXED: Safety check for missing tempUserId
+                if(!this.tempUserId) {
+                    // Try to recover ID from auth form if possible, or just fail gracefully
+                    alert('เกิดข้อผิดพลาด: ไม่พบ ID ผู้ใช้ (Session หมดอายุ) กรุณาสมัครสมาชิกใหม่อีกครั้ง');
+                    document.getElementById('securityModal').classList.add('hidden');
+                    return;
+                }
+
                 const btn = document.getElementById('secSubmitBtn'); btn.disabled = true; btn.innerText = 'กำลังบันทึก...';
                 try {
                     const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'setupSecurity', userId: this.tempUserId, question: q, answer: a }) });
@@ -536,8 +548,15 @@
                         document.getElementById('securityModal').classList.add('hidden');
                         alert('ตั้งค่าสำเร็จ! กรุณาเข้าสู่ระบบอีกครั้ง');
                         this.handleAuthClick();
-                    } else { alert(result.message); }
-                } catch(e) { alert(e); } finally { btn.disabled = false; btn.innerText = 'บันทึกและเริ่มใช้งาน'; }
+                    } else { 
+                        // Enhanced error message
+                        if(result.message && result.message.includes('Unknown action')) {
+                            alert('⚠️ ระบบหลังบ้านยังไม่อัปเดต: กรุณา Copy โค้ด Apps Script ใหม่ไปวางและ Deploy ใหม่ (เลือก New version)');
+                        } else {
+                            alert('ข้อผิดพลาด: ' + result.message); 
+                        }
+                    }
+                } catch(e) { alert('Connection Error: ' + e); } finally { btn.disabled = false; btn.innerText = 'บันทึกและเริ่มใช้งาน'; }
             },
 
             openRecoveryModal: function() { this.closeAuthModal(); document.getElementById('recoveryModal').classList.remove('hidden'); document.getElementById('recStep1').classList.remove('hidden'); document.getElementById('recStep2').classList.add('hidden'); },
