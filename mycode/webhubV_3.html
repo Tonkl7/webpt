@@ -355,6 +355,11 @@
                     <input type="password" id="authPass" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition" placeholder="••••••••">
                 </div>
                 
+                <!-- Forgot Password Button -->
+                <div class="text-right">
+                    <button onclick="hub.openRecoveryModal()" class="text-xs text-blue-500 hover:underline font-bold">ลืมรหัสผ่าน?</button>
+                </div>
+
                 <button id="authSubmitBtn" onclick="hub.handleAuthSubmit()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition transform active:scale-95 mt-2">
                     เข้าสู่ระบบ
                 </button>
@@ -368,7 +373,39 @@
         </div>
     </div>
 
-    <!-- PROFILE MODAL (NEW) -->
+    <!-- SECURITY SETUP MODAL -->
+    <div id="securityModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col">
+            <h3 class="font-bold text-2xl font-brand mb-2 text-green-600">ตั้งค่าความปลอดภัย</h3>
+            <p class="text-xs text-gray-500 mb-6">กรุณาตั้งคำถามเพื่อใช้กู้คืนรหัสผ่านในอนาคต</p>
+            <div class="space-y-4">
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำถามกันลืม</label><input type="text" id="secQuestion" placeholder="เช่น ชื่อสัตว์เลี้ยงตัวแรก?" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white transition"></div>
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำตอบ</label><input type="text" id="secAnswer" placeholder="คำตอบของคุณ" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white transition"></div>
+                <button onclick="hub.handleSecuritySetup()" id="secSubmitBtn" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/30 transition transform active:scale-95 mt-2">บันทึกและเริ่มใช้งาน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECOVERY MODAL -->
+    <div id="recoveryModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col">
+            <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-2xl font-brand text-gray-800 dark:text-white">กู้คืนรหัสผ่าน</h3><button onclick="hub.closeRecoveryModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
+            
+            <div id="recStep1" class="space-y-4">
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">อีเมลของคุณ</label><input type="email" id="recEmail" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></div>
+                <button onclick="hub.fetchSecurityQuestion()" id="recStep1Btn" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">ถัดไป</button>
+            </div>
+
+            <div id="recStep2" class="space-y-4 hidden">
+                <p class="text-sm font-bold text-gray-800 dark:text-white bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 text-center" id="recQuestionDisplay"></p>
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำตอบ</label><input type="text" id="recAnswer" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></div>
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">รหัสผ่านใหม่</label><input type="password" id="recNewPass" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></div>
+                <button onclick="hub.handleResetPassword()" id="recStep2Btn" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition">เปลี่ยนรหัสผ่าน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
     <div id="profileModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col items-center">
             <div class="w-full flex justify-end mb-2"><button onclick="hub.closeProfileModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button></div>
@@ -392,10 +429,28 @@
                     </div>
                 </div>
                 
-                <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <button onclick="hub.handleLogout()" class="w-full py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition flex items-center justify-center gap-2">
-                        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                <div class="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2">
+                    <button onclick="hub.handleLogout()" class="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ
                     </button>
+                    <button onclick="hub.openDeleteAccountModal()" class="w-full py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition">
+                        <i class="fas fa-trash-alt mr-2"></i> ลบบัญชีผู้ใช้
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE ACCOUNT MODAL -->
+    <div id="deleteAccountModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col">
+            <h3 class="font-bold text-2xl font-brand mb-2 text-red-600">ยืนยันการลบบัญชี</h3>
+            <p class="text-xs text-gray-500 mb-6">ข้อมูลทั้งหมดจะถูกลบและไม่สามารถกู้คืนได้</p>
+            <div class="space-y-4">
+                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">กรอกรหัสผ่านเพื่อยืนยัน</label><input type="password" id="delAccPass" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 dark:text-white transition"></div>
+                <div class="flex gap-2">
+                    <button onclick="hub.closeDeleteAccountModal()" class="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">ยกเลิก</button>
+                    <button onclick="hub.handleDeleteAccount()" id="delAccBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg">ลบถาวร</button>
                 </div>
             </div>
         </div>
@@ -409,7 +464,7 @@
 
         const hub = {
             links: [], selectedIcon: 'fas fa-globe', selectedColor: 'bg-green-500', currentAppColor: null, editingId: null, 
-            currentUser: null, isLoginMode: true, tempAvatarBase64: null,
+            currentUser: null, isLoginMode: true, tempAvatarBase64: null, tempUserId: null,
 
             icons: ['fas fa-globe', 'fab fa-youtube', 'fab fa-github', 'fab fa-facebook', 'fab fa-twitter', 'fab fa-instagram', 'fab fa-discord', 'fab fa-google', 'fas fa-envelope', 'fas fa-shopping-cart', 'fas fa-gamepad', 'fas fa-music', 'fas fa-code', 'fas fa-book', 'fas fa-tools', 'fas fa-graduation-cap', 'fas fa-briefcase', 'fas fa-video', 'fas fa-comment', 'fas fa-camera', 'fas fa-heart', 'fas fa-star', 'fas fa-lightbulb', 'fas fa-rocket'],
             colors: ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500', 'bg-rose-500', 'bg-slate-500'],
@@ -428,7 +483,7 @@
                 if (this.currentUser) {
                     const avatarUrl = this.currentUser.avatar || `https://ui-avatars.com/api/?name=${this.currentUser.name || 'User'}&background=random`;
                     btn.innerHTML = `<img src="${avatarUrl}" class="w-full h-full rounded-full object-cover">`;
-                    btn.onclick = () => this.openProfileModal(); // Change to Profile Modal
+                    btn.onclick = () => this.openProfileModal(); 
                 } else {
                     btn.innerHTML = `<i class="fas fa-user"></i>`;
                     btn.onclick = () => this.handleAuthClick();
@@ -453,12 +508,91 @@
                     const response = await fetch(url, { method: 'POST', body: JSON.stringify({ action, email, password: pass }) });
                     const result = await response.json();
                     if(result.status === 'success') {
-                        this.currentUser = result.user; localStorage.setItem('webhub_user', JSON.stringify(this.currentUser));
-                        this.updateAuthUI(); this.closeAuthModal(); this.showToast(`ยินดีต้อนรับ ${this.currentUser.name || this.currentUser.email} 🎉`); this.loadLinks();
+                        if (action === 'register') {
+                            // Register success -> Force Security Setup
+                            this.tempUserId = result.user.id;
+                            this.closeAuthModal();
+                            document.getElementById('securityModal').classList.remove('hidden');
+                        } else {
+                            // Login success
+                            this.currentUser = result.user; localStorage.setItem('webhub_user', JSON.stringify(this.currentUser));
+                            this.updateAuthUI(); this.closeAuthModal(); this.showToast(`ยินดีต้อนรับ ${this.currentUser.name || this.currentUser.email} 🎉`); this.loadLinks();
+                        }
                     } else if (result.code === 'USER_NOT_FOUND') {
                         alert('⚠️ ไม่พบบัญชีนี้ กรุณาสมัครสมาชิกก่อนครับ');
                     } else { alert(result.message); }
                 } catch(e) { alert('เชื่อมต่อไม่สำเร็จ: ' + e); } finally { btn.disabled = false; btn.innerText = this.isLoginMode ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'; }
+            },
+
+            // --- SECURITY & RECOVERY ---
+            handleSecuritySetup: async function() {
+                const q = document.getElementById('secQuestion').value; const a = document.getElementById('secAnswer').value; const url = localStorage.getItem('hub_api_url');
+                if(!q || !a) return alert('กรุณากรอกให้ครบ');
+                const btn = document.getElementById('secSubmitBtn'); btn.disabled = true; btn.innerText = 'กำลังบันทึก...';
+                try {
+                    const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'setupSecurity', userId: this.tempUserId, question: q, answer: a }) });
+                    const result = await res.json();
+                    if(result.status === 'success') {
+                        document.getElementById('securityModal').classList.add('hidden');
+                        alert('ตั้งค่าสำเร็จ! กรุณาเข้าสู่ระบบอีกครั้ง');
+                        this.handleAuthClick();
+                    } else { alert(result.message); }
+                } catch(e) { alert(e); } finally { btn.disabled = false; btn.innerText = 'บันทึกและเริ่มใช้งาน'; }
+            },
+
+            openRecoveryModal: function() { this.closeAuthModal(); document.getElementById('recoveryModal').classList.remove('hidden'); document.getElementById('recStep1').classList.remove('hidden'); document.getElementById('recStep2').classList.add('hidden'); },
+            closeRecoveryModal: function() { document.getElementById('recoveryModal').classList.add('hidden'); },
+            
+            fetchSecurityQuestion: async function() {
+                const email = document.getElementById('recEmail').value; const url = localStorage.getItem('hub_api_url');
+                if(!email) return alert('กรุณากรอกอีเมล');
+                const btn = document.getElementById('recStep1Btn'); btn.disabled = true; btn.innerText = 'กำลังค้นหา...';
+                try {
+                    const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'getSecurityQuestion', email }) });
+                    const result = await res.json();
+                    if(result.status === 'success') {
+                        document.getElementById('recStep1').classList.add('hidden');
+                        document.getElementById('recStep2').classList.remove('hidden');
+                        document.getElementById('recQuestionDisplay').innerText = "คำถาม: " + result.question;
+                    } else { alert(result.message); }
+                } catch(e) { alert(e); } finally { btn.disabled = false; btn.innerText = 'ถัดไป'; }
+            },
+
+            handleResetPassword: async function() {
+                const email = document.getElementById('recEmail').value; 
+                const ans = document.getElementById('recAnswer').value;
+                const newPass = document.getElementById('recNewPass').value;
+                const url = localStorage.getItem('hub_api_url');
+                if(!ans || !newPass) return alert('กรุณากรอกให้ครบ');
+                
+                const btn = document.getElementById('recStep2Btn'); btn.disabled = true; btn.innerText = 'กำลังเปลี่ยน...';
+                try {
+                    const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'resetPassword', email, answer: ans, newPassword: newPass }) });
+                    const result = await res.json();
+                    if(result.status === 'success') {
+                        alert('เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบใหม่');
+                        this.closeRecoveryModal(); this.handleAuthClick();
+                    } else { alert(result.message); }
+                } catch(e) { alert(e); } finally { btn.disabled = false; btn.innerText = 'เปลี่ยนรหัสผ่าน'; }
+            },
+
+            openDeleteAccountModal: function() { this.closeProfileModal(); document.getElementById('deleteAccountModal').classList.remove('hidden'); },
+            closeDeleteAccountModal: function() { document.getElementById('deleteAccountModal').classList.add('hidden'); },
+            
+            handleDeleteAccount: async function() {
+                const pass = document.getElementById('delAccPass').value; const url = localStorage.getItem('hub_api_url');
+                if(!pass) return alert('กรุณากรอกรหัสผ่าน');
+                if(!confirm('ยืนยันครั้งสุดท้าย? ข้อมูลจะหายไปตลอดกาล')) return;
+                
+                const btn = document.getElementById('delAccBtn'); btn.disabled = true; btn.innerText = 'กำลังลบ...';
+                try {
+                    const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'deleteAccount', userId: this.currentUser.id, password: pass }) });
+                    const result = await res.json();
+                    if(result.status === 'success') {
+                        localStorage.clear(); // Clear all
+                        location.reload();
+                    } else { alert(result.message); }
+                } catch(e) { alert(e); } finally { btn.disabled = false; btn.innerText = 'ลบถาวร'; }
             },
 
             // --- PROFILE LOGIC ---
@@ -477,20 +611,14 @@
                 if (input.files && input.files[0]) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        // Compress Image to fit in Google Sheet cell (< 50kb safe)
                         const img = new Image();
                         img.src = e.target.result;
                         img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            // Resize to thumbnail 120x120
+                            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
                             const maxSize = 120;
                             let width = img.width, height = img.height;
-                            if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } 
-                            else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
-                            canvas.width = width; canvas.height = height;
-                            ctx.drawImage(img, 0, 0, width, height);
-                            // Get compressed Base64
+                            if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+                            canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height);
                             this.tempAvatarBase64 = canvas.toDataURL('image/jpeg', 0.6);
                             document.getElementById('profileAvatar').src = this.tempAvatarBase64;
                         }
@@ -500,31 +628,13 @@
             },
 
             handleProfileSave: async function() {
-                const newName = document.getElementById('editProfileName').value.trim();
-                const url = localStorage.getItem('hub_api_url');
+                const newName = document.getElementById('editProfileName').value.trim(); const url = localStorage.getItem('hub_api_url');
                 if(!url) return;
-                
-                // Optimistic Update
                 const oldUser = {...this.currentUser};
-                this.currentUser.name = newName;
-                if(this.tempAvatarBase64) this.currentUser.avatar = this.tempAvatarBase64;
+                this.currentUser.name = newName; if(this.tempAvatarBase64) this.currentUser.avatar = this.tempAvatarBase64;
                 localStorage.setItem('webhub_user', JSON.stringify(this.currentUser));
-                this.updateAuthUI();
-                this.showToast('บันทึกโปรไฟล์แล้ว ✅');
-                this.closeProfileModal();
-
-                // Send to Backend
-                try {
-                    await fetch(url, { 
-                        method: 'POST', 
-                        body: JSON.stringify({ 
-                            action: 'updateProfile', 
-                            userId: this.currentUser.id,
-                            name: newName,
-                            avatar: this.tempAvatarBase64 // Send if changed, otherwise undefined is fine (handle in GAS)
-                        }) 
-                    });
-                } catch(e) { console.error('Sync Profile Failed'); }
+                this.updateAuthUI(); this.showToast('บันทึกโปรไฟล์แล้ว ✅'); this.closeProfileModal();
+                try { await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'updateProfile', userId: this.currentUser.id, name: newName, avatar: this.tempAvatarBase64 }) }); } catch(e) { console.error('Sync Profile Failed'); }
             },
 
             handleLogout: function() {
