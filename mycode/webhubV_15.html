@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tonkla's Hub</title>
     
     <!-- Tailwind CSS -->
@@ -31,6 +31,9 @@
                             '0%': { opacity: '0', transform: 'translateY(10px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
+                    },
+                    screens: {
+                        'xs': '375px',
                     }
                 }
             }
@@ -42,22 +45,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Mitr:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     
     <style>
+        /* Base Settings */
         body { 
             font-family: 'Sarabun', sans-serif; 
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
             transition: background-color 0.5s ease, color 0.5s ease;
+            /* Safe Area for Mobile */
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
         /* 3D Button Effect */
         .btn-3d {
             transition: all 0.1s;
-            border-bottom-width: 6px;
+            border-bottom-width: 4px;
+        }
+        @media (min-width: 768px) {
+            .btn-3d { border-bottom-width: 6px; }
         }
         .btn-3d:active {
             transform: translateY(3px);
-            border-bottom-width: 0px;
-            margin-top: 6px; 
+            border-bottom-width: 0px !important;
+            margin-top: 4px; 
+        }
+        @media (min-width: 768px) {
+            .btn-3d:active { margin-top: 6px; }
         }
 
         /* Transition Curtain */
@@ -80,6 +92,7 @@
         }
         #app-frame-layer.active { transform: translateX(0); }
 
+        /* Backgrounds */
         .clean-grid-bg {
             background-size: 40px 40px;
             background-image: radial-gradient(circle, #00000008 1px, transparent 1px);
@@ -90,12 +103,12 @@
 
         /* Drawers */
         .drawer-panel {
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .drawer-panel.open { transform: translateX(0); }
         
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
@@ -108,22 +121,25 @@
             transform: translateY(-50%);
             background: #ef4444;
             color: white;
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 10px;
             white-space: nowrap;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             font-weight: bold;
         }
+        @media (min-width: 768px) {
+            .tutorial-hint { padding: 4px 12px; font-size: 12px; }
+        }
         .tutorial-hint::after {
-            content: ''; position: absolute; right: -6px; top: 50%; margin-top: -6px;
-            border-width: 6px; border-style: solid;
+            content: ''; position: absolute; right: -5px; top: 50%; margin-top: -5px;
+            border-width: 5px; border-style: solid;
             border-color: transparent transparent transparent #ef4444;
         }
 
         /* Selection Styling */
         .icon-option.selected, .color-option.selected {
-            ring-width: 4px;
+            ring-width: 3px;
             ring-color: #10b981;
             transform: scale(1.1);
         }
@@ -136,12 +152,12 @@
         .profile-upload:hover .overlay { opacity: 1; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-[#0f172a] text-gray-800 dark:text-gray-100 h-[100dvh] w-screen overflow-hidden">
+<body class="bg-gray-50 dark:bg-[#0f172a] text-gray-800 dark:text-gray-100 h-[100dvh] w-screen overflow-hidden flex flex-col">
 
     <!-- TRANSITION CURTAIN -->
     <div id="transition-curtain" class="bg-green-500">
-        <div class="text-white text-4xl font-brand font-bold animate-bounce flex flex-col items-center">
-            <i class="fas fa-rocket mb-4 text-6xl"></i>
+        <div class="text-white text-3xl md:text-4xl font-brand font-bold animate-bounce flex flex-col items-center">
+            <i class="fas fa-rocket mb-4 text-5xl md:text-6xl"></i>
             <span>Loading...</span>
         </div>
     </div>
@@ -149,49 +165,50 @@
     <!-- LAYER 1: HUB -->
     <div id="hub-layer" class="w-full h-full flex flex-col relative clean-grid-bg overflow-hidden">
         <!-- Enlarged Navbar -->
-        <nav class="h-20 px-6 md:px-10 flex items-center justify-between bg-white/80 dark:bg-slate-850/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shrink-0 sticky top-0 z-20">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white shadow-lg text-xl"><i class="fas fa-leaf"></i></div>
-                <h1 class="text-2xl md:text-3xl font-brand font-bold tracking-tight flex items-center">
+        <nav class="h-16 md:h-20 px-4 md:px-10 flex items-center justify-between bg-white/80 dark:bg-slate-850/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shrink-0 sticky top-0 z-20">
+            <div class="flex items-center gap-2 md:gap-4">
+                <div class="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg text-lg md:text-xl"><i class="fas fa-leaf"></i></div>
+                <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">
                     Tonkla's <span class="text-green-600 mx-1">Hub</span>
                     <!-- Beta Badge -->
-                    <span class="bg-orange-400/20 text-orange-600 dark:text-orange-400 border border-orange-400/30 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-2 translate-y-1">Beta</span>
+                    <span class="bg-orange-400/20 text-orange-600 dark:text-orange-400 border border-orange-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">Beta</span>
                 </h1>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 md:gap-3">
                 <!-- User Auth Button -->
-                <button onclick="hub.handleAuthClick()" id="authBtn" class="w-11 h-11 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 flex items-center justify-center transition text-lg border border-blue-200 dark:border-blue-800 overflow-hidden">
+                <button onclick="hub.handleAuthClick()" id="authBtn" class="w-9 h-9 md:w-11 md:h-11 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 flex items-center justify-center transition text-sm md:text-lg border border-blue-200 dark:border-blue-800 overflow-hidden">
                     <i class="fas fa-user"></i>
                 </button>
-                <div class="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
-                <button onclick="hub.toggleTheme()" class="w-11 h-11 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition text-lg"><i class="fas fa-adjust"></i></button>
-                <button onclick="hub.openManageModal()" class="w-11 h-11 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition relative text-lg"><i class="fas fa-pen"></i></button>
+                <div class="h-5 md:h-6 w-px bg-gray-300 dark:bg-gray-700 mx-0.5"></div>
+                <button onclick="hub.toggleTheme()" class="w-9 h-9 md:w-11 md:h-11 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition text-sm md:text-lg"><i class="fas fa-adjust"></i></button>
+                <button onclick="hub.openManageModal()" class="w-9 h-9 md:w-11 md:h-11 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition relative text-sm md:text-lg"><i class="fas fa-pen"></i></button>
             </div>
         </nav>
 
-        <main class="flex-1 p-6 md:p-10 overflow-y-auto z-10 flex flex-col items-center">
-            <h2 class="text-3xl md:text-4xl font-brand font-bold text-gray-700 dark:text-gray-200 mb-10 mt-6 animate-pulse-slow text-center drop-shadow-sm">เลือกพื้นที่ที่จะแสดง</h2>
+        <main class="flex-1 p-4 md:p-10 overflow-y-auto z-10 flex flex-col items-center w-full">
+            <h2 class="text-2xl md:text-4xl font-brand font-bold text-gray-700 dark:text-gray-200 mb-6 md:mb-10 mt-2 md:mt-6 animate-pulse-slow text-center drop-shadow-sm">เลือกพื้นที่ที่จะแสดง</h2>
             
-            <div id="app-grid" class="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 pb-20 w-full max-w-7xl px-4">
+            <!-- Responsive Grid: 2 cols on mobile, up to 5 on desktop -->
+            <div id="app-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-8 pb-20 w-full max-w-7xl px-2 md:px-4">
                 <!-- Dynamic Apps will be injected here -->
                 
                 <!-- Add Button -->
-                <div onclick="hub.openAddModal()" class="btn-3d aspect-square border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-all border-b-gray-300 dark:border-b-gray-700 group hover:border-green-400 dark:hover:border-green-600">
-                    <i class="fas fa-plus text-5xl mb-3 group-hover:scale-110 transition-transform group-hover:rotate-90 duration-300"></i>
-                    <span class="text-sm md:text-base font-bold">Add Project</span>
+                <div onclick="hub.openAddModal()" class="btn-3d aspect-square border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-all border-b-gray-300 dark:border-b-gray-700 group hover:border-green-400 dark:hover:border-green-600">
+                    <i class="fas fa-plus text-3xl md:text-5xl mb-2 md:mb-3 group-hover:scale-110 transition-transform group-hover:rotate-90 duration-300"></i>
+                    <span class="text-xs md:text-base font-bold">Add Project</span>
                 </div>
             </div>
         </main>
 
         <!-- Footer -->
-        <footer class="p-6 text-center text-xs md:text-sm font-brand border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-900/50 backdrop-blur-sm relative overflow-hidden w-full flex justify-center">
+        <footer class="p-4 md:p-6 text-center text-[10px] md:text-sm font-brand border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-900/50 backdrop-blur-sm relative overflow-hidden w-full flex justify-center shrink-0">
             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/5 to-transparent animate-pulse"></div>
-            <div class="relative z-10 flex flex-col items-center justify-center gap-2">
+            <div class="relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2">
                 <div class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400">
                     <i class="fas fa-code text-green-500"></i>
                     <span>Developed by</span>
                 </div>
-                <div class="font-bold text-gray-700 dark:text-gray-200 text-base md:text-lg tracking-wide flex items-center justify-center gap-2">
+                <div class="font-bold text-gray-700 dark:text-gray-200 text-xs md:text-lg tracking-wide flex items-center justify-center gap-2">
                     Sarayut Angko <i class="fas fa-seedling text-green-500"></i>
                 </div>
             </div>
@@ -200,36 +217,36 @@
 
     <!-- LAYER 2: APP FRAME -->
     <div id="app-frame-layer" class="flex flex-col bg-white dark:bg-gray-900">
-        <!-- Home Button -->
-        <button onclick="hub.goHome()" class="fixed bottom-6 left-6 z-[60] w-12 h-12 bg-black/60 hover:bg-black/80 backdrop-blur text-white rounded-full flex items-center justify-center shadow-2xl transition hover:scale-110 text-xl border border-white/20">
+        <!-- Home Button (Mobile Optimized) -->
+        <button onclick="hub.goHome()" class="fixed bottom-6 left-4 md:left-6 z-[60] w-12 h-12 md:w-14 md:h-14 bg-black/60 hover:bg-black/80 backdrop-blur text-white rounded-full flex items-center justify-center shadow-2xl transition active:scale-95 md:hover:scale-110 text-xl border border-white/20 pb-safe">
             <i class="fas fa-home"></i>
         </button>
         <iframe id="web-frame" class="w-full h-full border-none bg-white"></iframe>
     </div>
 
     <!-- RIGHT DRAWERS -->
-    <button onclick="hub.toggleDrawer('time')" class="fixed right-0 top-28 z-30 bg-green-600 text-white p-3 md:p-4 rounded-l-2xl shadow-lg hover:pr-6 transition-all duration-300 flex items-center gap-2 group">
-        <i class="fas fa-chevron-left group-hover:animate-bounce"></i><i class="far fa-clock text-xl"></i>
+    <button onclick="hub.toggleDrawer('time')" class="fixed right-0 top-20 md:top-28 z-30 bg-green-600 text-white p-3 md:p-4 rounded-l-xl md:rounded-l-2xl shadow-lg hover:pr-6 transition-all duration-300 flex items-center gap-2 group active:scale-95">
+        <i class="fas fa-chevron-left group-hover:animate-bounce"></i><i class="far fa-clock text-lg md:text-xl"></i>
     </button>
 
-    <button onclick="hub.toggleDrawer('help')" id="help-btn" class="fixed right-0 top-48 z-30 bg-blue-600 text-white p-3 md:p-4 rounded-l-2xl shadow-lg hover:pr-6 transition-all duration-300 flex items-center gap-2 group">
+    <button onclick="hub.toggleDrawer('help')" id="help-btn" class="fixed right-0 top-36 md:top-48 z-30 bg-blue-600 text-white p-3 md:p-4 rounded-l-xl md:rounded-l-2xl shadow-lg hover:pr-6 transition-all duration-300 flex items-center gap-2 group active:scale-95">
         <div id="help-hint" class="tutorial-hint hidden animate-bounce-slow">กดเพื่อดูวิธีใช้</div>
-        <i class="fas fa-question-circle text-xl"></i>
+        <i class="fas fa-question-circle text-lg md:text-xl"></i>
     </button>
 
-    <!-- Time Drawer Panel -->
-    <div id="time-drawer" class="drawer-panel fixed top-0 right-0 h-full w-80 md:w-96 bg-white dark:bg-slate-800 shadow-2xl z-[40] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
-        <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-slate-900">
-            <h3 class="font-brand font-bold text-xl text-green-600"><i class="far fa-calendar-alt mr-2"></i>Time & Holiday</h3>
-            <button onclick="hub.closeAllDrawers()" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-2xl"></i></button>
+    <!-- Time Drawer Panel (Responsive Width) -->
+    <div id="time-drawer" class="drawer-panel fixed top-0 right-0 h-full w-[85vw] md:w-96 bg-white dark:bg-slate-800 shadow-2xl z-[40] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
+        <div class="p-5 md:p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-slate-900">
+            <h3 class="font-brand font-bold text-lg md:text-xl text-green-600"><i class="far fa-calendar-alt mr-2"></i>Time & Holiday</h3>
+            <button onclick="hub.closeAllDrawers()" class="text-gray-400 hover:text-red-500 transition p-2"><i class="fas fa-times text-xl md:text-2xl"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-6 space-y-8">
+        <div class="flex-1 overflow-y-auto p-5 md:p-6 space-y-6 md:space-y-8">
             <div class="text-center">
-                <div id="drawer-greeting" class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">HELLO</div>
-                <h2 id="drawer-clock" class="text-5xl font-mono font-bold text-gray-800 dark:text-white mb-2 tracking-tighter">00:00:00</h2>
-                <p id="drawer-date" class="text-sm text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/30 py-1 px-3 rounded-full inline-block">Loading...</p>
+                <div id="drawer-greeting" class="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">HELLO</div>
+                <h2 id="drawer-clock" class="text-4xl md:text-5xl font-mono font-bold text-gray-800 dark:text-white mb-2 tracking-tighter">00:00:00</h2>
+                <p id="drawer-date" class="text-xs md:text-sm text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/30 py-1 px-3 rounded-full inline-block">Loading...</p>
             </div>
-            <div class="bg-gray-50 dark:bg-slate-700/50 p-5 rounded-2xl">
+            <div class="bg-gray-50 dark:bg-slate-700/50 p-4 md:p-5 rounded-2xl">
                 <div class="flex justify-between text-xs font-bold mb-3">
                     <span class="text-gray-500 dark:text-gray-400 uppercase">Road to Freedom</span>
                     <span id="weekend-text" class="text-blue-500">0%</span>
@@ -242,67 +259,67 @@
                 <p id="next-break-info" class="text-[10px] text-gray-400 mt-2 text-right font-mono">Next: Weekend</p>
             </div>
             <div>
-                <p id="calendar-month" class="text-center font-bold mb-4 text-gray-800 dark:text-white text-base"></p>
-                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-400 mb-2">
+                <p id="calendar-month" class="text-center font-bold mb-4 text-gray-800 dark:text-white text-sm md:text-base"></p>
+                <div class="grid grid-cols-7 gap-1 md:gap-2 text-center text-[10px] md:text-xs font-bold text-gray-400 mb-2">
                     <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
                 </div>
-                <div id="calendar-days" class="grid grid-cols-7 gap-2 text-center text-sm font-mono"></div>
+                <div id="calendar-days" class="grid grid-cols-7 gap-1 md:gap-2 text-center text-xs md:text-sm font-mono"></div>
             </div>
         </div>
     </div>
 
-    <!-- Help Drawer Panel -->
-    <div id="help-drawer" class="drawer-panel fixed top-0 right-0 h-full w-80 md:w-96 bg-white dark:bg-slate-800 shadow-2xl z-[40] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
-        <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-slate-900">
-            <h3 class="font-brand font-bold text-xl text-blue-600"><i class="fas fa-book mr-2"></i>คู่มือการใช้งาน</h3>
-            <button onclick="hub.closeAllDrawers()" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-2xl"></i></button>
+    <!-- Help Drawer Panel (Responsive Width) -->
+    <div id="help-drawer" class="drawer-panel fixed top-0 right-0 h-full w-[85vw] md:w-96 bg-white dark:bg-slate-800 shadow-2xl z-[40] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
+        <div class="p-5 md:p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-slate-900">
+            <h3 class="font-brand font-bold text-lg md:text-xl text-blue-600"><i class="fas fa-book mr-2"></i>คู่มือการใช้งาน</h3>
+            <button onclick="hub.closeAllDrawers()" class="text-gray-400 hover:text-red-500 transition p-2"><i class="fas fa-times text-xl md:text-2xl"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            <div class="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl border border-blue-100 dark:border-blue-800">
-                <h4 class="font-bold text-blue-700 dark:text-blue-300 mb-2 text-lg">ยินดีต้อนรับ!</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Tonkla's Hub คือประตูสู่โปรเจกต์ของคุณ รวมทุกลิงก์ไว้ในที่เดียว</p>
+        <div class="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 md:p-5 rounded-2xl border border-blue-100 dark:border-blue-800">
+                <h4 class="font-bold text-blue-700 dark:text-blue-300 mb-2 text-base md:text-lg">ยินดีต้อนรับ!</h4>
+                <p class="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Tonkla's Hub คือประตูสู่โปรเจกต์ของคุณ รวมทุกลิงก์ไว้ในที่เดียว</p>
             </div>
             <div class="space-y-6 pl-2">
                 <div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700">
                     <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                    <h5 class="font-bold text-base text-gray-800 dark:text-white mb-1">1. เพิ่มปุ่มใหม่</h5>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">กดปุ่ม <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded font-bold border border-gray-300 dark:border-gray-600">+</span> ใส่ชื่อและลิงก์ เลือกไอคอนและสีที่ชอบ</p>
+                    <h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">1. เพิ่มปุ่มใหม่</h5>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กดปุ่ม <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded font-bold border border-gray-300 dark:border-gray-600">+</span> ใส่ชื่อและลิงก์ เลือกไอคอนและสีที่ชอบ</p>
                 </div>
                 <div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700">
                     <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                    <h5 class="font-bold text-base text-gray-800 dark:text-white mb-1">2. แก้ไข/ลบ</h5>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">กดปุ่ม <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600"><i class="fas fa-pen"></i></span> บนแถบเมนูเพื่อจัดการ</p>
+                    <h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">2. แก้ไข/ลบ</h5>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กดปุ่ม <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600"><i class="fas fa-pen"></i></span> บนแถบเมนูเพื่อจัดการ</p>
                 </div>
                 <div class="relative pl-6 border-l-2 border-transparent">
                     <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                    <h5 class="font-bold text-base text-gray-800 dark:text-white mb-1">3. เวลา & วันหยุด</h5>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">กดแถบด้านขวาเพื่อดูนาฬิกาและวันหยุด</p>
+                    <h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">3. เวลา & วันหยุด</h5>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กดแถบด้านขวาเพื่อดูนาฬิกาและวันหยุด</p>
                 </div>
             </div>
-            <a href="https://github.com/Tonkl7/ToolExtensions" target="_blank" class="block w-full py-4 bg-gray-900 hover:bg-black text-white text-center rounded-2xl font-bold shadow-lg transition flex items-center justify-center gap-2 mt-4 transform active:scale-95">
-                <i class="fab fa-github text-2xl"></i> ไปที่ GitHub Repo
+            <a href="https://github.com/Tonkl7/ToolExtensions" target="_blank" class="block w-full py-3 md:py-4 bg-gray-900 hover:bg-black text-white text-center rounded-2xl font-bold shadow-lg transition flex items-center justify-center gap-2 mt-4 transform active:scale-95 text-sm md:text-base">
+                <i class="fab fa-github text-xl md:text-2xl"></i> ไปที่ GitHub Repo
             </a>
         </div>
     </div>
 
     <div id="drawer-backdrop" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[35] hidden transition-opacity" onclick="hub.closeAllDrawers()"></div>
 
-    <!-- MODALS -->
+    <!-- MODALS (Centered & Responsive) -->
     <!-- Add/Edit Modal with Selection -->
     <div id="addModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col max-h-[90vh]">
-            <h3 id="modalTitle" class="font-bold text-2xl font-brand mb-6 text-gray-800 dark:text-white">สร้างปุ่มใหม่</h3>
+            <h3 id="modalTitle" class="font-bold text-xl md:text-2xl font-brand mb-4 md:mb-6 text-gray-800 dark:text-white">สร้างปุ่มใหม่</h3>
             
             <div class="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">รายละเอียด</label>
-                    <input type="text" id="addName" placeholder="ชื่อปุ่ม (เช่น YouTube)" class="w-full mb-3 p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white font-bold transition">
-                    <input type="url" id="addUrl" placeholder="ลิงก์ (https://...)" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white font-mono text-sm transition">
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">รายละเอียด</label>
+                    <input type="text" id="addName" placeholder="ชื่อปุ่ม (เช่น YouTube)" class="w-full mb-3 p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white font-bold transition text-sm md:text-base">
+                    <input type="url" id="addUrl" placeholder="ลิงก์ (https://...)" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white font-mono text-xs md:text-sm transition">
                 </div>
 
                 <!-- Icon Selection -->
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">เลือกไอคอน</label>
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">เลือกไอคอน</label>
                     <div id="iconGrid" class="grid grid-cols-6 gap-2">
                         <!-- JS injected -->
                     </div>
@@ -310,16 +327,16 @@
 
                 <!-- Color Selection -->
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">เลือกสีปุ่ม</label>
-                    <div id="colorGrid" class="flex flex-wrap gap-3">
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">เลือกสีปุ่ม</label>
+                    <div id="colorGrid" class="flex flex-wrap gap-2 md:gap-3">
                         <!-- JS injected -->
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-                <button onclick="hub.closeAddModal()" class="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition">ยกเลิก</button>
-                <button onclick="hub.saveLink()" id="modalBtnText" class="px-8 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/30 transition transform active:scale-95">สร้างเลย</button>
+            <div class="flex justify-end gap-3 mt-4 md:mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <button onclick="hub.closeAddModal()" class="px-4 md:px-6 py-2 md:py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition text-sm md:text-base">ยกเลิก</button>
+                <button onclick="hub.saveLink()" id="modalBtnText" class="px-6 md:px-8 py-2 md:py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/30 transition transform active:scale-95 text-sm md:text-base">สร้างเลย</button>
             </div>
         </div>
     </div>
@@ -328,14 +345,14 @@
     <div id="manageModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="font-bold text-2xl font-brand text-gray-800 dark:text-white">จัดการปุ่ม</h3>
+                <h3 class="font-bold text-xl md:text-2xl font-brand text-gray-800 dark:text-white">จัดการปุ่ม</h3>
                 <button onclick="hub.closeManageModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
             </div>
             <div id="manageList" class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar"></div>
             
             <!-- Delete All Button -->
             <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                <button onclick="hub.deleteAllLinks()" class="w-full py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition">
+                <button onclick="hub.deleteAllLinks()" class="w-full py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition text-sm md:text-base">
                     <i class="fas fa-trash-alt mr-2"></i> ลบข้อมูลทั้งหมด
                 </button>
             </div>
@@ -347,19 +364,19 @@
     <div id="authModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col transition-all duration-300">
             <div class="flex justify-between items-center mb-6">
-                <h3 id="authTitle" class="font-bold text-2xl font-brand text-gray-800 dark:text-white">เข้าสู่ระบบ</h3>
+                <h3 id="authTitle" class="font-bold text-xl md:text-2xl font-brand text-gray-800 dark:text-white">เข้าสู่ระบบ</h3>
                 <button onclick="hub.closeAuthModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
             </div>
             
             <!-- Auth Form -->
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">อีเมล</label>
-                    <input type="email" id="authEmail" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition" placeholder="name@example.com">
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">อีเมล</label>
+                    <input type="email" id="authEmail" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition text-sm md:text-base" placeholder="name@example.com">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">รหัสผ่าน</label>
-                    <input type="password" id="authPass" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition" placeholder="••••••••">
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">รหัสผ่าน</label>
+                    <input type="password" id="authPass" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition text-sm md:text-base" placeholder="••••••••">
                 </div>
                 
                 <!-- Forgot Password Button -->
@@ -367,13 +384,13 @@
                     <button onclick="hub.openRecoveryModal()" class="text-xs text-blue-500 hover:underline font-bold">ลืมรหัสผ่าน?</button>
                 </div>
 
-                <button id="authSubmitBtn" onclick="hub.handleAuthSubmit()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition transform active:scale-95 mt-2">
+                <button id="authSubmitBtn" onclick="hub.handleAuthSubmit()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition transform active:scale-95 mt-2 text-sm md:text-base">
                     เข้าสู่ระบบ
                 </button>
             </div>
 
             <!-- Toggle Auth Mode -->
-            <div class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+            <div class="mt-6 text-center text-xs md:text-sm text-gray-500 dark:text-gray-400">
                 <span id="authSwitchText">ยังไม่มีบัญชี?</span>
                 <button onclick="hub.toggleAuthMode()" class="text-blue-500 font-bold hover:underline ml-1">สมัครสมาชิก</button>
             </div>
@@ -383,12 +400,12 @@
     <!-- SECURITY SETUP MODAL -->
     <div id="securityModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col">
-            <h3 class="font-bold text-2xl font-brand mb-2 text-green-600">ตั้งค่าความปลอดภัย</h3>
-            <p class="text-xs text-gray-500 mb-6">กรุณาตั้งคำถามเพื่อใช้กู้คืนรหัสผ่านในอนาคต</p>
+            <h3 class="font-bold text-xl md:text-2xl font-brand mb-2 text-green-600">ตั้งค่าความปลอดภัย</h3>
+            <p class="text-[10px] md:text-xs text-gray-500 mb-6">กรุณาตั้งคำถามเพื่อใช้กู้คืนรหัสผ่านในอนาคต</p>
             <div class="space-y-4">
-                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำถามกันลืม</label><input type="text" id="secQuestion" placeholder="เช่น ชื่อสัตว์เลี้ยงตัวแรก?" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white transition"></div>
-                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำตอบ</label><input type="text" id="secAnswer" placeholder="คำตอบของคุณ" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white transition"></div>
-                <button onclick="hub.handleSecuritySetup()" id="secSubmitBtn" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/30 transition transform active:scale-95 mt-2">บันทึกและเริ่มใช้งาน</button>
+                <div><label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำถามกันลืม</label><input type="text" id="secQuestion" placeholder="เช่น ชื่อสัตว์เลี้ยงตัวแรก?" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white transition text-sm md:text-base"></div>
+                <div><label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำตอบ</label><input type="text" id="secAnswer" placeholder="คำตอบของคุณ" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white transition text-sm md:text-base"></div>
+                <button onclick="hub.handleSecuritySetup()" id="secSubmitBtn" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-500/30 transition transform active:scale-95 mt-2 text-sm md:text-base">บันทึกและเริ่มใช้งาน</button>
             </div>
         </div>
     </div>
@@ -396,18 +413,18 @@
     <!-- RECOVERY MODAL -->
     <div id="recoveryModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col">
-            <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-2xl font-brand text-gray-800 dark:text-white">กู้คืนรหัสผ่าน</h3><button onclick="hub.closeRecoveryModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
+            <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-xl md:text-2xl font-brand text-gray-800 dark:text-white">กู้คืนรหัสผ่าน</h3><button onclick="hub.closeRecoveryModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
             
             <div id="recStep1" class="space-y-4">
-                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">อีเมลของคุณ</label><input type="email" id="recEmail" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></div>
-                <button onclick="hub.fetchSecurityQuestion()" id="recStep1Btn" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">ถัดไป</button>
+                <div><label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">อีเมลของคุณ</label><input type="email" id="recEmail" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm md:text-base"></div>
+                <button onclick="hub.fetchSecurityQuestion()" id="recStep1Btn" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm md:text-base">ถัดไป</button>
             </div>
 
             <div id="recStep2" class="space-y-4 hidden">
-                <p class="text-sm font-bold text-gray-800 dark:text-white bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 text-center" id="recQuestionDisplay"></p>
-                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำตอบ</label><input type="text" id="recAnswer" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></div>
-                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">รหัสผ่านใหม่</label><input type="password" id="recNewPass" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></div>
-                <button onclick="hub.handleResetPassword()" id="recStep2Btn" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition">เปลี่ยนรหัสผ่าน</button>
+                <p class="text-xs md:text-sm font-bold text-gray-800 dark:text-white bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 text-center" id="recQuestionDisplay"></p>
+                <div><label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">คำตอบ</label><input type="text" id="recAnswer" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm md:text-base"></div>
+                <div><label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">รหัสผ่านใหม่</label><input type="password" id="recNewPass" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm md:text-base"></div>
+                <button onclick="hub.handleResetPassword()" id="recStep2Btn" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition text-sm md:text-base">เปลี่ยนรหัสผ่าน</button>
             </div>
         </div>
     </div>
@@ -419,33 +436,32 @@
             
             <!-- Avatar Upload -->
             <div class="relative group cursor-pointer profile-upload mb-4" onclick="document.getElementById('avatarInput').click()">
-                <img id="profileAvatar" src="" class="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg">
+                <img id="profileAvatar" src="" class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg">
                 <div class="overlay absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white opacity-0 transition-opacity"><i class="fas fa-camera"></i></div>
             </div>
             <input type="file" id="avatarInput" class="hidden" accept="image/*" onchange="hub.handleAvatarSelect(this)">
 
-            <h3 class="text-xl font-bold dark:text-white mb-1" id="profileNameDisplay">User</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6" id="profileEmailDisplay">user@example.com</p>
+            <h3 class="text-lg md:text-xl font-bold dark:text-white mb-1" id="profileNameDisplay">User</h3>
+            <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-6" id="profileEmailDisplay">user@example.com</p>
 
-            <div class="w-full space-y-4">
+            <div class="w-full space-y-3 md:space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">แก้ไขชื่อเล่น</label>
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">แก้ไขชื่อเล่น</label>
                     <div class="flex gap-2">
-                        <input type="text" id="editProfileName" class="flex-1 p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white">
-                        <button onclick="hub.handleProfileSave()" class="bg-green-600 text-white px-4 rounded-xl hover:bg-green-700 font-bold"><i class="fas fa-save"></i></button>
+                        <input type="text" id="editProfileName" class="flex-1 p-2 md:p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white">
+                        <button onclick="hub.handleProfileSave()" class="bg-green-600 text-white px-3 md:px-4 rounded-xl hover:bg-green-700 font-bold"><i class="fas fa-save"></i></button>
                     </div>
                 </div>
                 
-                <!-- NEW: Change Password Button -->
-                <button onclick="hub.openProfileReset()" class="w-full py-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 rounded-xl font-bold hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition">
+                <button onclick="hub.openProfileReset()" class="w-full py-2 md:py-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 rounded-xl font-bold hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition text-sm md:text-base">
                     <i class="fas fa-key mr-2"></i> เปลี่ยนรหัสผ่าน
                 </button>
 
-                <div class="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2">
-                    <button onclick="hub.handleLogout()" class="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                <div class="pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2">
+                    <button onclick="hub.handleLogout()" class="w-full py-2 md:py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm md:text-base">
                         <i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ
                     </button>
-                    <button onclick="hub.openDeleteAccountModal()" class="w-full py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition">
+                    <button onclick="hub.openDeleteAccountModal()" class="w-full py-2 md:py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition text-sm md:text-base">
                         <i class="fas fa-trash-alt mr-2"></i> ลบบัญชีผู้ใช้
                     </button>
                 </div>
@@ -456,13 +472,13 @@
     <!-- DELETE ACCOUNT MODAL -->
     <div id="deleteAccountModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col">
-            <h3 class="font-bold text-2xl font-brand mb-2 text-red-600">ยืนยันการลบบัญชี</h3>
-            <p class="text-xs text-gray-500 mb-6">ข้อมูลทั้งหมดจะถูกลบและไม่สามารถกู้คืนได้</p>
+            <h3 class="font-bold text-xl md:text-2xl font-brand mb-2 text-red-600">ยืนยันการลบบัญชี</h3>
+            <p class="text-[10px] md:text-xs text-gray-500 mb-6">ข้อมูลทั้งหมดจะถูกลบและไม่สามารถกู้คืนได้</p>
             <div class="space-y-4">
-                <div><label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">กรอกรหัสผ่านเพื่อยืนยัน</label><input type="password" id="delAccPass" class="w-full p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 dark:text-white transition"></div>
+                <div><label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">กรอกรหัสผ่านเพื่อยืนยัน</label><input type="password" id="delAccPass" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 dark:text-white transition text-sm md:text-base"></div>
                 <div class="flex gap-2">
-                    <button onclick="hub.closeDeleteAccountModal()" class="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">ยกเลิก</button>
-                    <button onclick="hub.handleDeleteAccount()" id="delAccBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg">ลบถาวร</button>
+                    <button onclick="hub.closeDeleteAccountModal()" class="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl text-sm md:text-base">ยกเลิก</button>
+                    <button onclick="hub.handleDeleteAccount()" id="delAccBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg text-sm md:text-base">ลบถาวร</button>
                 </div>
             </div>
         </div>
@@ -717,14 +733,14 @@
             // --- UI RENDER ---
             renderGrid: function() {
                 const grid = document.getElementById('app-grid');
-                const addBtn = `<div onclick="hub.openAddModal()" class="btn-3d aspect-square border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-all border-b-gray-300 dark:border-b-gray-700 group hover:border-green-400 dark:hover:border-green-600"><i class="fas fa-plus text-5xl mb-3 group-hover:scale-110 transition-transform group-hover:rotate-90 duration-300"></i><span class="text-sm md:text-base font-bold">Add Project</span></div>`;
+                const addBtn = `<div onclick="hub.openAddModal()" class="btn-3d aspect-square border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-all border-b-gray-300 dark:border-b-gray-700 group hover:border-green-400 dark:hover:border-green-600"><i class="fas fa-plus text-3xl md:text-5xl mb-2 md:mb-3 group-hover:scale-110 transition-transform group-hover:rotate-90 duration-300"></i><span class="text-xs md:text-base font-bold">Add Project</span></div>`;
                 let html = '';
                 this.links.forEach(link => {
                     const bgClass = link.color || 'bg-gray-500';
                     const iconClass = link.icon || 'fas fa-globe';
                     const colorName = bgClass.replace('bg-', '');
                     const shadowClass = `shadow-lg shadow-${colorName}/40`; 
-                    html += `<div onclick="hub.openLink('${link.url}', '${bgClass}')" class="btn-3d group relative aspect-square bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 rounded-3xl cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 flex flex-col items-center justify-center p-4 ${shadowClass} hover:shadow-xl transition-all border-b-gray-300 dark:border-b-slate-600 overflow-hidden"><div class="w-20 h-20 md:w-24 md:h-24 ${bgClass} rounded-2xl flex items-center justify-center mb-4 text-white group-hover:scale-110 transition-transform duration-300 shadow-md"><i class="${iconClass} text-4xl md:text-5xl"></i></div><span class="font-bold font-brand text-gray-700 dark:text-gray-200 text-sm md:text-base text-center truncate w-full px-2">${link.name}</span></div>`;
+                    html += `<div onclick="hub.openLink('${link.url}', '${bgClass}')" class="btn-3d group relative aspect-square bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 rounded-2xl md:rounded-3xl cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 flex flex-col items-center justify-center p-4 ${shadowClass} hover:shadow-xl transition-all border-b-gray-300 dark:border-b-slate-600 overflow-hidden"><div class="w-16 h-16 md:w-24 md:h-24 ${bgClass} rounded-2xl flex items-center justify-center mb-3 md:mb-4 text-white group-hover:scale-110 transition-transform duration-300 shadow-md"><i class="${iconClass} text-3xl md:text-5xl"></i></div><span class="font-bold font-brand text-gray-700 dark:text-gray-200 text-xs md:text-base text-center truncate w-full px-1 md:px-2">${link.name}</span></div>`;
                 });
                 grid.innerHTML = html + addBtn;
             },
@@ -749,9 +765,9 @@
             
             initAddModal: function() {
                 const iconGrid = document.getElementById('iconGrid'); iconGrid.innerHTML = '';
-                this.icons.forEach(icon => { const div = document.createElement('div'); div.className = `icon-option w-10 h-10 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-600 transition`; div.innerHTML = `<i class="${icon}"></i>`; div.onclick = () => this.selectIcon(icon, div); iconGrid.appendChild(div); });
+                this.icons.forEach(icon => { const div = document.createElement('div'); div.className = `icon-option w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-600 transition text-sm md:text-base`; div.innerHTML = `<i class="${icon}"></i>`; div.onclick = () => this.selectIcon(icon, div); iconGrid.appendChild(div); });
                 const colorGrid = document.getElementById('colorGrid'); colorGrid.innerHTML = '';
-                this.colors.forEach(color => { const div = document.createElement('div'); div.className = `color-option w-8 h-8 rounded-full ${color} shadow-sm hover:scale-110 transition`; div.onclick = () => this.selectColor(color, div); colorGrid.appendChild(div); });
+                this.colors.forEach(color => { const div = document.createElement('div'); div.className = `color-option w-6 h-6 md:w-8 md:h-8 rounded-full ${color} shadow-sm hover:scale-110 transition`; div.onclick = () => this.selectColor(color, div); colorGrid.appendChild(div); });
             },
             selectIcon: function(icon, el = null) { this.selectedIcon = icon; document.querySelectorAll('.icon-option').forEach(e => { e.classList.remove('selected', 'ring-2', 'ring-green-500', 'bg-green-100', 'dark:bg-green-900', 'text-green-600'); e.classList.add('text-gray-500'); }); if(!el) { const iconEls = document.querySelectorAll('#iconGrid .icon-option i'); for(let i of iconEls) { if(i.className === icon) { el = i.parentElement; break; } } } if(el) { el.classList.add('selected', 'ring-2', 'ring-green-500', 'bg-green-100', 'dark:bg-green-900', 'text-green-600'); el.classList.remove('text-gray-500'); } },
             selectColor: function(color, el = null) { this.selectedColor = color; document.querySelectorAll('.color-option').forEach(e => e.classList.remove('selected', 'ring-2', 'ring-offset-2', 'ring-gray-400')); if(!el) el = document.querySelector(`.color-option.${color}`); if(el) el.classList.add('selected', 'ring-2', 'ring-offset-2', 'ring-gray-400'); },
@@ -764,7 +780,7 @@
 
             openManageModal: function() { document.getElementById('manageModal').classList.remove('hidden'); this.renderManageList(); },
             closeManageModal: () => document.getElementById('manageModal').classList.add('hidden'),
-            renderManageList: function() { const list = document.getElementById('manageList'); list.innerHTML = ''; if(this.links.length === 0) list.innerHTML = '<p class="text-center text-gray-400 py-4">ไม่มีรายการ</p>'; this.links.forEach(link => { const div = document.createElement('div'); div.className = "flex justify-between items-center bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700"; div.innerHTML = `<div class="flex items-center gap-3 overflow-hidden flex-1"><div class="w-8 h-8 rounded-lg ${link.color || 'bg-gray-500'} flex items-center justify-center text-white shrink-0 text-xs"><i class="${link.icon || 'fas fa-globe'}"></i></div><div class="truncate"><div class="font-bold text-sm dark:text-white truncate">${link.name}</div><div class="text-[10px] text-gray-400 truncate">${link.url}</div></div></div><div class="flex gap-2 ml-2"><button onclick="hub.openEditModal(${link.id})" class="w-8 h-8 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 hover:bg-yellow-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-pen text-xs"></i></button><button onclick="hub.deleteLink(${link.id})" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-trash-alt text-xs"></i></button></div>`; list.appendChild(div); }); },
+            renderManageList: function() { const list = document.getElementById('manageList'); list.innerHTML = ''; if(this.links.length === 0) list.innerHTML = '<p class="text-center text-gray-400 py-4 text-sm">ไม่มีรายการ</p>'; this.links.forEach(link => { const div = document.createElement('div'); div.className = "flex justify-between items-center bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700"; div.innerHTML = `<div class="flex items-center gap-3 overflow-hidden flex-1"><div class="w-8 h-8 rounded-lg ${link.color || 'bg-gray-500'} flex items-center justify-center text-white shrink-0 text-xs"><i class="${link.icon || 'fas fa-globe'}"></i></div><div class="truncate"><div class="font-bold text-sm dark:text-white truncate">${link.name}</div><div class="text-[10px] text-gray-400 truncate">${link.url}</div></div></div><div class="flex gap-2 ml-2"><button onclick="hub.openEditModal(${link.id})" class="w-8 h-8 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 hover:bg-yellow-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-pen text-xs"></i></button><button onclick="hub.deleteLink(${link.id})" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-trash-alt text-xs"></i></button></div>`; list.appendChild(div); }); },
             deleteLink: function(id) { if(confirm("ต้องการลบปุ่มนี้ใช่ไหม?")) { this.links = this.links.filter(l => l.id !== id); this.saveLinks(); this.renderGrid(); this.renderManageList(); } },
             deleteAllLinks: function() { if(confirm("⚠️ คำเตือน: คุณต้องการลบข้อมูลทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้")) { this.links = []; this.saveLinks(); this.renderGrid(); this.renderManageList(); } },
             saveConfig: function() { const url = document.getElementById('apiUrlInput').value.trim(); if(url) { localStorage.setItem('hub_api_url', url); this.showToast('บันทึก API URL แล้ว ✅'); } },
