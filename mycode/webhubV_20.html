@@ -147,12 +147,26 @@
         /* Drag and Drop */
         .dragging { opacity: 0.5; transform: scale(0.95); }
         .drag-over { border: 2px dashed #10b981; transform: scale(1.02); }
+
+        /* Dev Modals */
+        .dev-modal {
+            transition: box-shadow 0.2s, transform 0.1s;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
+        }
+        .dev-modal:active {
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.3);
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-[#0f172a] text-gray-800 dark:text-gray-100 h-[100dvh] w-screen overflow-hidden flex flex-col transition-colors duration-700">
 
     <!-- DEV MODE OVERLAY -->
     <div id="dev-overlay"></div>
+
+    <!-- DEV TOOL MODALS CONTAINER -->
+    <div id="dev-modals-layer" class="absolute inset-0 pointer-events-none z-[60] overflow-hidden">
+        <!-- Modals injected here via JS -->
+    </div>
 
     <!-- TRANSITION CURTAIN -->
     <div id="transition-curtain" class="bg-green-500">
@@ -175,7 +189,7 @@
                 <div id="hub-logo" class="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg text-lg md:text-xl transition-all duration-500"><i class="fas fa-leaf"></i></div>
                 <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">
                     Tonkla's <span class="text-green-600 mx-1 transition-colors" id="hub-text">Hub</span>
-                    <span class="bg-purple-400/20 text-purple-600 dark:text-purple-400 border border-purple-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V20.0</span>
+                    <span class="bg-purple-400/20 text-purple-600 dark:text-purple-400 border border-purple-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V20.2</span>
                 </h1>
             </div>
             
@@ -197,8 +211,7 @@
                 <!-- Normal Menu Items -->
                 <button onclick="hub.toggleDrawer('time')" class="text-gray-500 hover:text-green-600 transition" title="Time & Holiday"><i class="far fa-clock text-xl"></i></button>
                 
-                <!-- Normal Note Button (Hidden in Dev Mode) -->
-                <button id="normal-note-btn" onclick="hub.addNote()" class="text-gray-500 hover:text-yellow-500 transition" title="New Note"><i class="fas fa-sticky-note text-xl"></i></button>
+                <!-- NOTE BUTTON REMOVED FROM NORMAL MODE -->
                 
                 <button onclick="hub.toggleDrawer('help')" class="text-gray-500 hover:text-blue-500 transition" title="Help"><i class="fas fa-info-circle text-xl"></i></button>
                 
@@ -222,7 +235,12 @@
         <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 z-30 flex-col shadow-xl animate-slide-in">
             <div class="grid grid-cols-4 gap-2 p-4">
                 <button onclick="hub.toggleDrawer('time')" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="far fa-clock text-xl text-green-500"></i><span class="text-[10px]">Time</span></button>
-                <button onclick="hub.addNote()" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="fas fa-sticky-note text-xl text-yellow-500"></i><span class="text-[10px]">Note</span></button>
+                
+                <!-- Note button only shows in mobile menu if Dev Mode is active (handled by JS toggling class, or left hidden) -->
+                <!-- For safety, we keep it hidden by default and toggle with JS if needed, or remove completely as per request -->
+                <!-- Request said remove button from normal mode. I will remove it here too. -->
+                <!-- <button onclick="hub.addNote()" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="fas fa-sticky-note text-xl text-yellow-500"></i><span class="text-[10px]">Note</span></button> -->
+                
                 <button onclick="hub.openSettingsModal()" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="fas fa-cog text-xl text-slate-500"></i><span class="text-[10px]">Setting</span></button>
                 <button onclick="hub.handleAuthClick()" id="mobileAuthBtn" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="fas fa-user text-xl text-indigo-500"></i><span class="text-[10px]">Account</span></button>
             </div>
@@ -348,7 +366,7 @@
     <div id="settingsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-6">
-                <!-- Secret Trigger Area: No cursor pointer, no hover effect -->
+                <!-- Secret Trigger Area -->
                 <h3 onclick="hub.handleSettingsTitleClick()" class="font-bold text-xl md:text-2xl font-brand text-gray-800 dark:text-white select-none cursor-default"><i class="fas fa-cog mr-2"></i>ตั้งค่า</h3>
                 <button onclick="hub.closeSettingsModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
             </div>
@@ -415,7 +433,7 @@
             </div>
 
             <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
-                <p class="text-[10px] text-gray-400">Tonkla's Hub V20.0</p>
+                <p class="text-[10px] text-gray-400">Tonkla's Hub V20.2</p>
             </div>
         </div>
     </div>
@@ -562,6 +580,7 @@
             devClickCount: 0,
             devPassword: '1234',
             dragSrcEl: null,
+            dragModal: null, // For dragging dev tool modals
 
             icons: ['fas fa-globe', 'fab fa-youtube', 'fab fa-github', 'fab fa-facebook', 'fab fa-twitter', 'fab fa-instagram', 'fab fa-discord', 'fab fa-google', 'fas fa-envelope', 'fas fa-shopping-cart', 'fas fa-gamepad', 'fas fa-music', 'fas fa-code', 'fas fa-book', 'fas fa-tools', 'fas fa-graduation-cap', 'fas fa-briefcase', 'fas fa-video', 'fas fa-comment', 'fas fa-camera', 'fas fa-heart', 'fas fa-star', 'fas fa-lightbulb', 'fas fa-rocket'],
             colors: ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500', 'bg-rose-500', 'bg-slate-500'],
@@ -605,7 +624,6 @@
                 document.getElementById('dev-overlay').style.opacity = '1';
                 document.getElementById('dev-toolbar').classList.remove('hidden');
                 document.getElementById('dev-toolbar').classList.add('flex');
-                document.getElementById('normal-note-btn').classList.add('hidden'); // Move note btn
                 
                 // Animations
                 document.getElementById('hub-logo').classList.add('animate-glow');
@@ -621,31 +639,29 @@
                 this.showToast('DEV MODE ACTIVATED 🚀');
             },
             deactivateDevMode: function() {
-                this.isDevMode = false;
-                document.body.classList.remove('dev-active');
-                
-                // Revert Theme logic (back to user pref)
-                if (localStorage.getItem('tonkla_theme') !== 'dark') {
-                    document.documentElement.classList.remove('dark');
-                }
-
-                // Visuals
-                document.getElementById('dev-overlay').style.opacity = '0';
-                document.getElementById('dev-toolbar').classList.add('hidden');
-                document.getElementById('dev-toolbar').classList.remove('flex');
-                document.getElementById('normal-note-btn').classList.remove('hidden');
-
-                // Animations
-                document.getElementById('hub-logo').classList.remove('animate-glow');
-                document.getElementById('settings-gear').classList.remove('animate-spin-slow', 'text-green-500');
-
-                // Settings UI change
-                document.getElementById('normalSettings').classList.remove('hidden');
-                document.getElementById('devModeSettings').classList.add('hidden');
-
-                this.renderGrid();
                 this.closeSettingsModal();
-                this.showToast('Exited Dev Mode');
+                const curtain = document.getElementById('transition-curtain');
+                
+                // Remove existing colors and add black background
+                curtain.classList.remove('bg-green-500');
+                curtain.classList.add('bg-black');
+                
+                // Update content to look like "System Off"
+                curtain.innerHTML = `
+                    <div class="text-green-500 font-mono flex flex-col items-center">
+                        <i class="fas fa-terminal text-4xl mb-4 animate-pulse"></i>
+                        <span class="text-xl">TERMINATING SESSION...</span>
+                        <span class="text-xs mt-2 opacity-50">Rebooting System</span>
+                    </div>
+                `;
+                
+                // Slide up
+                curtain.classList.add('active');
+                
+                // Reload
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
             },
             changeDevPassword: function() {
                 const newPass = prompt("Set new Dev Password:", this.devPassword);
@@ -656,36 +672,137 @@
                 }
             },
             
-            // --- DEV TOOLS ---
+            // --- DEV TOOLS (MODALS) ---
+            createDevModal: function(title, content) {
+                const layer = document.getElementById('dev-modals-layer');
+                const id = 'dev-modal-' + Date.now();
+                const modal = document.createElement('div');
+                modal.className = 'dev-modal absolute w-80 bg-slate-900 border border-green-500 rounded-lg shadow-xl z-50 flex flex-col overflow-hidden pointer-events-auto';
+                modal.style.top = '50%';
+                modal.style.left = '50%';
+                modal.style.transform = 'translate(-50%, -50%)'; // Initial centering
+                modal.id = id;
+                
+                modal.innerHTML = `
+                    <div class="modal-header bg-green-900/50 p-2 cursor-move flex justify-between items-center border-b border-green-500/30" onmousedown="hub.startModalDrag(event, '${id}')">
+                        <span class="font-mono text-xs text-green-400 font-bold uppercase"><i class="fas fa-terminal mr-2"></i>${title}</span>
+                        <button onclick="document.getElementById('${id}').remove()" class="text-green-500 hover:text-white px-2"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body p-4 text-green-300 font-mono text-xs h-full overflow-auto max-h-[300px]">
+                        ${content}
+                    </div>
+                `;
+                
+                // Bring to front on click
+                modal.onmousedown = function() {
+                    document.querySelectorAll('.dev-modal').forEach(m => m.style.zIndex = '50');
+                    this.style.zIndex = '60';
+                };
+
+                layer.appendChild(modal);
+            },
+
+            startModalDrag: function(e, id) {
+                e.preventDefault();
+                const modal = document.getElementById(id);
+                // Switch from translate centering to absolute positioning for dragging
+                const rect = modal.getBoundingClientRect();
+                modal.style.transform = 'none';
+                modal.style.left = rect.left + 'px';
+                modal.style.top = rect.top + 'px';
+                modal.style.width = rect.width + 'px'; // Fix width
+
+                let startX = e.clientX;
+                let startY = e.clientY;
+                let startLeft = rect.left;
+                let startTop = rect.top;
+
+                const onMove = (moveEvent) => {
+                    const dx = moveEvent.clientX - startX;
+                    const dy = moveEvent.clientY - startY;
+                    modal.style.left = (startLeft + dx) + 'px';
+                    modal.style.top = (startTop + dy) + 'px';
+                };
+
+                const onUp = () => {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                };
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+            },
+
             runDevTool: async function(tool) {
                 switch(tool) {
                     case 'net':
-                        const start = Date.now();
-                        try {
-                            await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
-                            const end = Date.now();
-                            alert(`Ping (Approx): ${end - start}ms`);
-                        } catch(e) { alert('Network Error'); }
+                        this.createDevModal('Speed Test (Sim)', `
+                            <div class="space-y-2">
+                                <div class="flex justify-between"><span>Ping:</span> <span id="ping-val">...</span></div>
+                                <div class="w-full bg-green-900/30 h-2 rounded overflow-hidden"><div id="net-bar" class="h-full bg-green-500 w-0 transition-all duration-500"></div></div>
+                                <div class="text-center mt-2" id="net-status">Testing...</div>
+                            </div>
+                        `);
+                        // Simulation Logic
+                        setTimeout(async () => {
+                            const start = Date.now();
+                            try { await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' }); } catch(e){}
+                            const ping = Date.now() - start;
+                            const modal = document.querySelector('#dev-modals-layer .dev-modal:last-child'); // Basic selection
+                            if(modal) {
+                                modal.querySelector('#ping-val').innerText = ping + 'ms';
+                                modal.querySelector('#net-bar').style.width = '100%';
+                                modal.querySelector('#net-status').innerText = 'Complete';
+                            }
+                        }, 500);
                         break;
                     case 'ip':
+                        this.createDevModal('IP Address', `<div id="ip-content">Fetching IP...</div>`);
                         try {
                             const res = await fetch('https://api.ipify.org?format=json');
                             const data = await res.json();
-                            alert(`Public IP: ${data.ip}`);
-                        } catch(e) { alert('Check Failed'); }
+                            const m = document.querySelector('#dev-modals-layer .dev-modal:last-child');
+                            if(m) m.querySelector('#ip-content').innerHTML = `<span class="text-white text-lg">${data.ip}</span><br><span class="opacity-50">Public IPv4</span>`;
+                        } catch(e) { 
+                            const m = document.querySelector('#dev-modals-layer .dev-modal:last-child');
+                            if(m) m.querySelector('#ip-content').innerText = 'Check Failed';
+                        }
                         break;
                     case 'db':
-                        if(this.currentUser) alert(`Syncing data for user: ${this.currentUser.email}... (Simulated)`);
-                        else alert('Not logged in.');
+                        this.createDevModal('DB Sync', `
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-database fa-spin"></i>
+                                <span>Syncing to Server...</span>
+                            </div>
+                            <div class="mt-2 text-[10px] opacity-70">
+                                User: ${this.currentUser ? this.currentUser.email : 'Guest'}<br>
+                                Items: ${this.links.length}
+                            </div>
+                        `);
                         break;
                     case 'batt':
                         if(navigator.getBattery) {
                             const batt = await navigator.getBattery();
-                            alert(`Battery: ${Math.round(batt.level * 100)}% ${batt.charging ? '(Charging)' : ''}`);
-                        } else alert('Battery API not supported');
+                            this.createDevModal('Battery Status', `
+                                <div class="text-center">
+                                    <i class="fas fa-battery-${batt.level > 0.7 ? 'full' : batt.level > 0.3 ? 'half' : 'quarter'} text-3xl mb-2 ${batt.charging ? 'text-yellow-400' : 'text-green-500'}"></i>
+                                    <div class="text-xl font-bold">${Math.round(batt.level * 100)}%</div>
+                                    <div class="text-[10px]">${batt.charging ? 'Charging' : 'Discharging'}</div>
+                                </div>
+                            `);
+                        } else {
+                            this.createDevModal('Battery', 'Battery API not supported on this device.');
+                        }
                         break;
                     case 'sys':
-                        alert(`Platform: ${navigator.platform}\nUser Agent: ${navigator.userAgent}`);
+                        this.createDevModal('System Info', `
+                            <ul class="list-disc pl-4 space-y-1">
+                                <li><b>Platform:</b> ${navigator.platform}</li>
+                                <li><b>Cores:</b> ${navigator.hardwareConcurrency || '?'}</li>
+                                <li><b>Memory:</b> ${navigator.deviceMemory || '?'} GB</li>
+                                <li><b>User Agent:</b> <div class="break-all text-[10px]">${navigator.userAgent}</div></li>
+                            </ul>
+                        `);
                         break;
                 }
             },
@@ -777,7 +894,7 @@
             handleSearch: function(query) { const term = query.toLowerCase(); const filtered = this.links.filter(l => l.name.toLowerCase().includes(term)); this.renderGrid(filtered); },
             getGridCols: function() { const w = window.innerWidth; if (w >= 1280) return 6; if (w >= 1024) return 5; if (w >= 768) return 4; if (w >= 640) return 3; return 2; },
             loadLinks: async function() { let skeletonCount = this.getGridCols(); const cached = localStorage.getItem('webhub_links'); if (cached) { try { const parsed = JSON.parse(cached); if (Array.isArray(parsed) && parsed.length > 0) { skeletonCount = parsed.length; } } catch(e) {} } this.renderSkeletons(skeletonCount); if (this.currentUser) { const url = localStorage.getItem('hub_api_url'); if (url) { try { const res = await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'getLinks', userId: this.currentUser.id }) }); const data = await res.json(); if(data.status === 'success') { this.links = data.links; localStorage.setItem('webhub_links', JSON.stringify(this.links)); this.renderGrid(); return; } } catch(e) { console.log('Offline load'); } } } const stored = localStorage.getItem('webhub_links'); this.links = stored ? JSON.parse(stored) : []; this.renderGrid(); },
-            saveLinks: async function() { localStorage.setItem('webhub_links', JSON.stringify(this.links)); if (this.currentUser) { const url = localStorage.getItem('hub_api_url'); if(url) try { await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'saveLinks', userId: this.currentUser.id, links: this.links }) }); } catch(e) { console.log('Sync failed'); } } },
+            saveLinks: async function() { localStorage.setItem('webhub_links', JSON.stringify(this.links)); if (this.currentUser) { const url = localStorage.getItem('hub_api_url'); if(url) try { await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'saveLinks', userId: this.currentUser.id, links: this.links }) }); } catch(e) { console.log('Sync failed'); } } }, // <--- Fixed here
             renderSkeletons: function(count) { const grid = document.getElementById('app-grid'); let html = ''; for(let i=0; i<count; i++) { html += `<div class="relative group"><div class="aspect-square bg-gray-200 dark:bg-slate-800 border-gray-200 dark:border-gray-700 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center p-4 border-b-gray-300 dark:border-b-slate-600 skeleton-load"><div class="w-16 h-16 md:w-24 md:h-24 bg-gray-300 dark:bg-slate-700 rounded-2xl mb-3 md:mb-4"></div><div class="h-4 w-20 bg-gray-300 dark:bg-slate-700 rounded-full"></div></div></div>`; } grid.innerHTML = html; },
             renderGrid: function(dataSource = this.links) {
                 const grid = document.getElementById('app-grid');
