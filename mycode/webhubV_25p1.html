@@ -194,7 +194,7 @@
                 <div id="hub-logo" class="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg text-lg md:text-xl transition-all duration-500"><i class="fas fa-leaf"></i></div>
                 <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">
                     Tonkla's <span class="text-green-600 mx-1 transition-colors" id="hub-text">Hub</span>
-                    <span class="bg-purple-400/20 text-purple-600 dark:text-purple-400 border border-purple-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V25.0</span>
+                    <span class="bg-purple-400/20 text-purple-600 dark:text-purple-400 border border-purple-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V25.1</span>
                 </h1>
             </div>
             
@@ -447,7 +447,7 @@
             </div>
 
             <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
-                <p class="text-[10px] text-gray-400">Tonkla's Hub V25.0</p>
+                <p class="text-[10px] text-gray-400">Tonkla's Hub V25.1</p>
             </div>
         </div>
     </div>
@@ -672,6 +672,7 @@
                 const result = await this.callApi('verifyDevPassword', { password });
                 
                 if (result.status === 'success') {
+                    this.devPassword = password; // <-- STORE PASSWORD HERE!
                     this.activateDevMode();
                     input.value = '';
                     this.closeSettingsModal();
@@ -732,6 +733,7 @@
                     this.logAction('DB', 'Updating Dev Password...');
                     const res = await this.callApi('updateDevPassword', { newPassword: newPass });
                     if(res.status === 'success') {
+                         this.devPassword = newPass; // Update local too
                          this.showToast('Dev Password Updated');
                          this.logAction('SECURITY', 'Dev Password Changed in DB');
                     } else {
@@ -761,7 +763,7 @@
             runDevTool: async function(tool) {
                 switch(tool) {
                     case 'sys_info':
-                        this.createDevModal('System Information', `<div class="space-y-2"><p><strong>Version:</strong> <span class="text-white">WebHub V25.0 Mobile</span></p><p><strong>Environment:</strong> <span class="text-green-400">Production</span></p><p><strong>Uptime:</strong> <span id="uptime-counter">0s</span></p><hr class="border-green-500/30 my-2"><p><strong>API:</strong> ${localStorage.getItem('hub_api_url') ? 'Connected' : 'Disconnected'}</p></div>`);
+                        this.createDevModal('System Information', `<div class="space-y-2"><p><strong>Version:</strong> <span class="text-white">WebHub V25.1 Mobile</span></p><p><strong>Environment:</strong> <span class="text-green-400">Production</span></p><p><strong>Uptime:</strong> <span id="uptime-counter">0s</span></p><hr class="border-green-500/30 my-2"><p><strong>API:</strong> ${localStorage.getItem('hub_api_url') ? 'Connected' : 'Disconnected'}</p></div>`);
                         const uptimeStart = Date.now();
                         const upInt = setInterval(() => { const el = document.getElementById('uptime-counter'); if(el) el.innerText = Math.floor((Date.now() - uptimeStart)/1000) + 's'; else clearInterval(upInt); }, 1000);
                         this.activeIntervals.push(upInt);
