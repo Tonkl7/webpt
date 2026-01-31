@@ -112,12 +112,6 @@
         .search-container.active #header-title { display: none; }
         .search-container.active #search-input { display: block; width: 100%; }
         
-        /* Status Dot */
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; position: absolute; bottom: 8px; right: 8px; z-index: 20; border: 2px solid rgba(255,255,255,0.8); }
-        .status-online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
-        .status-offline { background-color: #ef4444; box-shadow: 0 0 5px #ef4444; }
-        .status-checking { background-color: #eab308; animation: pulse 1s infinite; }
-
         /* Selection Styling */
         .icon-option.selected, .color-option.selected { ring-width: 3px; ring-color: #10b981; transform: scale(1.1); }
         .icon-option, .color-option { transition: all 0.2s; cursor: pointer; }
@@ -147,7 +141,7 @@
                 <div class="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg text-lg md:text-xl"><i class="fas fa-leaf"></i></div>
                 <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">
                     Tonkla's <span class="text-green-600 mx-1">Hub</span>
-                    <span class="bg-purple-400/20 text-purple-600 dark:text-purple-400 border border-purple-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V18.0</span>
+                    <span class="bg-purple-400/20 text-purple-600 dark:text-purple-400 border border-purple-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V19.1</span>
                 </h1>
             </div>
             
@@ -155,11 +149,17 @@
             <div class="hidden md:flex items-center gap-3">
                 <button onclick="hub.toggleDrawer('time')" class="text-gray-500 hover:text-green-600 transition" title="Time & Holiday"><i class="far fa-clock text-xl"></i></button>
                 <button onclick="hub.addNote()" class="text-gray-500 hover:text-yellow-500 transition" title="New Note"><i class="fas fa-sticky-note text-xl"></i></button>
-                <button onclick="hub.toggleDrawer('help')" class="text-gray-500 hover:text-blue-500 transition" title="Help"><i class="fas fa-question-circle text-xl"></i></button>
+                
                 <div class="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-2"></div>
+                
                 <button onclick="hub.handleAuthClick()" id="authBtn" class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 flex items-center justify-center transition border border-blue-200 dark:border-blue-800 overflow-hidden"><i class="fas fa-user"></i></button>
-                <button onclick="hub.toggleTheme()" class="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition"><i class="fas fa-adjust"></i></button>
+                
+                <!-- Theme Toggle REMOVED from Navbar -->
+                
                 <button onclick="hub.openManageModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition"><i class="fas fa-pen"></i></button>
+
+                <!-- Settings Button Moved to FAR RIGHT -->
+                <button onclick="hub.openSettingsModal()" class="ml-2 w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-slate-600 dark:hover:text-slate-300 transition" title="Settings"><i class="fas fa-cog text-xl"></i></button>
             </div>
 
             <!-- Mobile Menu Toggle -->
@@ -173,12 +173,13 @@
             <div class="grid grid-cols-4 gap-2 p-4">
                 <button onclick="hub.toggleDrawer('time')" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="far fa-clock text-xl text-green-500"></i><span class="text-[10px]">Time</span></button>
                 <button onclick="hub.addNote()" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="fas fa-sticky-note text-xl text-yellow-500"></i><span class="text-[10px]">Note</span></button>
-                <button onclick="hub.toggleDrawer('help')" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="fas fa-question-circle text-xl text-blue-500"></i><span class="text-[10px]">Help</span></button>
+                <!-- Mobile Settings Button -->
+                <button onclick="hub.openSettingsModal()" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="fas fa-cog text-xl text-slate-500"></i><span class="text-[10px]">Setting</span></button>
                 <button onclick="hub.handleAuthClick()" id="mobileAuthBtn" class="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"><i class="fas fa-user text-xl text-indigo-500"></i><span class="text-[10px]">Account</span></button>
             </div>
+            <!-- Removed Theme toggle from footer to force use of Settings -->
             <div class="flex justify-between border-t border-gray-100 dark:border-gray-800 p-3 bg-gray-50 dark:bg-slate-950/50">
-                <button onclick="hub.toggleTheme()" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-300"><i class="fas fa-adjust"></i> Theme</button>
-                <button onclick="hub.openManageModal()" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-300"><i class="fas fa-pen"></i> Edit</button>
+                <button onclick="hub.toggleDrawer('help')" class="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-300"><i class="fas fa-question-circle"></i> Help</button>
             </div>
         </div>
 
@@ -266,21 +267,27 @@
         </div>
         <div class="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
             <div class="bg-blue-50 dark:bg-blue-900/20 p-4 md:p-5 rounded-2xl border border-blue-100 dark:border-blue-800"><h4 class="font-bold text-blue-700 dark:text-blue-300 mb-2 text-base md:text-lg">ยินดีต้อนรับ!</h4><p class="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Tonkla's Hub คือประตูสู่โปรเจกต์ของคุณ รวมทุกลิงก์ไว้ในที่เดียว</p></div>
+            
             <div class="space-y-6 pl-2">
-                <div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700"><div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700"></div><h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">1. Sticky Notes 📌</h5><p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กดปุ่ม Note บนแถบเมนูเพื่อแปะโน้ต ลากวางและย่อขยายได้อิสระ</p></div>
-                <div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700"><div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700"></div><h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">2. Search 🔍</h5><p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กดปุ่มแว่นขยายที่หัวข้อเพื่อค้นหาแอปของคุณได้ทันที</p></div>
-                
-                <!-- NEW SECTION: How to add button -->
                 <div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700">
-                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-200 dark:bg-green-700"></div>
-                    <h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">3. การสร้างปุ่มใหม่ 🆕</h5>
-                    <div class="text-xs md:text-sm text-gray-500 dark:text-gray-400 space-y-2">
-                        <p>1. กดปุ่ม <b>(+) Add Project</b> ด้านล่างสุดของตาราง</p>
-                        <p>2. นำลิงก์เว็บจาก <b>GitHub Pages</b> หรือลิงก์ที่ต้องการ มาวางในช่อง URL (เช่น https://...)</p>
-                        <p>3. เลือกไอคอนและสีที่ชอบ แล้วกด <b>"สร้างเลย"</b></p>
-                    </div>
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold"></div>
+                    <h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">1. เริ่มสร้าง</h5>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กดปุ่ม <b>(+) Add Project</b> ด้านล่างสุดของตาราง</p>
+                </div>
+                
+                <div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold"></div>
+                    <h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">2. ใส่ข้อมูล</h5>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">นำลิงก์เว็บจาก <b>GitHub Pages</b> หรือลิงก์ที่ต้องการ มาวางในช่อง URL (เช่น https://...)</p>
+                </div>
+                
+                <div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold"></div>
+                    <h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">3. ยืนยัน</h5>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">เลือกไอคอนและสีที่ชอบ แล้วกด <b>"สร้างเลย"</b></p>
                 </div>
             </div>
+
             <a href="https://github.com/Tonkl7/ToolExtensions" target="_blank" class="block w-full py-3 md:py-4 bg-gray-900 hover:bg-black text-white text-center rounded-2xl font-bold shadow-lg transition flex items-center justify-center gap-2 mt-4 transform active:scale-95 text-sm md:text-base"><i class="fab fa-github text-xl md:text-2xl"></i> ไปที่ GitHub Repo</a>
         </div>
     </div>
@@ -288,6 +295,62 @@
     <div id="drawer-backdrop" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[55] hidden transition-opacity" onclick="hub.closeAllDrawers()"></div>
 
     <!-- MODALS -->
+
+    <!-- Settings Modal (New Feature) -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-xl md:text-2xl font-brand text-gray-800 dark:text-white"><i class="fas fa-cog mr-2"></i>ตั้งค่า</h3>
+                <button onclick="hub.closeSettingsModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar space-y-6">
+                <!-- General Settings -->
+                <div>
+                    <h4 class="font-bold text-sm text-gray-400 uppercase tracking-wider mb-3">ทั่วไป</h4>
+                    <div class="space-y-2">
+                        <button onclick="hub.toggleTheme()" class="w-full flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-slate-700 transition">
+                            <span class="font-bold text-gray-700 dark:text-gray-200"><i class="fas fa-adjust mr-2 text-blue-500"></i> โหมดกลางคืน (Theme)</span>
+                            <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- API Settings with LOCK -->
+                <div>
+                    <h4 class="font-bold text-sm text-gray-400 uppercase tracking-wider mb-3">การเชื่อมต่อ</h4>
+                    <div class="p-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-gray-700">
+                         <div class="flex justify-between items-center mb-2">
+                             <label class="block text-[10px] font-bold text-gray-400">API URL (Google Apps Script)</label>
+                             <button onclick="hub.toggleApiLock()" id="apiLockBtn" class="text-gray-400 hover:text-blue-500 transition text-xs flex items-center gap-1">
+                                 <i class="fas fa-lock"></i> <span>ปลดล็อก</span>
+                             </button>
+                         </div>
+                         <!-- Disabled by default -->
+                         <input type="text" id="settingsApiUrl" disabled class="w-full p-2 bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-mono mb-2 focus:outline-none focus:border-green-500 dark:text-white cursor-not-allowed opacity-60" placeholder="https://script.google.com/...">
+                         <button onclick="hub.saveSettingsConfig()" class="w-full py-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition">บันทึกการตั้งค่า</button>
+                    </div>
+                </div>
+
+                <!-- System Status Checker -->
+                <div>
+                    <h4 class="font-bold text-sm text-gray-400 uppercase tracking-wider mb-3">สถานะระบบ</h4>
+                    <button onclick="hub.checkAllWebsites()" id="checkStatusBtn" class="w-full py-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition border border-green-200 dark:border-green-800 mb-3">
+                        <i class="fas fa-stethoscope mr-2"></i> ตรวจสอบสถานะเว็บไซต์
+                    </button>
+                    
+                    <div id="statusResultList" class="space-y-2 max-h-40 overflow-y-auto hidden">
+                        <!-- Results will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
+                <p class="text-[10px] text-gray-400">Tonkla's Hub V19.1</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Add/Edit Modal with Selection -->
     <div id="addModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col max-h-[90vh]">
@@ -316,7 +379,7 @@
                     <i class="fas fa-trash-alt mr-2"></i> ลบข้อมูลทั้งหมด
                 </button>
             </div>
-            <input type="hidden" id="apiUrlInput">
+            <!-- API URL input moved to Settings Modal -->
         </div>
     </div>
 
@@ -427,6 +490,8 @@
             currentUser: null, isLoginMode: true, tempAvatarBase64: null, tempUserId: null, isProfileReset: false,
             // เพิ่มตัวแปรสำหรับจำข้อมูลชั่วคราวเพื่อ auto-login
             tempEmail: null, tempPass: null,
+            // API Lock State
+            isApiLocked: true,
 
             icons: ['fas fa-globe', 'fab fa-youtube', 'fab fa-github', 'fab fa-facebook', 'fab fa-twitter', 'fab fa-instagram', 'fab fa-discord', 'fab fa-google', 'fas fa-envelope', 'fas fa-shopping-cart', 'fas fa-gamepad', 'fas fa-music', 'fas fa-code', 'fas fa-book', 'fas fa-tools', 'fas fa-graduation-cap', 'fas fa-briefcase', 'fas fa-video', 'fas fa-comment', 'fas fa-camera', 'fas fa-heart', 'fas fa-star', 'fas fa-lightbulb', 'fas fa-rocket'],
             colors: ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500', 'bg-rose-500', 'bg-slate-500'],
@@ -436,7 +501,7 @@
                 if(!localStorage.getItem('hub_api_url') || localStorage.getItem('hub_api_url').includes('1qg')) {
                     localStorage.setItem('hub_api_url', DEFAULT_API_URL);
                 }
-                document.getElementById('apiUrlInput').value = localStorage.getItem('hub_api_url') || DEFAULT_API_URL;
+                document.getElementById('settingsApiUrl').value = localStorage.getItem('hub_api_url') || DEFAULT_API_URL;
 
                 // Check first visit login (or guest)
                 this.checkInitialLogin();
@@ -650,13 +715,6 @@
             },
             handleSearch: function(query) { const term = query.toLowerCase(); const filtered = this.links.filter(l => l.name.toLowerCase().includes(term)); this.renderGrid(filtered); },
 
-            // --- CHECK URL STATUS ---
-            checkUrlStatus: async function(url, dotId) {
-                const dot = document.getElementById(dotId); if(!dot) return;
-                try { await fetch(url, { mode: 'no-cors', method: 'HEAD' }); dot.className = "status-dot status-online"; dot.title = "Online"; } 
-                catch(e) { dot.className = "status-dot status-offline"; dot.title = "Offline/Error"; }
-            },
-
             // --- CORE & RENDER ---
             loadLinks: async function() {
                 if (this.currentUser) {
@@ -672,7 +730,9 @@
                 const addBtn = `<div onclick="hub.openAddModal()" class="btn-3d aspect-square border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-all border-b-gray-300 dark:border-b-gray-700 group hover:border-green-400 dark:hover:border-green-600"><i class="fas fa-plus text-3xl md:text-5xl mb-2 md:mb-3 group-hover:scale-110 transition-transform group-hover:rotate-90 duration-300"></i><span class="text-xs md:text-base font-bold">Add Project</span></div>`;
                 let html = '';
                 dataSource.forEach(link => {
-                    const bgClass = link.color || 'bg-gray-500'; const iconClass = link.icon || 'fas fa-globe'; const colorName = bgClass.replace('bg-', ''); const shadowClass = `shadow-lg shadow-${colorName}/40`; const dotId = `status-${link.id}`;
+                    const bgClass = link.color || 'bg-gray-500'; const iconClass = link.icon || 'fas fa-globe'; const colorName = bgClass.replace('bg-', ''); const shadowClass = `shadow-lg shadow-${colorName}/40`; 
+                    
+                    // Removed Status Dot from HTML here
                     html += `
                     <div class="relative group">
                         <div onclick="hub.openLink('${link.url}', '${bgClass}')" class="btn-3d relative aspect-square bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 rounded-2xl md:rounded-3xl cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 flex flex-col items-center justify-center p-4 ${shadowClass} hover:shadow-xl transition-all border-b-gray-300 dark:border-b-slate-600 overflow-hidden">
@@ -680,10 +740,8 @@
                                 <i class="${iconClass} text-3xl md:text-5xl"></i>
                             </div>
                             <span class="font-bold font-brand text-gray-700 dark:text-gray-200 text-xs md:text-base text-center truncate w-full px-1 md:px-2">${link.name}</span>
-                            <div id="${dotId}" class="status-dot status-checking absolute bottom-3 right-3 z-10 border-2 border-white dark:border-slate-800" title="Checking..."></div>
                         </div>
                     </div>`;
-                    setTimeout(() => this.checkUrlStatus(link.url, dotId), 500);
                 });
                 grid.innerHTML = html + addBtn;
             },
@@ -708,6 +766,91 @@
             startClock: function() { setInterval(() => { const now = new Date(); document.getElementById('drawer-clock').innerText = now.toLocaleTimeString('th-TH', { hour12: false }); document.getElementById('drawer-date').innerText = now.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); const h = now.getHours(); document.getElementById('drawer-greeting').innerText = h < 12 ? "GOOD MORNING" : h < 17 ? "GOOD AFTERNOON" : "GOOD EVENING"; this.updateProgress(now); }, 1000); },
             updateProgress: function(now) { const day = now.getDay(); const isWeekend = (day === 0 || day === 6); const d = now.getDate(); const m = now.getMonth() + 1; const isHoliday = this.holidays.some(h => h.d === d && h.m === m); let percent = 0; let text = ""; let nextInfo = ""; if (isWeekend || isHoliday) { percent = 100; text = "FREEDOM! 🎉"; nextInfo = "Enjoy your break!"; } else { const totalSecs = 5 * 24 * 60 * 60; const currentSecs = (day - 1) * 24 * 60 * 60 + now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds(); percent = Math.min(100, Math.max(0, (currentSecs / totalSecs) * 100)); text = `${percent.toFixed(2)}%`; const daysToSat = 6 - day; nextInfo = `Next: Weekend in ${daysToSat} days`; } document.getElementById('weekend-text').innerText = text; document.getElementById('weekend-progress').style.width = `${percent}%`; document.getElementById('next-break-info').innerText = nextInfo; },
             renderCalendar: function() { const now = new Date(); const y = now.getFullYear(), m = now.getMonth(); document.getElementById('calendar-month').innerText = now.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' }); const firstDay = new Date(y, m, 1).getDay(); const daysInMonth = new Date(y, m + 1, 0).getDate(); const grid = document.getElementById('calendar-days'); grid.innerHTML = ''; for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')); for(let i=1; i<=daysInMonth; i++) { const d = document.createElement('div'); d.className = "aspect-square flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 cursor-default text-xs relative"; d.innerText = i; if(i===now.getDate()) d.className += " bg-green-500 text-white font-bold"; const isHol = this.holidays.find(h => h.d === i && h.m === (m + 1)); if(isHol) { d.classList.add('text-red-500', 'font-bold'); d.title = isHol.name; } grid.appendChild(d); } },
+
+            // --- SETTINGS (New) ---
+            openSettingsModal: function() { document.getElementById('settingsModal').classList.remove('hidden'); },
+            closeSettingsModal: function() { document.getElementById('settingsModal').classList.add('hidden'); document.getElementById('statusResultList').innerHTML = ''; document.getElementById('statusResultList').classList.add('hidden'); },
+            
+            // TOGGLE API LOCK FUNCTION
+            toggleApiLock: function() {
+                this.isApiLocked = !this.isApiLocked;
+                const input = document.getElementById('settingsApiUrl');
+                const btn = document.getElementById('apiLockBtn');
+                
+                if (this.isApiLocked) {
+                    input.disabled = true;
+                    input.classList.add('cursor-not-allowed', 'opacity-60', 'bg-gray-100', 'dark:bg-slate-800');
+                    input.classList.remove('bg-white', 'dark:bg-slate-900');
+                    btn.innerHTML = '<i class="fas fa-lock"></i> <span>ปลดล็อก</span>';
+                    btn.className = "text-gray-400 hover:text-blue-500 transition text-xs flex items-center gap-1";
+                } else {
+                    input.disabled = false;
+                    input.classList.remove('cursor-not-allowed', 'opacity-60', 'bg-gray-100', 'dark:bg-slate-800');
+                    input.classList.add('bg-white', 'dark:bg-slate-900');
+                    input.focus();
+                    btn.innerHTML = '<i class="fas fa-lock-open"></i> <span>ล็อก</span>';
+                    btn.className = "text-red-500 hover:text-red-700 transition text-xs flex items-center gap-1 font-bold";
+                }
+            },
+
+            saveSettingsConfig: function() {
+                const url = document.getElementById('settingsApiUrl').value.trim();
+                if(url) { 
+                    localStorage.setItem('hub_api_url', url); 
+                    this.showToast('บันทึกการตั้งค่าแล้ว ✅'); 
+                    // Optional: Re-lock after save
+                    if(!this.isApiLocked) this.toggleApiLock();
+                }
+            },
+            
+            // Function to check all sites one by one for the Settings modal
+            checkAllWebsites: async function() {
+                const list = document.getElementById('statusResultList');
+                list.innerHTML = '';
+                list.classList.remove('hidden');
+                
+                // Add Loading placeholder
+                if (this.links.length === 0) {
+                    list.innerHTML = '<p class="text-gray-400 text-center text-xs">ไม่พบรายการเว็บไซต์</p>';
+                    return;
+                }
+
+                // Render initial list
+                this.links.forEach(link => {
+                    const item = document.createElement('div');
+                    item.id = `check-item-${link.id}`;
+                    item.className = 'flex justify-between items-center bg-gray-50 dark:bg-slate-900 p-2 rounded-lg border border-gray-100 dark:border-gray-700';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <i class="${link.icon || 'fas fa-globe'} text-gray-400"></i>
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-200 truncate">${link.name}</span>
+                        </div>
+                        <span class="status-badge text-[10px] font-bold px-2 py-0.5 rounded bg-gray-200 text-gray-500"><i class="fas fa-circle-notch fa-spin"></i> Checking...</span>
+                    `;
+                    list.appendChild(item);
+                    
+                    // Trigger check
+                    this.checkSingleSiteStatus(link);
+                });
+            },
+
+            checkSingleSiteStatus: async function(link) {
+                const item = document.getElementById(`check-item-${link.id}`);
+                if(!item) return;
+                const badge = item.querySelector('.status-badge');
+                
+                try {
+                    // Try to fetch HEAD
+                    await fetch(link.url, { mode: 'no-cors', method: 'HEAD' });
+                    // If success (even opaque response)
+                    badge.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-green-100 text-green-600 border border-green-200";
+                    badge.innerHTML = '<i class="fas fa-check-circle"></i> ใช้งานได้';
+                } catch(e) {
+                    // Network error / DNS fail
+                    badge.className = "text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-600 border border-red-200";
+                    badge.innerHTML = '<i class="fas fa-times-circle"></i> เข้าไม่ได้';
+                }
+            },
 
             // --- ADD / EDIT / MANAGE ---
             openAddModal: () => { document.getElementById('addModal').classList.remove('hidden'); hub.editingId = null; document.getElementById('modalTitle').innerText = 'สร้างปุ่มใหม่'; document.getElementById('modalBtnText').innerText = 'สร้างเลย'; document.getElementById('addName').value = ''; document.getElementById('addUrl').value = ''; hub.selectIcon('fas fa-globe'); hub.selectColor('bg-green-500'); },
@@ -734,7 +877,7 @@
             renderManageList: function() { const list = document.getElementById('manageList'); list.innerHTML = ''; if(this.links.length === 0) list.innerHTML = '<p class="text-center text-gray-400 py-4">ไม่มีรายการ</p>'; this.links.forEach(link => { const div = document.createElement('div'); div.className = "flex justify-between items-center bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700"; div.innerHTML = `<div class="flex items-center gap-3 overflow-hidden flex-1"><div class="w-8 h-8 rounded-lg ${link.color || 'bg-gray-500'} flex items-center justify-center text-white shrink-0 text-xs"><i class="${link.icon || 'fas fa-globe'}"></i></div><div class="truncate"><div class="font-bold text-sm dark:text-white truncate">${link.name}</div><div class="text-[10px] text-gray-400 truncate">${link.url}</div></div></div><div class="flex gap-2 ml-2"><button onclick="hub.openEditModal(${link.id})" class="w-8 h-8 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 hover:bg-yellow-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-pen text-xs"></i></button><button onclick="hub.deleteLink(${link.id})" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-trash-alt text-xs"></i></button></div>`; list.appendChild(div); }); },
             deleteLink: function(id) { if(confirm("ต้องการลบปุ่มนี้ใช่ไหม?")) { this.links = this.links.filter(l => l.id !== id); this.saveLinks(); this.renderGrid(); this.renderManageList(); } },
             deleteAllLinks: function() { if(confirm("⚠️ คำเตือน: คุณต้องการลบข้อมูลทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้")) { this.links = []; this.saveLinks(); this.renderGrid(); this.renderManageList(); } },
-            saveConfig: function() { const url = document.getElementById('apiUrlInput').value.trim(); if(url) { localStorage.setItem('hub_api_url', url); this.showToast('บันทึก API URL แล้ว ✅'); } }
+            saveConfig: function() { /* Moved to Settings Modal */ }
         };
         window.addEventListener('load', () => hub.init());
     </script>
