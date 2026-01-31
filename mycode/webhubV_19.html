@@ -145,7 +145,7 @@
                 <div class="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg text-lg md:text-xl"><i class="fas fa-leaf"></i></div>
                 <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">
                     Tonkla's <span class="text-green-600 mx-1">Hub</span>
-                    <span class="bg-purple-400/20 text-purple-600 dark:text-purple-400 border border-purple-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V19.3</span>
+                    <span class="bg-purple-400/20 text-purple-600 dark:text-purple-400 border border-purple-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V19.4</span>
                 </h1>
             </div>
             
@@ -154,11 +154,12 @@
                 <button onclick="hub.toggleDrawer('time')" class="text-gray-500 hover:text-green-600 transition" title="Time & Holiday"><i class="far fa-clock text-xl"></i></button>
                 <button onclick="hub.addNote()" class="text-gray-500 hover:text-yellow-500 transition" title="New Note"><i class="fas fa-sticky-note text-xl"></i></button>
                 
+                <!-- NEW: Help Button (i) -->
+                <button onclick="hub.toggleDrawer('help')" class="text-gray-500 hover:text-blue-500 transition" title="Help"><i class="fas fa-info-circle text-xl"></i></button>
+                
                 <div class="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-2"></div>
                 
                 <button onclick="hub.handleAuthClick()" id="authBtn" class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 flex items-center justify-center transition border border-blue-200 dark:border-blue-800 overflow-hidden"><i class="fas fa-user"></i></button>
-                
-                <!-- Theme Toggle REMOVED from Navbar -->
                 
                 <button onclick="hub.openManageModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 transition"><i class="fas fa-pen"></i></button>
 
@@ -183,7 +184,7 @@
             </div>
             <!-- Removed Theme toggle from footer to force use of Settings -->
             <div class="flex justify-between border-t border-gray-100 dark:border-gray-800 p-3 bg-gray-50 dark:bg-slate-950/50">
-                <button onclick="hub.toggleDrawer('help')" class="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-300"><i class="fas fa-question-circle"></i> Help</button>
+                <button onclick="hub.toggleDrawer('help')" class="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-300"><i class="fas fa-info-circle text-blue-500"></i> Help & Guide</button>
             </div>
         </div>
 
@@ -350,7 +351,7 @@
             </div>
 
             <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
-                <p class="text-[10px] text-gray-400">Tonkla's Hub V19.3</p>
+                <p class="text-[10px] text-gray-400">Tonkla's Hub V19.4</p>
             </div>
         </div>
     </div>
@@ -825,7 +826,14 @@
             toggleTheme: function() { document.documentElement.classList.toggle('dark'); const isDark = document.documentElement.classList.contains('dark'); localStorage.setItem('tonkla_theme', isDark ? 'dark' : 'light'); },
             toggleDrawer: function(type) { this.closeAllDrawers(); const drawer = document.getElementById(`${type}-drawer`); const backdrop = document.getElementById('drawer-backdrop'); drawer.classList.add('open'); backdrop.classList.remove('hidden'); if(type === 'time') this.renderCalendar(); this.toggleMobileMenu(); },
             closeAllDrawers: function() { document.querySelectorAll('.drawer-panel').forEach(d => d.classList.remove('open')); document.getElementById('drawer-backdrop').classList.add('hidden'); },
-            checkFirstVisit: function() { if(!localStorage.getItem('tonkla_hub_help_seen')) setTimeout(() => this.toggleDrawer('help'), 1000); },
+            checkFirstVisit: function() { 
+                if(!localStorage.getItem('tonkla_hub_help_seen')) {
+                    setTimeout(() => {
+                        this.toggleDrawer('help');
+                        localStorage.setItem('tonkla_hub_help_seen', 'true');
+                    }, 1000);
+                }
+            },
             showToast: function(msg) { const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; toast.classList.remove('hidden', 'translate-y-10', 'opacity-0'); setTimeout(() => toast.classList.add('translate-y-10', 'opacity-0'), 3000); setTimeout(() => toast.classList.add('hidden'), 3300); },
 
             startClock: function() { setInterval(() => { const now = new Date(); document.getElementById('drawer-clock').innerText = now.toLocaleTimeString('th-TH', { hour12: false }); document.getElementById('drawer-date').innerText = now.toLocaleDateString('th-TH', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); const h = now.getHours(); document.getElementById('drawer-greeting').innerText = h < 12 ? "GOOD MORNING" : h < 17 ? "GOOD AFTERNOON" : "GOOD EVENING"; this.updateProgress(now); }, 1000); },
