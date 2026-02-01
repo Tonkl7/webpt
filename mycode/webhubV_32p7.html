@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tonkla's Hub V32.6 Perfect</title>
+    <title>Tonkla's Hub V32.7 Super Drag</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -166,8 +166,8 @@
             <div class="w-32 h-32 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-fast">
                 <i class="fas fa-cloud-upload-alt text-6xl text-green-500"></i>
             </div>
-            <h2 class="text-4xl font-brand font-bold text-gray-800 dark:text-white mb-2">ปล่อยไฟล์ที่นี่</h2>
-            <p class="text-gray-500 text-lg">สร้างโปรเจกต์ใหม่ทันที</p>
+            <h2 class="text-4xl font-brand font-bold text-gray-800 dark:text-white mb-2">ปล่อยไฟล์หรือลิงก์ที่นี่</h2>
+            <p class="text-gray-500 text-lg">รองรับ .html และ URL</p>
         </div>
     </div>
 
@@ -179,7 +179,7 @@
                 <div id="hub-logo" class="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg text-lg md:text-xl transition-all duration-500"><i class="fas fa-leaf"></i></div>
                 <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">
                     Tonkla's <span class="text-green-600 mx-1 transition-colors">Hub</span>
-                    <span class="bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 border border-indigo-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V32.6</span>
+                    <span class="bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 border border-indigo-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V32.7</span>
                 </h1>
             </div>
             
@@ -210,7 +210,7 @@
             </div>
         </div>
 
-        <main class="flex-1 p-4 md:p-10 overflow-y-auto z-10 flex flex-col items-center w-full relative">
+        <main class="flex-1 p-4 md:p-10 overflow-y-auto z-10 flex flex-col items-center w-full relative min-h-0">
             <!-- Search -->
             <div class="search-container w-full max-w-xl mb-6 md:mb-10 mt-2 md:mt-6 flex items-center justify-center relative h-16 transition-all duration-300" id="header-container">
                 <div class="header-content header-title flex items-center justify-center gap-3">
@@ -337,7 +337,7 @@
                 <!-- Tools Section -->
                 <div><h4 class="font-bold text-xs text-gray-400 uppercase tracking-wider mb-2">เครื่องมือ</h4><button onclick="hub.checkAllWebsites()" id="checkStatusBtn" class="w-full py-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition border border-green-200 dark:border-green-800 mb-3 text-sm"><i class="fas fa-stethoscope mr-2"></i> ตรวจสอบลิงก์เสีย (Link Checker)</button><div id="statusResultList" class="space-y-2 max-h-40 overflow-y-auto hidden bg-gray-100 dark:bg-slate-950 p-2 rounded-lg border border-gray-200 dark:border-gray-700"></div></div>
             </div>
-            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center"><p class="text-[10px] text-gray-400">Tonkla's Hub V32.6</p></div>
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center"><p class="text-[10px] text-gray-400">Tonkla's Hub V32.7</p></div>
         </div>
     </div>
 
@@ -350,7 +350,7 @@
     <div id="profileModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4"><div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col items-center"><div class="w-full flex justify-end mb-2"><button onclick="hub.closeProfileModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button></div><div class="relative group cursor-pointer profile-upload mb-4" onclick="document.getElementById('avatarInput').click()"><img id="profileAvatar" src="" class="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg"><div class="overlay absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white opacity-0 transition-opacity"><i class="fas fa-camera"></i></div></div><input type="file" id="avatarInput" class="hidden" accept="image/*" onchange="hub.handleAvatarSelect(this)"><h3 class="text-lg md:text-xl font-bold dark:text-white mb-1" id="profileNameDisplay">User</h3><p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-6" id="profileEmailDisplay">user@example.com</p><div class="w-full space-y-3 md:space-y-4"><div><label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">แก้ไขชื่อเล่น</label><div class="flex gap-2"><input type="text" id="editProfileName" class="flex-1 p-2 md:p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white"><button onclick="hub.handleProfileSave()" class="bg-green-600 text-white px-3 md:px-4 rounded-xl hover:bg-green-700 font-bold"><i class="fas fa-save"></i></button></div></div><button onclick="hub.openProfileReset()" class="w-full py-2 md:py-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 rounded-xl font-bold hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition text-sm md:text-base"><i class="fas fa-key mr-2"></i> เปลี่ยนรหัสผ่าน</button><div class="pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2"><button onclick="hub.handleLogout()" class="w-full py-2 md:py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm md:text-base"><i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ</button><button onclick="hub.openDeleteAccountModal()" class="w-full py-2 md:py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition text-sm md:text-base"><i class="fas fa-trash-alt mr-2"></i> ลบบัญชีผู้ใช้</button></div></div></div></div>
     <div id="deleteAccountModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4"><div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col"><h3 class="font-bold text-xl md:text-2xl font-brand mb-2 text-red-600">ยืนยันการลบบัญชี</h3><p class="text-[10px] md:text-xs text-gray-500 mb-6">ข้อมูลทั้งหมดจะถูกลบและไม่สามารถกู้คืนได้</p><div class="space-y-4"><div><label class="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">กรอกรหัสผ่านเพื่อยืนยัน</label><input type="password" id="delAccPass" class="w-full p-3 md:p-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 dark:text-white transition text-sm md:text-base"></div><div class="flex gap-2"><button onclick="hub.closeDeleteAccountModal()" class="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl text-sm md:text-base">ยกเลิก</button><button onclick="hub.handleDeleteAccount()" id="delAccBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg text-sm md:text-base">ลบถาวร</button></div></div></div></div>
     <div id="time-drawer" class="drawer-panel fixed top-0 right-0 h-full w-[85vw] md:w-96 bg-white dark:bg-slate-800 shadow-2xl z-[60] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col"><div class="p-5 md:p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-slate-900"><h3 class="font-brand font-bold text-lg md:text-xl text-green-600"><i class="far fa-calendar-alt mr-2"></i>Time & Holiday</h3><button onclick="hub.closeAllDrawers()" class="text-gray-400 hover:text-red-500 transition p-2"><i class="fas fa-times text-xl md:text-2xl"></i></button></div><div class="flex-1 overflow-y-auto p-5 md:p-6 space-y-6 md:space-y-8"><div class="text-center"><div id="drawer-greeting" class="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">HELLO</div><h2 id="drawer-clock" class="text-4xl md:text-5xl font-mono font-bold text-gray-800 dark:text-white mb-2 tracking-tighter">00:00:00</h2><p id="drawer-date" class="text-xs md:text-sm text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/30 py-1 px-3 rounded-full inline-block">Loading...</p></div><div class="bg-gray-50 dark:bg-slate-700/50 p-4 md:p-5 rounded-2xl"><div class="flex justify-between text-xs font-bold mb-3"><span class="text-gray-500 dark:text-gray-400 uppercase">Road to Freedom</span><span id="weekend-text" class="text-blue-500">0%</span></div><div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 overflow-hidden shadow-inner"><div id="weekend-progress" class="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full transition-all duration-1000 relative" style="width: 0%"></div></div><p id="next-break-info" class="text-[10px] text-gray-400 mt-2 text-right font-mono">Next: Weekend</p></div><div><p id="calendar-month" class="text-center font-bold mb-4 text-gray-800 dark:text-white text-sm md:text-base"></p><div class="grid grid-cols-7 gap-1 md:gap-2 text-center text-[10px] md:text-xs font-bold text-gray-400 mb-2"><div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div></div><div id="calendar-days" class="grid grid-cols-7 gap-1 md:gap-2 text-center text-xs md:text-sm font-mono"></div></div></div></div>
-    <div id="help-drawer" class="drawer-panel fixed top-0 right-0 h-full w-[85vw] md:w-96 bg-white dark:bg-slate-800 shadow-2xl z-[60] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col"><div class="p-5 md:p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-slate-900"><h3 class="font-brand font-bold text-lg md:text-xl text-blue-600"><i class="fas fa-book mr-2"></i>คู่มือการใช้งาน</h3><button onclick="hub.closeAllDrawers()" class="text-gray-400 hover:text-red-500 transition p-2"><i class="fas fa-times text-xl md:text-2xl"></i></button></div><div class="flex-1 overflow-y-auto p-5 md:p-6 space-y-6"><div class="bg-blue-50 dark:bg-blue-900/20 p-4 md:p-5 rounded-2xl border border-blue-100 dark:border-blue-800"><h4 class="font-bold text-blue-700 dark:text-blue-300 mb-2 text-base md:text-lg">ยินดีต้อนรับ!</h4><p class="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Tonkla's Hub คือประตูสู่โปรเจกต์ของคุณ รวมทุกลิงก์ไว้ในที่เดียว</p></div><div class="space-y-6 pl-2"><div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700"><div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold"></div><h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">1. เริ่มสร้าง</h5><p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กดปุ่ม <b>(+) Add Project</b> ด้านล่างสุดของตาราง หรือ <b>ลากไฟล์</b> ลงมาวางเพื่อสร้างปุ่มทันที</p></div><div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700"><div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold"></div><h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">2. แก้ไขขั้นสูง (New)</h5><p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">เข้าเมนู "แก้ไขกลุ่ม" เลือกสีหรือไอคอน แล้ว<b>แตะที่รายการ</b>เพื่อเปลี่ยนทันทีแบบ Paint Bucket</p></div></div><a href="https://github.com/Tonkl7/ToolExtensions" target="_blank" class="block w-full py-3 md:py-4 bg-gray-900 hover:bg-black text-white text-center rounded-2xl font-bold shadow-lg transition flex items-center justify-center gap-2 mt-4 transform active:scale-95 text-sm md:text-base"><i class="fab fa-github text-xl md:text-2xl"></i> ไปที่ GitHub Repo</a></div></div>
+    <div id="help-drawer" class="drawer-panel fixed top-0 right-0 h-full w-[85vw] md:w-96 bg-white dark:bg-slate-800 shadow-2xl z-[60] transform translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col"><div class="p-5 md:p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-slate-900"><h3 class="font-brand font-bold text-lg md:text-xl text-blue-600"><i class="fas fa-book mr-2"></i>คู่มือการใช้งาน</h3><button onclick="hub.closeAllDrawers()" class="text-gray-400 hover:text-red-500 transition p-2"><i class="fas fa-times text-xl md:text-2xl"></i></button></div><div class="flex-1 overflow-y-auto p-5 md:p-6 space-y-6"><div class="bg-blue-50 dark:bg-blue-900/20 p-4 md:p-5 rounded-2xl border border-blue-100 dark:border-blue-800"><h4 class="font-bold text-blue-700 dark:text-blue-300 mb-2 text-base md:text-lg">ยินดีต้อนรับ!</h4><p class="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Tonkla's Hub คือประตูสู่โปรเจกต์ของคุณ รวมทุกลิงก์ไว้ในที่เดียว</p></div><div class="space-y-6 pl-2"><div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700"><div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold"></div><h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">1. เริ่มสร้าง</h5><p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กดปุ่ม <b>(+) Add Project</b> หรือ <b>ลากไฟล์ HTML / ลิงก์</b> ลงมาวางเพื่อสร้างปุ่มทันที</p></div><div class="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700"><div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold"></div><h5 class="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1">2. แก้ไขขั้นสูง (New)</h5><p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">เข้าเมนู "แก้ไขกลุ่ม" เลือกสีหรือไอคอน แล้ว<b>แตะที่รายการ</b>เพื่อเปลี่ยนทันทีแบบ Paint Bucket</p></div></div><a href="https://github.com/Tonkl7/ToolExtensions" target="_blank" class="block w-full py-3 md:py-4 bg-gray-900 hover:bg-black text-white text-center rounded-2xl font-bold shadow-lg transition flex items-center justify-center gap-2 mt-4 transform active:scale-95 text-sm md:text-base"><i class="fab fa-github text-xl md:text-2xl"></i> ไปที่ GitHub Repo</a></div></div>
     <div id="drawer-backdrop" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[55] hidden transition-opacity" onclick="hub.closeAllDrawers()"></div>
     <div id="toast" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg z-[150] text-sm font-bold flex items-center gap-3 transition-all duration-300 translate-y-0"><i class="fas fa-info-circle text-blue-400"></i> <span id="toastMsg">Notification</span></div>
 
@@ -438,12 +438,9 @@
                     list.appendChild(div);
 
                     try {
-                        // Check 1: Simple Fetch (no-cors mode to avoid network error on valid servers)
-                        // If DNS fails or Server down, this usually throws
                         await fetch(link.url, { mode: 'no-cors', cache: 'no-cache' });
                         div.querySelector('span:last-child').innerHTML = '<span class="text-green-500">ปกติ <i class="fas fa-check"></i></span>';
                     } catch (e) {
-                        // Check 2: Fallback to Image Ping (for favicon)
                         const img = new Image();
                         img.onload = () => { div.querySelector('span:last-child').innerHTML = '<span class="text-green-500">ปกติ (Img)</span>'; };
                         img.onerror = () => { div.querySelector('span:last-child').innerHTML = '<span class="text-red-500">เข้าถึงไม่ได้</span>'; };
@@ -505,47 +502,33 @@
                 const frame = document.getElementById('web-frame');
                 const layer = document.getElementById('app-frame-layer');
                 const curtain = document.getElementById('transition-curtain');
-                
-                // 1. Curtain enters from top
                 curtain.className = "fixed inset-0 z-60 flex items-center justify-center bg-gray-800 text-white curtain-down-enter";
-                
                 setTimeout(() => {
-                    // 2. NOW HIDDEN: Change State
                     layer.classList.remove('active');
                     frame.src = 'about:blank';
-                    
-                    // 3. Small pause to ensure rendering
                     setTimeout(() => {
                         curtain.className = "fixed inset-0 z-60 flex items-center justify-center bg-gray-800 text-white curtain-down-exit";
-                        
                         setTimeout(() => {
                             curtain.className = "fixed inset-0 z-60 flex items-center justify-center bg-gray-800 text-white transform translate-y-full";
                         }, 500);
                     }, 300);
-                }, 500); // Wait for enter animation
+                }, 500);
             },
             openLink: function(url, colorClass) {
                 const frame = document.getElementById('web-frame');
                 const layer = document.getElementById('app-frame-layer');
                 const curtain = document.getElementById('transition-curtain');
-                
-                // 1. Curtain enters from bottom
                 curtain.className = `fixed inset-0 z-60 flex items-center justify-center text-white ${colorClass} curtain-up-enter`;
-                
                 setTimeout(() => {
-                    // 2. NOW HIDDEN: Load URL
                     frame.src = url;
                     layer.classList.add('active'); 
-                    
-                    // 3. Small pause to simulate processing/hide white flash
                     setTimeout(() => {
                         curtain.className = `fixed inset-0 z-60 flex items-center justify-center text-white ${colorClass} curtain-up-exit`;
-                        
                         setTimeout(() => {
                             curtain.className = "fixed inset-0 z-60 flex items-center justify-center bg-gray-800 text-white transform -translate-y-full";
                         }, 500);
                     }, 400); 
-                }, 500); // Wait for enter animation
+                }, 500); 
             },
             
             toggleSearch: function() { 
@@ -568,7 +551,6 @@
             },
             saveLinks: async function() { localStorage.setItem('webhub_links', JSON.stringify(this.links)); if (this.currentUser) { await this.callApi('saveLinks', { userId: this.currentUser.id, links: this.links }); } },
             
-            // --- POINT 2: EDIT MODE TOGGLE ANIMATION ---
             toggleEditMode: function() {
                 this.isEditMode = !this.isEditMode;
                 const body = document.body;
@@ -576,12 +558,12 @@
                 
                 if(this.isEditMode) {
                     body.classList.add('edit-mode');
-                    toolbar.classList.remove('translate-y-48'); // Move in
+                    toolbar.classList.remove('translate-y-48'); 
                     this.selectedIds = [];
                     this.updateBatchUI();
                 } else {
                     body.classList.remove('edit-mode');
-                    toolbar.classList.add('translate-y-48'); // Move out
+                    toolbar.classList.add('translate-y-48'); 
                     this.selectedIds = [];
                 }
                 this.updateEditModeBtnState();
@@ -644,7 +626,7 @@
                         tempId: i,
                         id: Date.now() + i, 
                         name: file.name.split('.')[0],
-                        url: '',
+                        url: file.name.endsWith('.html') ? file.name : '', // Auto-set .html URL
                         icon: 'fas fa-file',
                         color: this.colors[i % this.colors.length]
                     }));
@@ -745,7 +727,6 @@
                 this.batchItems[index][field] = value;
             },
 
-            // POINT 3: REMOVED Auto-Edit Mode after batch save
             saveBatchChanges: function() {
                 this.batchItems.forEach(batchItem => {
                     const existingIndex = this.links.findIndex(l => l.id === batchItem.id);
@@ -759,10 +740,9 @@
                 this.renderGrid();
                 this.closeAdvancedBatchModal();
                 this.showToast('บันทึกข้อมูลเรียบร้อย ✅');
-                // No more auto-toggle edit mode here
             },
 
-            // --- DRAG & DROP ---
+            // --- DRAG & DROP (UPDATED: Files & Links) ---
             dragCounter: 0,
             initDragDrop: function() {
                 const body = document.body;
@@ -784,14 +764,51 @@
                 body.addEventListener('drop', (e) => {
                     this.dragCounter = 0;
                     body.classList.remove('dragging-file');
+                    
                     const files = e.dataTransfer.files;
-                    if (files.length === 0) return;
+                    
+                    // 1. Handle FILES (dragged from OS)
+                    if (files.length > 0) {
+                        if (files.length === 1) {
+                            // Single file: Fill URL with filename if .html
+                            this.openAddModal();
+                            document.getElementById('addName').value = files[0].name.split('.')[0];
+                            if(files[0].name.endsWith('.html')) {
+                                document.getElementById('addUrl').value = files[0].name;
+                            }
+                        } else {
+                            // Multiple files: Batch mode + auto filenames
+                            this.openAdvancedBatchModal(Array.from(files));
+                        }
+                        return;
+                    }
 
-                    if (files.length === 1) {
+                    // 2. Handle TEXT/LINKS (dragged from browser/text)
+                    const droppedText = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list');
+                    if (droppedText && (droppedText.startsWith('http') || droppedText.startsWith('www'))) {
                         this.openAddModal();
-                        document.getElementById('addName').value = files[0].name.split('.')[0];
-                    } else {
-                        this.openAdvancedBatchModal(Array.from(files));
+                        document.getElementById('addUrl').value = droppedText;
+                        
+                        // Smart Name Extraction
+                        let name = "New Link";
+                        try {
+                            const urlObj = new URL(droppedText);
+                            if(urlObj.hostname.includes('github.com')) {
+                                // Extract repo name: github.com/user/repo -> repo
+                                const parts = urlObj.pathname.split('/').filter(p => p);
+                                if(parts.length >= 2) name = parts[1]; 
+                                else name = "GitHub";
+                                hub.selectIcon('fab fa-github'); // Auto icon
+                            } else if(urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                                name = "YouTube";
+                                hub.selectIcon('fab fa-youtube');
+                            } else {
+                                name = urlObj.hostname.replace('www.', '').split('.')[0];
+                                name = name.charAt(0).toUpperCase() + name.slice(1);
+                            }
+                        } catch(err) { name = "Link"; }
+                        
+                        document.getElementById('addName').value = name;
                     }
                 }, false);
             },
@@ -846,7 +863,7 @@
             initAddModal: function() { const iconGrid = document.getElementById('iconGrid'); if(iconGrid) { iconGrid.innerHTML = ''; this.icons.forEach(icon => { const div = document.createElement('div'); div.className = `icon-option w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-600 transition text-sm md:text-base`; div.innerHTML = `<i class="${icon}"></i>`; div.onclick = () => this.selectIcon(icon, div); iconGrid.appendChild(div); }); } const colorGrid = document.getElementById('colorGrid'); if(colorGrid) { colorGrid.innerHTML = ''; this.colors.forEach(color => { const div = document.createElement('div'); div.className = `color-option w-6 h-6 md:w-8 md:h-8 rounded-full ${color} shadow-sm hover:scale-110 transition`; div.onclick = () => this.selectColor(color, div); colorGrid.appendChild(div); }); } },
             selectIcon: function(icon, el = null) { this.selectedIcon = icon; document.querySelectorAll('.icon-option').forEach(e => { e.classList.remove('selected', 'ring-2', 'ring-green-500', 'bg-green-100', 'dark:bg-green-900', 'text-green-600'); e.classList.add('text-gray-500'); }); if(!el) { const iconEls = document.querySelectorAll('#iconGrid .icon-option i'); for(let i of iconEls) { if(i.className === icon) { el = i.parentElement; break; } } } if(el) { el.classList.add('selected', 'ring-2', 'ring-green-500', 'bg-green-100', 'dark:bg-green-900', 'text-green-600'); el.classList.remove('text-gray-500'); } },
             selectColor: function(color, el = null) { this.selectedColor = color; document.querySelectorAll('.color-option').forEach(e => e.classList.remove('selected', 'ring-2', 'ring-offset-2', 'ring-gray-400')); if(!el) el = document.querySelector(`.color-option.${color}`); if(el) el.classList.add('selected', 'ring-2', 'ring-offset-2', 'ring-gray-400'); },
-            saveLink: function() { const name = document.getElementById('addName').value.trim(); let url = document.getElementById('addUrl').value.trim(); if(!name || !url) return alert("กรุณากรอกข้อมูลให้ครบ"); if(!url.startsWith('http')) url = 'https://' + url; if (this.editingId) { const index = this.links.findIndex(l => l.id === this.editingId); if(index !== -1) { this.links[index] = { ...this.links[index], name, url, icon: this.selectedIcon, color: this.selectedColor }; } } else { this.links.push({ id: Date.now(), name, url, icon: this.selectedIcon, color: this.selectedColor }); } this.saveLinks(); this.renderGrid(); this.closeAddModal(); },
+            saveLink: function() { const name = document.getElementById('addName').value.trim(); let url = document.getElementById('addUrl').value.trim(); if(!name || !url) return alert("กรุณากรอกข้อมูลให้ครบ"); if(!url.startsWith('http') && !url.endsWith('.html')) url = 'https://' + url; if (this.editingId) { const index = this.links.findIndex(l => l.id === this.editingId); if(index !== -1) { this.links[index] = { ...this.links[index], name, url, icon: this.selectedIcon, color: this.selectedColor }; } } else { this.links.push({ id: Date.now(), name, url, icon: this.selectedIcon, color: this.selectedColor }); } this.saveLinks(); this.renderGrid(); this.closeAddModal(); },
             openManageModal: function() { document.getElementById('manageModal').classList.remove('hidden'); this.renderManageList(); },
             closeManageModal: function() { document.getElementById('manageModal').classList.add('hidden'); },
             renderManageList: function() { const list = document.getElementById('manageList'); list.innerHTML = ''; if(this.links.length === 0) list.innerHTML = '<p class="text-center text-gray-400 py-4">ไม่มีรายการ</p>'; this.links.forEach(link => { const div = document.createElement('div'); div.className = "flex justify-between items-center bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700"; div.innerHTML = `<div class="flex items-center gap-3 overflow-hidden flex-1"><div class="w-8 h-8 rounded-lg ${link.color || 'bg-gray-500'} flex items-center justify-center text-white shrink-0 text-xs"><i class="${link.icon || 'fas fa-globe'}"></i></div><div class="truncate"><div class="font-bold text-sm dark:text-white truncate">${link.name}</div><div class="text-[10px] text-gray-400 truncate">${link.url}</div></div></div><div class="flex gap-2 ml-2"><button onclick="hub.openEditModal(${link.id})" class="w-8 h-8 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 hover:bg-yellow-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-pen text-xs"></i></button><button onclick="hub.deleteLink(${link.id})" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-trash-alt text-xs"></i></button></div>`; list.appendChild(div); }); },
