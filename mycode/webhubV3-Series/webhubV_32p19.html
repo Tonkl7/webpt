@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tonkla's Hub V32.18 </title>
+    <title>Tonkla's Hub V32.19 </title>
     <link rel="icon" type="image/png" href="leaf-Photoroom.png">
     
     <!-- Tailwind CSS -->
@@ -165,7 +165,7 @@
         <nav class="h-16 md:h-20 px-4 md:px-10 flex items-center justify-between bg-white/80 dark:bg-slate-850/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shrink-0 sticky top-0 z-40 transition-all">
             <div class="flex items-center gap-2 md:gap-4 shrink-0">
                 <div id="hub-logo" class="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg text-lg md:text-xl transition-all duration-500"><i class="fas fa-leaf"></i></div>
-                <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">Tonkla's <span class="text-green-600 mx-1 transition-colors">Hub</span><span class="bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 border border-indigo-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V32.18</span></h1>
+                <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">Tonkla's <span class="text-green-600 mx-1 transition-colors">Hub</span><span class="bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 border border-indigo-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V32.19</span></h1>
             </div>
             <div class="hidden md:flex items-center gap-3">
                 <button onclick="hub.toggleDrawer('time')" class="text-gray-500 hover:text-green-600 transition"><i class="far fa-clock text-xl"></i></button>
@@ -242,11 +242,19 @@
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3"><span class="text-xs font-bold text-gray-400 uppercase tracking-wider">สถานะแปรง:</span><div id="activeBrushDisplay" class="flex items-center gap-2 px-3 py-1 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-400 text-sm font-bold border border-gray-200 dark:border-gray-600"><i class="fas fa-ban"></i> <span>ว่างเปล่า</span></div></div>
                     <div class="flex gap-2">
-                        <button onclick="hub.addEmptyBatchItem()" class="text-xs text-blue-500 hover:text-blue-600 font-bold flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition border border-blue-200 dark:border-blue-800 active:scale-95"><i class="fas fa-plus-circle"></i> เพิ่มแถวเปล่า</button>
-                        <button onclick="hub.clearBatchBrush()" class="text-xs text-red-500 hover:text-red-600 font-bold flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition border border-red-200 dark:border-red-800"><i class="fas fa-times-circle"></i> ล้างแปรง</button>
+                        <button onclick="hub.addEmptyBatchItem()" class="text-xs text-blue-500 hover:text-blue-600 font-bold flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition border border-blue-200 dark:border-blue-800 active:scale-95"><i class="fas fa-plus-circle"></i><span class="hidden md:inline ml-1">เพิ่มแถวเปล่า</span></button>
+                        <button onclick="hub.clearBatchBrush()" class="text-xs text-red-500 hover:text-red-600 font-bold flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition border border-red-200 dark:border-red-800"><i class="fas fa-times-circle"></i><span class="hidden md:inline ml-1">ล้างแปรง</span></button>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Toggle Button for Mobile -->
+                <button onclick="hub.toggleBatchTools()" class="md:hidden w-full mb-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-xl flex items-center justify-between px-4 text-sm font-bold text-gray-600 dark:text-gray-300">
+                    <span><i class="fas fa-palette mr-2 text-green-500"></i>เลือกสี & ไอคอน</span>
+                    <i class="fas fa-chevron-down transition-transform" id="batchToolsToggleIcon"></i>
+                </button>
+
+                <!-- Tools Container (Hidden by default on mobile, visible on desktop) -->
+                <div id="batchToolsContainer" class="hidden md:grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 overflow-hidden">
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block flex items-center gap-1"><i class="fas fa-fill-drip"></i> เลือกสี (Paint)</label><div id="batchColorTools" class="flex flex-wrap gap-2"></div></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block flex items-center gap-1"><i class="fas fa-stamp"></i> เลือกไอคอน (Stamp)</label><div id="batchIconTools" class="grid grid-cols-8 gap-2 overflow-y-auto max-h-24 p-1 custom-scrollbar"></div></div>
                 </div>
@@ -356,7 +364,14 @@
     
     <div id="manageModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 max-h-[80vh] flex flex-col">
-            <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-xl md:text-2xl font-brand text-gray-800 dark:text-white">จัดการปุ่ม</h3><button onclick="hub.closeManageModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-red-500 transition"><i class="fas fa-times"></i></button></div>
+            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-xl md:text-2xl font-brand text-gray-800 dark:text-white">จัดการปุ่ม</h3><button onclick="hub.closeManageModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-red-500 transition"><i class="fas fa-times"></i></button></div>
+            
+            <!-- Added Search Input -->
+            <div class="mb-4 relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="manageSearchInput" oninput="hub.renderManageList(this.value)" class="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm" placeholder="ค้นหาปุ่ม...">
+            </div>
+
             <div id="manageList" class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar"></div>
             <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <!-- NEW BUTTON: BATCH EDIT ALL -->
@@ -809,6 +824,11 @@
                 document.getElementById('advancedBatchModal').classList.remove('hidden');
                 this.activeBatchTool = null;
                 this.updateActiveBrushDisplay();
+                // Reset tools toggle on open
+                const toolsContainer = document.getElementById('batchToolsContainer');
+                if(toolsContainer) toolsContainer.classList.add('hidden');
+                const toggleIcon = document.getElementById('batchToolsToggleIcon');
+                if(toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
                 
                 this.batchOperationMode = 'mass'; // Default
 
@@ -843,6 +863,17 @@
                 `).join('');
 
                 this.renderBatchList();
+            },
+            toggleBatchTools: function() {
+                const container = document.getElementById('batchToolsContainer');
+                const icon = document.getElementById('batchToolsToggleIcon');
+                if(container.classList.contains('hidden')) {
+                    container.classList.remove('hidden');
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    container.classList.add('hidden');
+                    icon.style.transform = 'rotate(0deg)';
+                }
             },
             setBatchTool: function(type, value) {
                 this.activeBatchTool = { type, value };
@@ -922,7 +953,7 @@
                             <i class="${item.icon} text-lg relative z-10"></i>
                             <div class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition"></div>
                         </div>
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <input type="text" value="${item.name}" onchange="hub.updateBatchItem(${index}, 'name', this.value)" class="w-full bg-transparent font-bold text-gray-800 dark:text-white border-b border-transparent focus:border-green-500 outline-none text-sm mb-1 hover:border-gray-200 dark:hover:border-gray-700 transition px-1" placeholder="Name">
                             <input type="text" value="${item.url}" onchange="hub.updateBatchItem(${index}, 'url', this.value)" class="w-full bg-transparent text-xs text-gray-500 font-mono outline-none hover:text-green-600 transition px-1" placeholder="https://...">
                         </div>
@@ -1075,10 +1106,31 @@
             selectIcon: function(icon, el = null) { this.selectedIcon = icon; document.querySelectorAll('.icon-option').forEach(e => { e.classList.remove('selected', 'ring-2', 'ring-green-500', 'bg-green-100', 'dark:bg-green-900', 'text-green-600'); e.classList.add('text-gray-500'); }); if(!el) { const iconEls = document.querySelectorAll('#iconGrid .icon-option i'); for(let i of iconEls) { if(i.className === icon) { el = i.parentElement; break; } } } if(el) { el.classList.add('selected', 'ring-2', 'ring-green-500', 'bg-green-100', 'dark:bg-green-900', 'text-green-600'); el.classList.remove('text-gray-500'); } },
             selectColor: function(color, el = null) { this.selectedColor = color; document.querySelectorAll('.color-option').forEach(e => e.classList.remove('selected', 'ring-2', 'ring-offset-2', 'ring-gray-400')); if(!el) el = document.querySelector(`.color-option.${color}`); if(el) el.classList.add('selected', 'ring-2', 'ring-offset-2', 'ring-gray-400'); },
             saveLink: function() { const name = document.getElementById('addName').value.trim(); let url = document.getElementById('addUrl').value.trim(); if(!name || !url) return alert("กรุณากรอกข้อมูลให้ครบ"); if(!url.startsWith('http') && !url.endsWith('.html')) url = 'https://' + url; if (this.editingId) { const index = this.links.findIndex(l => l.id === this.editingId); if(index !== -1) { this.links[index] = { ...this.links[index], name, url, icon: this.selectedIcon, color: this.selectedColor }; } } else { this.links.push({ id: Date.now(), name, url, icon: this.selectedIcon, color: this.selectedColor }); } this.saveLinks(); this.renderGrid(); this.closeAddModal(); },
-            openManageModal: function() { document.getElementById('manageModal').classList.remove('hidden'); this.renderManageList(); },
+            openManageModal: function() { 
+                document.getElementById('manageModal').classList.remove('hidden'); 
+                document.getElementById('manageSearchInput').value = ''; 
+                this.renderManageList(); 
+            },
             closeManageModal: function() { document.getElementById('manageModal').classList.add('hidden'); },
-            renderManageList: function() { const list = document.getElementById('manageList'); list.innerHTML = ''; if(this.links.length === 0) list.innerHTML = '<p class="text-center text-gray-400 py-4">ไม่มีรายการ</p>'; this.links.forEach(link => { const div = document.createElement('div'); div.className = "flex justify-between items-center bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700"; div.innerHTML = `<div class="flex items-center gap-3 overflow-hidden flex-1"><div class="w-8 h-8 rounded-lg ${link.color || 'bg-gray-500'} flex items-center justify-center text-white shrink-0 text-xs"><i class="${link.icon || 'fas fa-globe'}"></i></div><div class="truncate"><div class="font-bold text-sm dark:text-white truncate">${link.name}</div><div class="text-[10px] text-gray-400 truncate">${link.url}</div></div></div><div class="flex gap-2 ml-2"><button onclick="hub.openEditModal(${link.id})" class="w-8 h-8 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 hover:bg-yellow-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-pen text-xs"></i></button><button onclick="hub.deleteLink(${link.id})" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-trash-alt text-xs"></i></button></div>`; list.appendChild(div); }); },
-            deleteLink: function(id) { if(confirm("ต้องการลบปุ่มนี้ใช่ไหม?")) { this.links = this.links.filter(l => l.id !== id); this.saveLinks(); this.renderGrid(); this.renderManageList(); } },
+            renderManageList: function(filterText = '') {
+                const list = document.getElementById('manageList');
+                list.innerHTML = '';
+                
+                const filteredLinks = this.links.filter(link => 
+                    link.name.toLowerCase().includes(filterText.toLowerCase()) || 
+                    link.url.toLowerCase().includes(filterText.toLowerCase())
+                );
+
+                if(filteredLinks.length === 0) list.innerHTML = '<p class="text-center text-gray-400 py-4">ไม่พบรายการ</p>'; 
+                
+                filteredLinks.forEach(link => { 
+                    const div = document.createElement('div'); 
+                    div.className = "flex justify-between items-center bg-gray-50 dark:bg-slate-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700"; 
+                    div.innerHTML = `<div class="flex items-center gap-3 overflow-hidden flex-1"><div class="w-8 h-8 rounded-lg ${link.color || 'bg-gray-500'} flex items-center justify-center text-white shrink-0 text-xs"><i class="${link.icon || 'fas fa-globe'}"></i></div><div class="truncate"><div class="font-bold text-sm dark:text-white truncate">${link.name}</div><div class="text-[10px] text-gray-400 truncate">${link.url}</div></div></div><div class="flex gap-2 ml-2"><button onclick="hub.openEditModal(${link.id})" class="w-8 h-8 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 hover:bg-yellow-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-pen text-xs"></i></button><button onclick="hub.deleteLink(${link.id})" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center shrink-0"><i class="fas fa-trash-alt text-xs"></i></button></div>`; 
+                    list.appendChild(div); 
+                }); 
+            },
+            deleteLink: function(id) { if(confirm("ต้องการลบปุ่มนี้ใช่ไหม?")) { this.links = this.links.filter(l => l.id !== id); this.saveLinks(); this.renderGrid(); this.renderManageList(document.getElementById('manageSearchInput').value); } },
             deleteAllLinks: function() { if(confirm("⚠️ คำเตือน: คุณต้องการลบข้อมูลทั้งหมดหรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้")) { this.links = []; this.saveLinks(); this.renderGrid(); this.renderManageList(); } }
         };
         window.addEventListener('load', () => hub.init());
