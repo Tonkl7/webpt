@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tonkla's Hub V32.11 Database Ready</title>
+    <title>Tonkla's Hub V32.14 Seedling Spinner</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,6 +25,7 @@
                         'slide-in': 'slideIn 0.3s ease-out forwards',
                         'wiggle': 'wiggle 0.3s ease-in-out infinite',
                         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 3s linear infinite',
                     },
                     keyframes: {
                         slideIn: {
@@ -124,10 +125,15 @@
         /* Profile Hover Camera Effect */
         .profile-upload .overlay { transition: opacity 0.2s; }
         .profile-upload:hover .overlay { opacity: 1; }
+
+        /* API Loading Overlay */
+        #api-loading-overlay { pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+        #api-loading-overlay.active { pointer-events: auto; opacity: 1; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-[#0f172a] text-gray-800 dark:text-gray-100 h-[100dvh] w-screen overflow-hidden flex flex-col transition-colors duration-700">
 
+    <!-- TRANSITION CURTAIN -->
     <div id="transition-curtain" class="bg-gray-800 text-white">
         <div class="flex flex-col items-center animate-bounce">
             <i class="fas fa-rocket text-5xl mb-4"></i>
@@ -135,6 +141,16 @@
         </div>
     </div>
 
+    <!-- API LOADING OVERLAY (Updated: Seedling Spinner) -->
+    <div id="api-loading-overlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm text-white">
+        <!-- Seedling Spinner -->
+        <div class="relative mb-6">
+            <i class="fas fa-seedling text-7xl text-green-500 animate-spin"></i>
+        </div>
+        <h3 id="api-loading-text" class="text-2xl font-brand font-bold animate-pulse text-green-400">กำลังดำเนินการ...</h3>
+    </div>
+
+    <!-- DRAG DROP OVERLAY -->
     <div id="drag-overlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center border-4 border-dashed border-green-500 m-4 rounded-[3rem]">
         <div class="text-center p-10 transform transition-transform duration-300">
             <div class="w-32 h-32 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-fast"><i class="fas fa-cloud-upload-alt text-6xl text-green-500"></i></div>
@@ -148,7 +164,7 @@
         <nav class="h-16 md:h-20 px-4 md:px-10 flex items-center justify-between bg-white/80 dark:bg-slate-850/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shrink-0 sticky top-0 z-40 transition-all">
             <div class="flex items-center gap-2 md:gap-4 shrink-0">
                 <div id="hub-logo" class="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-lg md:rounded-xl flex items-center justify-center text-white shadow-lg text-lg md:text-xl transition-all duration-500"><i class="fas fa-leaf"></i></div>
-                <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">Tonkla's <span class="text-green-600 mx-1 transition-colors">Hub</span><span class="bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 border border-indigo-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V32.11</span></h1>
+                <h1 class="text-lg md:text-3xl font-brand font-bold tracking-tight flex items-center">Tonkla's <span class="text-green-600 mx-1 transition-colors">Hub</span><span class="bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 border border-indigo-400/30 text-[9px] md:text-[10px] px-1.5 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm ml-1 md:ml-2 translate-y-0.5">V32.14</span></h1>
             </div>
             <div class="hidden md:flex items-center gap-3">
                 <button onclick="hub.toggleDrawer('time')" class="text-gray-500 hover:text-green-600 transition"><i class="far fa-clock text-xl"></i></button>
@@ -249,7 +265,7 @@
                 <div><h4 class="font-bold text-xs text-gray-400 uppercase tracking-wider mb-2">การเชื่อมต่อ (API)</h4><div class="p-4 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-gray-700 space-y-3"><div class="flex justify-between items-center"><label class="text-[10px] font-bold text-gray-400">Google Apps Script URL</label><button onclick="hub.toggleApiLock()" id="apiLockBtn" class="text-gray-400 hover:text-blue-500 transition text-xs flex items-center gap-1"><i class="fas fa-lock"></i> <span>ล็อก</span></button></div><input type="text" id="settingsApiUrl" disabled class="w-full p-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-mono focus:outline-none focus:border-green-500 dark:text-white cursor-not-allowed opacity-60 transition" placeholder="https://script.google.com/..."><button onclick="hub.saveSettingsConfig()" class="w-full py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20"><i class="fas fa-save mr-1"></i> บันทึกการตั้งค่า</button></div></div>
                 <div><h4 class="font-bold text-xs text-gray-400 uppercase tracking-wider mb-2">เครื่องมือ</h4><button onclick="hub.checkAllWebsites()" id="checkStatusBtn" class="w-full py-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl font-bold hover:bg-green-100 dark:hover:bg-green-900/40 transition border border-green-200 dark:border-green-800 mb-3 text-sm"><i class="fas fa-stethoscope mr-2"></i> ตรวจสอบลิงก์เสีย</button><div id="statusResultList" class="space-y-2 max-h-40 overflow-y-auto hidden bg-gray-100 dark:bg-slate-950 p-2 rounded-lg border border-gray-200 dark:border-gray-700"></div></div>
             </div>
-            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center"><p class="text-[10px] text-gray-400">Tonkla's Hub V32.11</p></div>
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center"><p class="text-[10px] text-gray-400">Tonkla's Hub V32.14</p></div>
         </div>
     </div>
 
@@ -342,7 +358,7 @@
     <div id="toast" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg z-[150] text-sm font-bold flex items-center gap-3 transition-all duration-300 translate-y-0"><i class="fas fa-info-circle text-blue-400"></i> <span id="toastMsg">Notification</span></div>
 
     <script>
-        const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbx8rWu2uPnj00hnboLX2IBZL9PH8Otw3u1ExCZHToo2RXZif1B4QwXmjkwp4zQereIF/exec';
+        const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbztbWU4sGc-NObEM59MvVbdIB1mCloOaS3Ts4-DX81nxnr9CjxzGnLpvRsicfts_LkQ/exec';
 
         const hub = {
             links: [], selectedIcon: 'fas fa-globe', selectedColor: 'bg-green-500', editingId: null, 
@@ -398,9 +414,23 @@
                 } catch(e) { console.error("Init failed:", e); }
             },
 
+            // --- API Loading Helper (Updated) ---
+            showApiLoading: function(msg = "กำลังโหลด...") {
+                const overlay = document.getElementById('api-loading-overlay');
+                document.getElementById('api-loading-text').innerText = msg;
+                overlay.classList.add('active');
+            },
+            hideApiLoading: function() {
+                const overlay = document.getElementById('api-loading-overlay');
+                overlay.classList.remove('active');
+            },
+
             // --- API & AUTH ---
-            callApi: async function(a,p={}){const u=localStorage.getItem('hub_api_url');if(!u)return{status:'error',message:'No API URL'};try{const b=JSON.stringify({action:a,deviceInfo:this.getDeviceInfo(),...p});const r=await fetch(u,{method:'POST',body:b});const t=await r.text();return JSON.parse(t);}catch(e){return{status:'error',message:e.toString()};}},
-            getDeviceInfo: function() { return `${navigator.platform} | ${navigator.userAgent}`; },
+            callApi: async function(a,p={}){const u=localStorage.getItem('hub_api_url');if(!u)return{status:'error',message:'No API URL'};try{
+                // Removed deviceInfo from payload
+                const b=JSON.stringify({action:a,...p});
+                const r=await fetch(u,{method:'POST',body:b});const t=await r.text();return JSON.parse(t);}catch(e){return{status:'error',message:e.toString()};}},
+            // getDeviceInfo removed as it's no longer used
             
             handleAuthSubmit: async function() { 
                 const identifier = document.getElementById('authIdentifier').value; 
@@ -530,10 +560,13 @@
                 if(!identifier) return alert('กรุณากรอกข้อมูล'); 
                 
                 const btn = document.getElementById('recStep1Btn'); 
-                btn.disabled = true; btn.innerText = 'กำลังค้นหา...'; 
+                // Show Global Loading Overlay
+                this.showApiLoading("กำลังค้นหาบัญชี...");
                 
                 const result = await this.callApi('getSecurityQuestion', { identifier }); 
                 
+                this.hideApiLoading(); // Hide Overlay
+
                 if(result.status === 'success') { 
                     document.getElementById('recStep1').classList.add('hidden'); 
                     document.getElementById('recStep2').classList.remove('hidden'); 
@@ -573,7 +606,6 @@
                 } else { 
                     alert(result.message); 
                 } 
-                btn.disabled = false; btn.innerText = 'ถัดไป'; 
             },
 
             handleResetPassword: async function() { 
@@ -588,17 +620,19 @@
                 if(newPass !== confirmPass) return alert('รหัสผ่านไม่ตรงกัน');
 
                 const btn = document.getElementById('recStep2Btn'); 
-                btn.disabled = true; btn.innerText = 'กำลังเปลี่ยน...'; 
+                // Show Global Loading Overlay
+                this.showApiLoading("กำลังบันทึกรหัสผ่านใหม่...");
                 
                 const result = await this.callApi('resetPassword', { identifier, answer: ans, newPassword: newPass, token }); 
                 
+                this.hideApiLoading(); // Hide Overlay
+
                 if(result.status === 'success') { 
                     alert('เปลี่ยนรหัสผ่านสำเร็จ!'); 
                     this.closeRecoveryModal(); 
                 } else { 
                     alert(result.message); 
                 } 
-                btn.disabled = false; btn.innerText = 'เปลี่ยนรหัสผ่าน'; 
             },
             
             openDeleteAccountModal: function() { this.closeProfileModal(); document.getElementById('deleteAccountModal').classList.remove('hidden'); },
