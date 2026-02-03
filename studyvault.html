@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyVault Pro - By Tonkla</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .cursor-copy { cursor: copy; }
+        .font-handwriting { font-family: 'Courier New', Courier, monospace; }
+        .code-scroll::-webkit-scrollbar { height: 8px; }
+        .code-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        .code-scroll::-webkit-scrollbar-track { background: #1f2937; }
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+        }
+    }
+    </script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 overflow-hidden">
+    <div id="root"></div>
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { 
+            Folder, FileText, Code, Calendar, Clock, 
+            Upload, Trash2, Grid, List, X, CheckSquare, 
+            BookOpen, Plus, Move, Smartphone, 
+            Monitor, Layout, Settings, File, Image as ImageIcon,
+            Play, Pause, RefreshCw, ChevronRight, Home,
+            Search, Music, PenTool, Eraser, StickyNote,
+            PieChart, Activity, AlertCircle, Lock, LogIn, ExternalLink,
+            ChevronLeft, Quote, Sun, Moon, Zap, Target
+        } from 'lucide-react';
+
+        // ✅ URL ล่าสุดของคุณ
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXSEhb7x6k8d93X_NmIc-oENJ1iZhqd70tRg8ZsCR12o1ii8AT1ZbuTVFeKJlRNSUx/exec"; 
+
+        const QUOTES = [
+            "ความพยายามอยู่ที่ไหน ความสำเร็จอยู่ที่นั่น",
+            "อย่าเพิ่งท้อ ถ้ายังไม่ได้ลงมือทำเต็มที่",
+            "การเรียนรู้คือการลงทุนที่คุ้มค่าที่สุด",
+            "เหนื่อยวันนี้ สบายวันหน้า",
+            "วินัย คือสิ่งที่ทำให้เราทำในสิ่งที่ไม่อยากทำ เพื่อผลลัพธ์ที่อยากได้",
+            "Believe you can and you're halfway there.",
+            "โอกาสมักมาตอนที่เราเตรียมพร้อมเสมอ",
+            "แข่งกับตัวเองในเมื่อวาน ให้เก่งขึ้นในวันนี้"
+        ];
+
+        function App() {
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [passwordInput, setPasswordInput] = useState('');
+            const [loginError, setLoginError] = useState(false);
+            const [isLoading, setIsLoading] = useState(false); 
+            const [currentDate, setCurrentDate] = useState(new Date());
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [showCalendar, setShowCalendar] = useState(false);
+            
+            const [files, setFiles] = useState([]);
+            const [exams, setExams] = useState([]);
+            const [notes, setNotes] = useState([]);
+            const [snippets, setSnippets] = useState([]);
+            
+            const [viewMode, setViewMode] = useState('grid');
+            const [previewFile, setPreviewFile] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [newExam, setNewExam] = useState({ subject: '', date: '', topic: '' });
+            const [isDragging, setIsDragging] = useState(false);
+            const [newCode, setNewCode] = useState({ title: '', language: 'javascript', code: '' });
+            const [isAddingCode, setIsAddingCode] = useState(false);
+
+            const [wbMode, setWbMode] = useState('move'); 
+            const [isDrawing, setIsDrawing] = useState(false);
+            const canvasRef = useRef(null);
+            const [drawingData, setDrawingData] = useState(null);
+            const [dragNoteId, setDragNoteId] = useState(null);
+            const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+            const [timer, setTimer] = useState(25 * 60);
+            const [isRunning, setIsRunning] = useState(false);
+            const [customTime, setCustomTime] = useState(''); 
+            const [spotifyUrl, setSpotifyUrl] = useState("https://open.spotify.com/embed/playlist/0vvXsWCC9xrXsKd4FyS8kM?utm_source=generator");
+            const [spotifyInput, setSpotifyInput] = useState('');
+
+            useEffect(() => {
+                const timer = setInterval(() => setCurrentDate(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            // ✅ FIX: ปรับปรุงการโหลดข้อมูล (Load Data Logic)
+            useEffect(() => {
+                if (isLoggedIn && GOOGLE_SCRIPT_URL) {
+                setIsLoading(true);
+                fetch(`${GOOGLE_SCRIPT_URL}?action=getAll&_t=${new Date().getTime()}`)
+                    .then(res => res.json())
+                    .then(data => {
+                    if(data.exams) {
+                        const now = new Date();
+                        const validExams = data.exams
+                        .map(e => ({...e, completed: String(e.completed) === 'true'}))
+                        .filter(e => {
+                            if (e.completed) {
+                                const examDate = new Date(e.date);
+                                const oneDayAfter = new Date(examDate);
+                                oneDayAfter.setDate(oneDayAfter.getDate() + 1);
+                                if (now > oneDayAfter) {
+                                    saveData('deleteExam', { id: e.id });
+                                    return false;
+                                }
+                            }
+                            return true;
+                        });
+                        setExams(validExams);
+                    }
+                    // ✅ รับข้อมูลไฟล์และแปลง ID เป็น string เพื่อความชัวร์
+                    if(data.files && Array.isArray(data.files)) {
+                        const loadedFiles = data.files.map(f => ({
+                            ...f, 
+                            id: String(f.id) // Ensure ID is string
+                        }));
+                        setFiles(loadedFiles);
+                    }
+                    if(data.snippets) setSnippets(data.snippets);
+                    if(data.notes) setNotes(data.notes);
+                    setIsLoading(false);
+                    })
+                    .catch(err => {
+                        console.error("Error loading data:", err);
+                        setIsLoading(false);
+                    });
+                }
+            }, [isLoggedIn]);
+
+            const saveData = (action, payload) => {
+                if (!GOOGLE_SCRIPT_URL) return; 
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, ...payload })
+                }).catch(e => console.error("Save error:", e));
+            };
+
+            // ✅ FIX: ปรับปรุงการอัปโหลดไฟล์ (Upload Logic)
+            const uploadFileObj = (file) => {
+                setIsLoading(true);
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Data = e.target.result.split(',')[1];
+                    const generatedId = Date.now().toString(); // สร้าง ID ที่นี่เลย
+                    
+                    const payload = {
+                        action: 'uploadFile',
+                        id: generatedId, // ส่ง ID ไปให้ Server ใช้ด้วย
+                        fileName: file.name,
+                        mimeType: file.type,
+                        fileData: base64Data,
+                        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                        category: getFileCategory(file.type)
+                    };
+
+                    // Optimistic update (แสดงผลทันที)
+                    const tempFile = {
+                        id: generatedId,
+                        name: file.name,
+                        type: file.type,
+                        size: payload.size,
+                        date: new Date().toLocaleDateString('th-TH'),
+                        url: URL.createObjectURL(file),
+                        category: payload.category,
+                        isUploading: true
+                    };
+                    setFiles(prev => [...prev, tempFile]);
+
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        // อัปเดตสถานะเมื่อเสร็จสิ้น (ใช้ ID เดิม ไม่เปลี่ยน)
+                        setFiles(prev => prev.map(f => f.id === generatedId ? { ...f, url: data.url, isUploading: false } : f)); 
+                        setIsLoading(false);
+                    })
+                    .catch(err => {
+                        console.error("Upload Error", err);
+                        setFiles(prev => prev.filter(f => f.id !== generatedId)); // ลบออกถ้าพัง
+                        setIsLoading(false);
+                    });
+                };
+                reader.readAsDataURL(file);
+            };
+
+            const handleFileUpload = (event) => {
+                const files = event.target.files;
+                if (files && files.length > 0) Array.from(files).forEach(uploadFileObj);
+            };
+
+            const onDrop = (e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) Array.from(files).forEach(uploadFileObj);
+            };
+
+            const deleteFile = (id, e) => {
+                e.stopPropagation();
+                if(confirm('ยืนยันการลบไฟล์นี้?')) {
+                    setFiles(files.filter(f => f.id !== id));
+                    saveData('deleteFile', { id }); 
+                }
+            };
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (passwordInput === '25486') {
+                    setIsLoggedIn(true);
+                    setLoginError(false);
+                } else {
+                    setLoginError(true);
+                }
+            };
+
+            const getFileCategory = (mimeType) => {
+                if (mimeType.includes('image')) return 'image';
+                if (mimeType.includes('pdf')) return 'pdf';
+                if (mimeType.includes('video')) return 'video';
+                if (mimeType.includes('audio')) return 'audio';
+                return 'doc';
+            };
+
+            const filteredFiles = files.filter(f => f.name && f.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            const handleAddExam = () => {
+                if(newExam.subject) {
+                    const id = Date.now();
+                    const examObj = { ...newExam, id, completed: false, priority: 'medium' };
+                    setExams([...exams, examObj]);
+                    saveData('addExam', examObj); 
+                    setNewExam({ subject: '', date: '', topic: '' });
+                }
+            };
+
+            const toggleExam = (id) => {
+                setExams(exams.map(e => e.id === id ? {...e, completed: !e.completed} : e));
+                saveData('toggleExam', { id }); 
+            };
+
+            const deleteExam = (id) => {
+                if(confirm('ต้องการลบรายการสอบนี้ใช่ไหม?')) {
+                    setExams(exams.filter(e => e.id !== id));
+                    saveData('deleteExam', { id });
+                }
+            };
+
+            const deleteSnippet = (id) => {
+                if(confirm('ต้องการลบ Snippet นี้ใช่ไหม?')) {
+                    setSnippets(snippets.filter(s => s.id !== id));
+                    saveData('deleteSnippet', { id }); 
+                }
+            };
+
+            const startDrawing = ({ nativeEvent }) => {
+                if (wbMode !== 'draw') return;
+                const { offsetX, offsetY } = nativeEvent;
+                const ctx = canvasRef.current.getContext('2d');
+                ctx.beginPath();
+                ctx.moveTo(offsetX, offsetY);
+                setIsDrawing(true);
+            };
+            const draw = ({ nativeEvent }) => {
+                if (!isDrawing || wbMode !== 'draw') return;
+                const { offsetX, offsetY } = nativeEvent;
+                const ctx = canvasRef.current.getContext('2d');
+                ctx.lineTo(offsetX, offsetY);
+                ctx.strokeStyle = '#ef4444'; 
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            };
+            const stopDrawing = () => {
+                if (wbMode === 'draw' && isDrawing) setDrawingData(canvasRef.current.toDataURL());
+                setIsDrawing(false);
+            };
+            const handleGlobalMouseMove = (e) => {
+                if (dragNoteId) {
+                    const newX = e.clientX - dragOffset.x;
+                    const newY = e.clientY - dragOffset.y;
+                    setNotes(notes.map(n => n.id === dragNoteId ? { ...n, x: newX, y: newY } : n));
+                }
+            };
+            
+            const addNote = (e) => {
+                if (wbMode === 'note') {
+                    const rect = e.target.getBoundingClientRect();
+                    const newNote = {
+                        id: Date.now(),
+                        x: e.clientX - rect.left - 100,
+                        y: e.clientY - rect.top - 50,
+                        text: 'New Note',
+                        color: 'bg-yellow-200'
+                    };
+                    setNotes([...notes, newNote]);
+                    setWbMode('move');
+                    saveData('addNote', newNote);
+                }
+            };
+
+            const deleteNote = (id, e) => {
+                e.stopPropagation();
+                if(confirm('ลบโน้ต?')) {
+                    setNotes(notes.filter(n => n.id !== id));
+                    saveData('deleteNote', { id });
+                }
+            }
+
+            const updateNoteText = (id, text) => {
+                setNotes(notes.map(n => n.id === id ? { ...n, text } : n));
+            }
+            
+            const saveNoteText = (id, text) => {
+                saveData('updateNote', { id, text });
+            }
+
+            const handleNoteDragEnd = () => {
+                if (dragNoteId) {
+                    const note = notes.find(n => n.id === dragNoteId);
+                    if (note) {
+                        saveData('updateNote', { id: note.id, x: note.x, y: note.y });
+                    }
+                    setDragNoteId(null);
+                }
+            }
+
+            useEffect(() => {
+                let interval = null;
+                if (isRunning && timer > 0) {
+                    interval = setInterval(() => setTimer(timer - 1), 1000);
+                } else if (timer === 0) setIsRunning(false);
+                return () => clearInterval(interval);
+            }, [isRunning, timer]);
+
+            const setCustomTimer = () => {
+                const mins = parseInt(customTime);
+                if (!isNaN(mins) && mins > 0) {
+                    setTimer(mins * 60);
+                    setCustomTime('');
+                }
+            };
+
+            const updateSpotify = (input) => {
+                let finalUrl = input;
+                if (input.includes('spotify.com') && !input.includes('/embed/')) {
+                    finalUrl = input.replace('spotify.com/', 'spotify.com/embed/');
+                }
+                setSpotifyUrl(finalUrl);
+                setSpotifyInput('');
+            };
+
+            if (!isLoggedIn) {
+                return (
+                <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+                        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                        <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+                        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 w-full max-w-md shadow-2xl border border-white/50 z-10">
+                        <div className="text-center mb-8">
+                            <div className="w-20 h-20 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/30"><Lock className="text-white" size={40} /></div>
+                            <h1 className="text-3xl font-extrabold text-slate-800">StudyVault Pro</h1>
+                            <p className="text-slate-500 mt-2">กรุณายืนยันตัวตนเพื่อเข้าสู่ระบบ</p>
+                        </div>
+                        <form onSubmit={handleLogin} className="space-y-6">
+                            <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-center text-xl tracking-[0.5em] font-bold text-slate-700 placeholder-slate-300" placeholder="•••••" autoFocus />
+                            {loginError && <div className="text-red-500 text-sm text-center font-medium bg-red-50 py-2 rounded-lg animate-pulse">รหัสผ่านไม่ถูกต้อง</div>}
+                            <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-3"><LogIn size={20} /> เข้าใช้งานระบบ</button>
+                        </form>
+                    </div>
+                </div>
+                );
+            }
+
+            const renderDashboard = () => {
+                const pendingExams = exams.filter(e => !e.completed);
+                const completedCount = exams.length - pendingExams.length;
+                const progress = exams.length > 0 ? (completedCount / exams.length) * 100 : 0;
+                const nextExam = pendingExams.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+                const daysLeft = nextExam ? Math.ceil((new Date(nextExam.date) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+                const quote = QUOTES[new Date().getDate() % QUOTES.length];
+
+                return (
+                <div className="flex-1 p-4 md:p-8 lg:p-12 bg-slate-50 h-full overflow-y-auto relative">
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-pink-200/40 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 relative z-10 gap-4">
+                        <div>
+                            <div className="text-sm font-bold text-indigo-500 uppercase tracking-wider mb-1">Welcome Back</div>
+                            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">สวัสดี, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-pink-600">ต้นกล้า</span></h1>
+                            <p className="text-slate-500 mt-2 text-lg">{isLoading ? 'กำลังซิงค์ข้อมูล...' : 'วันนี้เราจะเรียนรู้อะไรใหม่ๆ กันดี?'}</p>
+                        </div>
+                        <div className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/50 shadow-sm text-right">
+                            <div className="text-3xl font-mono font-bold text-slate-800">{currentDate.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}</div>
+                            <div className="text-sm font-medium text-slate-500 uppercase tracking-wide">{currentDate.toLocaleDateString('en-US', {weekday:'long', day:'numeric', month:'long'})}</div>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+                        <div onClick={() => setShowCalendar(true)} className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[2rem] p-8 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden group cursor-pointer transition-all hover:shadow-indigo-500/30 hover:scale-[1.01]">
+                            <div className="absolute top-0 right-0 p-12 opacity-10 transform translate-x-8 -translate-y-8 group-hover:rotate-12 transition-transform duration-500"><Target size={180} /></div>
+                            <div className="relative z-10 h-full flex flex-col justify-between">
+                                <div>
+                                    <div className="flex items-center gap-2 text-indigo-200 font-medium mb-2"><Zap size={18} className="text-yellow-400 fill-current" /> เป้าหมายถัดไป</div>
+                                    {nextExam ? (<><div className="text-4xl md:text-5xl font-bold mb-4 leading-tight">{nextExam.subject}</div><div className="text-indigo-100 text-lg opacity-90">{nextExam.topic}</div></>) : (<div className="text-3xl font-bold py-4 text-indigo-100">ไม่มีการสอบเร็วๆ นี้ 🎉</div>)}
+                                </div>
+                                {nextExam && (<div className="mt-8 flex items-center gap-4"><div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-medium border border-white/10">{daysLeft} วันที่เหลือ</div><div className="text-sm opacity-70 group-hover:translate-x-1 transition-transform flex items-center gap-1">ดูปฏิทิน <ChevronRight size={16} /></div></div>)}
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-[2rem] p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
+                            <h3 className="text-slate-500 font-medium text-sm absolute top-6 left-6">ความคืบหน้า</h3>
+                            <div className="relative w-32 h-32 mt-4">
+                                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                    <path className="text-slate-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3.5" />
+                                    <path className="text-green-500 transition-all duration-1000 ease-out" strokeDasharray={`${Math.round(progress)}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+                                </svg>
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center"><span className="text-3xl font-bold text-slate-800">{Math.round(progress)}%</span></div>
+                            </div>
+                            <div className="mt-4 text-xs font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">{completedCount} / {exams.length} วิชา</div>
+                        </div>
+                        <div className="bg-slate-900 rounded-[2rem] p-8 text-white shadow-xl flex flex-col justify-center relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900"></div>
+                            <Quote size={64} className="absolute -top-4 -left-4 text-slate-700 opacity-50 transform rotate-180" />
+                            <div className="relative z-10">
+                                <p className="text-lg md:text-xl font-medium leading-relaxed font-serif italic text-slate-200">"{quote}"</p>
+                                <div className="mt-6 w-12 h-1 bg-indigo-500 rounded-full group-hover:w-20 transition-all duration-500"></div>
+                                <p className="text-xs text-slate-500 mt-2 uppercase tracking-widest">Daily Motivation</p>
+                            </div>
+                        </div>
+                        <div className="md:col-span-2 lg:col-span-3 bg-white rounded-[2rem] p-8 shadow-lg shadow-slate-200/50 border border-slate-100">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-bold text-xl text-slate-800 flex items-center gap-3"><div className="bg-indigo-100 p-2 rounded-lg text-indigo-600"><CheckSquare size={20} /></div>รายการที่ต้องทำ</h3>
+                                <button onClick={() => setActiveTab('plan')} className="text-sm text-slate-400 hover:text-indigo-600 transition-colors">ดูทั้งหมด</button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {pendingExams.length > 0 ? pendingExams.slice(0, 4).map(e => (
+                                    <div key={e.id} className="group flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-indigo-200 hover:bg-white hover:shadow-md transition-all">
+                                        <div className={`w-2 h-12 rounded-full ${e.priority === 'high' ? 'bg-red-500' : e.priority === 'medium' ? 'bg-orange-400' : 'bg-blue-400'}`}></div>
+                                        <div className="flex-1 min-w-0"><div className="font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors">{e.subject}</div><div className="text-sm text-slate-500 truncate">{e.topic}</div></div>
+                                        <div className="text-xs font-mono font-medium text-slate-400 bg-white px-3 py-1.5 rounded-lg border group-hover:border-indigo-100">{new Date(e.date).getDate()} / {new Date(e.date).getMonth() + 1}</div>
+                                    </div>
+                                )) : (<div className="col-span-2 py-10 text-center text-slate-400 border-2 border-dashed border-slate-100 rounded-2xl"><div className="mb-2">🎉</div>ไม่มีงานค้าง พักผ่อนได้!</div>)}
+                            </div>
+                        </div>
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-[2rem] p-6 border border-blue-100 flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm"><FileText size={32} /></div>
+                            <div className="text-4xl font-bold text-slate-800 mb-1">{files.length}</div>
+                            <div className="text-sm text-slate-500 font-medium">ไฟล์ในคลัง</div>
+                            <button onClick={() => setActiveTab('files')} className="mt-4 text-xs font-bold text-blue-600 hover:underline">จัดการไฟล์</button>
+                        </div>
+                    </div>
+                    {showCalendar && (
+                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Calendar className="text-indigo-600" /> ตารางสอบ</h2>
+                            <button onClick={() => setShowCalendar(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors"><X size={20} /></button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-center text-sm mb-4">
+                            {['อา','จ','อ','พ','พฤ','ศ','ส'].map(d => <div key={d} className="font-bold text-slate-400 py-2">{d}</div>)}
+                            {Array.from({length: 31}).map((_, i) => {
+                            const day = i + 1;
+                            const dateStr = `2026-03-${day < 10 ? '0' + day : day}`;
+                            const hasExam = exams.find(e => e.date === dateStr);
+                            return (<div key={day} className={`aspect-square flex flex-col items-center justify-center rounded-lg relative ${hasExam ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-slate-50 text-slate-700'}`}><span>{day}</span>{hasExam && <div className="w-1 h-1 bg-white rounded-full mt-1"></div>}</div>);
+                            })}
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">{exams.filter(e => e.date.includes('2026-03')).map(e => (<div key={e.id} className="flex items-center gap-3 text-sm p-2 bg-slate-50 rounded-lg"><div className="font-mono bg-white px-2 py-1 rounded text-indigo-600 font-bold border border-indigo-100">{e.date.split('-')[2]}</div><div className="truncate flex-1">{e.subject}</div>{e.completed ? <CheckSquare size={14} className="text-green-500"/> : <div className="w-2 h-2 rounded-full bg-red-400"></div>}</div>))}</div>
+                        </div>
+                    </div>
+                    )}
+                </div>
+                );
+            };
+
+            const renderFileContent = () => (
+                <div className="flex-1 p-4 md:p-8 lg:p-12 h-full overflow-y-auto bg-slate-50">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div><h1 className="text-2xl font-bold text-slate-800">คลังเอกสาร</h1><p className="text-slate-500 text-sm">จัดการไฟล์ติวและชีทสรุปของคุณ</p></div>
+                    <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                    <div className="relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} /><input type="text" placeholder="ค้นหาเอกสาร..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border rounded-lg text-sm w-full md:w-64 focus:ring-2 focus:ring-indigo-500 outline-none"/></div>
+                    <div className="flex bg-white rounded-lg p-1 border shadow-sm self-start"><button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400'}`}><Grid size={18} /></button><button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400'}`}><List size={18} /></button></div>
+                    <label className={`bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-500/20 active:scale-95 whitespace-nowrap ${isLoading ? 'opacity-50 cursor-wait' : ''}`}>{isLoading ? <RefreshCw className="animate-spin" size={16}/> : <Upload size={16} />} {isLoading ? 'กำลังอัปโหลด...' : 'เพิ่มไฟล์'}<input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={isLoading} /></label>
+                    </div>
+                </div>
+                <div onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }} onDrop={onDrop} className={`border-2 border-dashed rounded-2xl p-8 text-center mb-8 transition-all cursor-pointer ${isDragging ? 'border-indigo-500 bg-indigo-50 scale-[1.02]' : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 hover:border-indigo-300'}`} onClick={() => document.querySelector('input[type="file"]').click()}>
+                    <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4"><Upload size={32} /></div>
+                    <p className="text-indigo-900 font-medium text-lg">ลากไฟล์มาวางที่นี่</p>
+                    <p className="text-slate-500 text-sm mt-1">หรือคลิกเพื่อเลือกไฟล์จากเครื่อง (รองรับหลายไฟล์)</p>
+                </div>
+                {files.length === 0 ? (<div className="text-center py-20 text-slate-400"><Folder size={48} className="mx-auto mb-4 opacity-20" /><p>ยังไม่มีไฟล์ในระบบ</p></div>) : (<div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4' : 'flex flex-col gap-2'}>{filteredFiles.map((file) => (<div key={file.id} onClick={() => !file.isUploading && setPreviewFile(file)} className={`group relative bg-white border border-slate-100 rounded-xl p-3 hover:shadow-lg transition-all cursor-pointer ${viewMode === 'list' ? 'flex items-center gap-4' : ''} ${file.isUploading ? 'opacity-50' : ''}`}><div className={`${viewMode === 'grid' ? 'aspect-square mb-3' : 'w-12 h-12 flex-shrink-0'} rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100`}>{file.isUploading ? <RefreshCw className="animate-spin text-indigo-500"/> : file.category === 'image' ? <img src={file.url} className="w-full h-full object-cover" /> : file.category === 'pdf' ? <FileText className="text-red-500" size={viewMode === 'grid' ? 40 : 24} /> : <FileText className="text-blue-500" size={viewMode === 'grid' ? 40 : 24} />}</div><div className="flex-1 min-w-0"><h3 className="text-sm font-medium text-slate-700 truncate">{file.name}</h3><div className="text-xs text-slate-400 mt-1">{file.size} • {file.date}</div></div><button onClick={(e) => deleteFile(file.id, e)} className="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all z-10" title="ลบไฟล์"><Trash2 size={14} /></button></div>))}</div>)}
+                </div>
+            );
+
+            const renderPlanner = () => {
+                const total = exams.length;
+                const completed = exams.filter(e => e.completed).length;
+                const remaining = total - completed;
+                const percent = total === 0 ? 0 : (completed / total) * 100;
+                
+                return (
+                <div className="flex-1 p-4 md:p-8 lg:p-12 bg-slate-50 h-full overflow-y-auto">
+                    <h1 className="text-2xl font-bold text-slate-800 mb-6">ตารางสอบและการวางแผน</h1>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-1 space-y-6">
+                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4">สรุปภาพรวม</h3>
+                        <div className="flex justify-center mb-6 relative">
+                            <div className="w-40 h-40 rounded-full border-[12px] border-slate-100 flex items-center justify-center relative"><svg className="w-full h-full absolute inset-0 rotate-[-90deg]" viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" strokeWidth="3" /><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#4f46e5" strokeWidth="3" strokeDasharray={`${percent}, 100`}/></svg><div className="text-center"><span className="text-3xl font-bold text-slate-800">{Math.round(percent)}%</span><div className="text-xs text-slate-400">เสร็จสิ้น</div></div></div>
+                        </div>
+                        <div className="space-y-3"><div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl"><span className="text-sm text-slate-600 flex items-center gap-2"><div className="w-3 h-3 bg-indigo-500 rounded-full"></div> เสร็จแล้ว</span><span className="font-bold text-slate-800">{completed} วิชา</span></div><div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl"><span className="text-sm text-slate-600 flex items-center gap-2"><div className="w-3 h-3 bg-slate-300 rounded-full"></div> คงเหลือ</span><span className="font-bold text-slate-800">{remaining} วิชา</span></div></div>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2 space-y-4">
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-12 gap-2"><input className="md:col-span-4 border rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="วิชาที่จะสอบ..." value={newExam.subject} onChange={e => setNewExam({...newExam, subject: e.target.value})} /><input className="md:col-span-4 border rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="หัวข้อ..." value={newExam.topic} onChange={e => setNewExam({...newExam, topic: e.target.value})} /><input type="date" className="md:col-span-3 border rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={newExam.date} onChange={e => setNewExam({...newExam, date: e.target.value})} /><button onClick={handleAddExam} className="bg-indigo-600 text-white rounded-lg p-2 flex items-center justify-center hover:bg-indigo-700 transition-colors"><Plus size={20}/></button></div>
+                        <div className="space-y-3">{exams.map(exam => (<div key={exam.id} className={`bg-white p-4 rounded-xl border border-slate-100 flex items-center gap-4 transition-all hover:shadow-md ${exam.completed ? 'opacity-60 bg-slate-50' : ''}`}><button onClick={() => toggleExam(exam.id)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${exam.completed ? 'bg-green-500 border-green-500 text-white' : 'border-slate-300 hover:border-indigo-500'}`}><CheckSquare size={16} /></button><div className="flex-1"><h3 className={`font-bold text-lg ${exam.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>{exam.subject}</h3><p className="text-sm text-slate-500">{exam.topic}</p></div><div className="flex items-center gap-2"><div className="text-sm font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">{exam.date}</div><button onClick={() => deleteExam(exam.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="ลบรายการ"><Trash2 size={16} /></button></div></div>))}</div>
+                    </div>
+                    </div>
+                </div>
+                );
+            };
+
+            const renderWhiteboard = () => (
+                <div className="flex-1 h-screen flex flex-col relative overflow-hidden bg-[#f0f2f5]" onMouseMove={handleGlobalMouseMove} onMouseUp={handleNoteDragEnd}>
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white px-2 py-2 rounded-xl shadow-lg border border-slate-200 z-50 flex items-center gap-2">
+                    <button onClick={() => setWbMode('move')} className={`p-2 rounded-lg transition-all ${wbMode === 'move' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}><Move size={20}/></button>
+                    <button onClick={() => setWbMode('draw')} className={`p-2 rounded-lg transition-all ${wbMode === 'draw' ? 'bg-red-100 text-red-600' : 'text-slate-500 hover:bg-slate-100'}`}><PenTool size={20}/></button>
+                    <button onClick={() => { const ctx = canvasRef.current.getContext('2d'); ctx.clearRect(0,0,canvasRef.current.width,canvasRef.current.height); setDrawingData(null); }} className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"><Eraser size={20}/></button>
+                    <button onClick={() => setWbMode('note')} className={`p-2 rounded-lg transition-all ${wbMode === 'note' ? 'bg-yellow-100 text-yellow-600' : 'text-slate-500 hover:bg-slate-100'}`}><StickyNote size={20}/></button>
+                </div>
+                <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight} className={`absolute inset-0 z-10 ${wbMode === 'draw' ? 'cursor-crosshair' : 'pointer-events-none'}`} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing} />
+                {wbMode === 'note' && <div className="absolute inset-0 z-20 cursor-copy" onClick={addNote}></div>}
+                <div className="absolute inset-0 z-30 pointer-events-none">
+                    {notes.map(note => (
+                    <div key={note.id} onMouseDown={(e) => { if(wbMode==='move'){ e.stopPropagation(); setDragNoteId(note.id); setDragOffset({x:e.clientX-note.x, y:e.clientY-note.y}); }}} style={{left:note.x, top:note.y, cursor: wbMode==='move'?'grab':'default'}} className={`absolute w-48 p-4 shadow-xl pointer-events-auto transition-shadow hover:shadow-2xl ${note.color} rounded-sm`}>
+                        <textarea className="w-full h-24 bg-transparent resize-none border-none focus:ring-0 p-0 text-slate-800 font-handwriting" value={note.text} onChange={e=>updateNoteText(note.id, e.target.value)} onBlur={e => saveNoteText(note.id, e.target.value)} />
+                        {wbMode==='move'&&<button onClick={(e)=>{deleteNote(note.id, e)}} className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1 shadow-md"><X size={14}/></button>}
+                    </div>
+                    ))}
+                </div>
+                </div>
+            );
+
+            const renderCode = () => (
+                <div className="flex-1 p-4 md:p-8 lg:p-12 bg-slate-50 h-full overflow-y-auto">
+                <div className="flex justify-between items-center mb-6"><h1 className="text-2xl font-bold text-slate-800">Code Snippets</h1><button onClick={()=>setIsAddingCode(!isAddingCode)} className="bg-slate-900 text-white px-3 py-2 rounded-lg text-sm flex gap-2 items-center"><Plus size={16}/> New Snippet</button></div>
+                {isAddingCode && (
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 mb-6 space-y-3 shadow-sm">
+                    <input className="w-full border p-2 rounded text-sm" placeholder="Title (e.g. React Fetch)" value={newCode.title} onChange={e=>setNewCode({...newCode,title:e.target.value})}/>
+                    <select className="w-full border p-2 rounded text-sm text-slate-700" value={newCode.language} onChange={e=>setNewCode({...newCode,language:e.target.value})}><option value="javascript">JavaScript / React</option><option value="python">Python</option><option value="html">HTML</option><option value="css">CSS</option><option value="sql">SQL</option><option value="java">Java</option><option value="cpp">C++</option><option value="other">Other</option></select>
+                    <textarea className="w-full border p-2 rounded text-sm font-mono h-32" placeholder="Paste your code here..." value={newCode.code} onChange={e=>setNewCode({...newCode,code:e.target.value})}/>
+                    <button onClick={()=>{if(newCode.title){const snip = {...newCode,id:Date.now()}; setSnippets([...snippets, snip]); saveData('addSnippet', snip); setIsAddingCode(false); setNewCode({title:'',code:'',language:'javascript'});}}} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm">Save</button>
+                    </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{snippets.map(s=>(<div key={s.id} className="bg-white border rounded-xl overflow-hidden shadow-sm flex flex-col group"><div className="bg-slate-50 px-4 py-2 border-b text-sm font-medium flex justify-between items-center"><div className="flex items-center gap-2"><span>{s.title}</span><span className="text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-600 uppercase font-bold">{s.language}</span></div><button onClick={() => deleteSnippet(s.id)} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="ลบ Snippet"><Trash2 size={16} /></button></div><pre className="p-4 text-xs bg-slate-900 text-slate-300 overflow-x-auto font-mono code-scroll">{s.code}</pre></div>))}</div>
+                </div>
+            );
+
+            const renderToolsWithSpotify = () => (
+                <div className="flex-1 p-4 md:p-8 lg:p-12 bg-slate-50 h-full overflow-y-auto">
+                <div className="max-w-4xl mx-auto space-y-8">
+                    <div className="bg-black rounded-3xl p-6 shadow-xl text-white">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div className="flex items-center gap-3"><Music className="text-green-400" /><h2 className="text-xl font-bold">Music Station</h2></div>
+                        <div className="flex gap-2 w-full md:w-auto"><input type="text" placeholder="Spotify Link..." className="bg-slate-800 text-sm rounded-lg px-3 py-2 border border-slate-700 w-full md:w-64 text-slate-200" value={spotifyInput} onChange={e=>setSpotifyInput(e.target.value)} /><button onClick={()=>updateSpotify(spotifyInput)} className="bg-green-500 text-black font-bold px-4 py-2 rounded-lg text-sm">Play</button></div>
+                    </div>
+                    <iframe src={spotifyUrl} width="100%" height="400" frameBorder="0" allowFullScreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" className="rounded-xl bg-slate-900 mb-6"></iframe>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{['Lofi Girl','Coffee Shop','Rain','Piano'].map((t,i)=><button key={i} onClick={()=>setSpotifyUrl("https://open.spotify.com/embed/playlist/0vvXsWCC9xrXsKd4FyS8kM?utm_source=generator")} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 text-sm text-left transition-colors">🎵 {t}</button>)}</div>
+                    </div>
+                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 text-center">
+                        <h2 className="text-2xl font-bold text-slate-800 mb-6">Focus Timer</h2>
+                        <div className="text-8xl font-bold text-slate-800 font-mono tracking-tighter mb-8">{Math.floor(timer/60)}:{timer%60<10?'0':''}{timer%60}</div>
+                        <div className="flex justify-center gap-4 mb-8"><button onClick={()=>setIsRunning(!isRunning)} className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white hover:bg-indigo-700 shadow-lg transition-transform active:scale-95">{isRunning?<Pause size={32}/>:<Play size={32}/>}</button><button onClick={()=>{setIsRunning(false);setTimer(25*60);}} className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-transform active:scale-95"><RefreshCw size={24}/></button></div>
+                        <div className="flex items-center justify-center gap-3"><button onClick={()=>setTimer(25*60)} className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-medium hover:bg-indigo-100">25 นาที</button><button onClick={()=>setTimer(50*60)} className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-medium hover:bg-indigo-100">50 นาที</button><div className="flex items-center border rounded-full px-3 py-1 bg-white focus-within:ring-2 focus-within:ring-indigo-100"><input type="number" placeholder="นาที" className="w-12 text-sm outline-none text-center bg-transparent" value={customTime} onChange={(e) => setCustomTime(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && setCustomTimer()} /><button onClick={setCustomTimer} className="text-slate-400 hover:text-indigo-600 ml-1"><Play size={14} fill="currentColor"/></button></div></div>
+                    </div>
+                </div>
+                </div>
+            );
+
+            return (
+                <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans">
+                <div className="w-full md:w-64 bg-slate-900 text-white flex-shrink-0 flex md:flex-col z-50 sticky top-0 md:h-screen shadow-2xl">
+                    <div className="p-4 flex items-center gap-3"><div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center"><BookOpen size={20} /></div><span className="font-bold text-xl hidden md:inline">StudyVault</span></div>
+                    <nav className="flex-1 px-2 flex md:flex-col overflow-x-auto md:overflow-visible no-scrollbar">
+                    {[{id:'dashboard',label:'หน้าหลัก',icon:Home},{id:'whiteboard',label:'กระดานวางแผน',icon:PenTool},{id:'files',label:'คลังเอกสาร',icon:Folder},{id:'plan',label:'ตารางสอบ',icon:Calendar},{id:'code',label:'Code Snippets',icon:Code},{id:'tools',label:'เครื่องมือ & เพลง',icon:Music}].map(item=><button key={item.id} onClick={()=>setActiveTab(item.id)} className={`flex items-center gap-3 px-4 py-3 mx-1 md:mx-0 rounded-xl transition-all whitespace-nowrap text-sm font-medium ${activeTab===item.id?'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50':'text-slate-400 hover:bg-slate-800 hover:text-white'}`}><item.icon size={18}/><span className="hidden md:inline">{item.label}</span></button>)}
+                    </nav>
+                    <div className="p-4 hidden md:block border-t border-slate-800"><button onClick={()=>setIsLoggedIn(false)} className="flex items-center gap-3 text-slate-400 hover:text-white text-sm w-full"><LogIn size={18} className="rotate-180"/> ออกจากระบบ</button></div>
+                </div>
+                <main className="flex-1 h-screen overflow-hidden flex flex-col relative bg-slate-50">
+                    {activeTab === 'dashboard' && renderDashboard()}
+                    {activeTab === 'whiteboard' && renderWhiteboard()}
+                    {activeTab === 'files' && renderFileContent()}
+                    {activeTab === 'plan' && renderPlanner()}
+                    {activeTab === 'code' && renderCode()}
+                    {activeTab === 'tools' && renderToolsWithSpotify()}
+                </main>
+                {previewFile && (
+                    <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex flex-col p-4 animate-in fade-in duration-200">
+                    <div className="flex justify-between items-center text-white mb-4 px-2"><div><h3 className="text-lg font-medium">{previewFile.name}</h3><p className="text-xs text-slate-400">{previewFile.type} • {previewFile.size}</p></div><div className="flex gap-4"><a href={previewFile.url} download={previewFile.name} target="_blank" className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm transition-colors"><ExternalLink size={16}/> เปิดใน Drive</a><button onClick={()=>setPreviewFile(null)} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"><X size={20}/></button></div></div>
+                    <div className="flex-1 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 relative">
+                        {previewFile.category === 'image' ? <img src={previewFile.url} className="max-w-full max-h-full object-contain" /> : <iframe src={previewFile.url.replace('/view', '/preview')} className="w-full h-full" title="Preview"></iframe>}
+                    </div>
+                    </div>
+                )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
