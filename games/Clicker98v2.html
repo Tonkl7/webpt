@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giant Mouse Clicker 98 - Unlimited Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap');
+
+        * { box-sizing: border-box; user-select: none; }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: #008080;
+            font-family: 'Tahoma', 'Chakra Petch', sans-serif;
+            overflow: hidden;
+            width: 100vw; height: 100vh;
+        }
+
+        #appScroller {
+            width: 100%; height: 200vh;
+            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex; flex-direction: column;
+        }
+
+        .screen {
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+
+        /* หน้าต่างโปรแกรมหลัก */
+        .window {
+            width: 95vw; height: 90vh;
+            background-color: #c0c0c0;
+            border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
+            border-right: 2px solid #000000; border-bottom: 2px solid #000000;
+            display: flex; flex-direction: column;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .title-bar {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            color: white; padding: 4px 8px; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px;
+        }
+
+        .title-bar-buttons button {
+            background: #c0c0c0; border-top: 1px solid #ffffff; border-left: 1px solid #ffffff;
+            border-right: 1px solid #000000; border-bottom: 1px solid #000000;
+            font-weight: bold; width: 16px; height: 16px;
+            font-size: 10px; line-height: 10px; padding: 0; cursor: pointer;
+        }
+
+        .window-content {
+            display: flex; flex: 1; padding: 5px; gap: 5px; overflow: hidden;
+        }
+
+        .column {
+            background: #fff; border: 2px inset #fff;
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        .col-left { flex: 1.2; background-color: #e0e0e0; }
+        .col-middle { flex: 1.2; background-color: #c0c0c0; }
+        .col-right { flex: 0.8; background-color: #c0c0c0; }
+
+        .section-header {
+            background: #000080; color: #fff; padding: 4px;
+            font-size: 14px; font-weight: bold; text-align: center;
+            border-bottom: 2px solid #000;
+        }
+
+        .mass-buy-panel {
+            background: #d6d6d6;
+            border-bottom: 2px solid #808080;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .mass-buy-row {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .mass-btn {
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 42px;
+        }
+
+        .mass-btn.active {
+            background: #0f0;
+            color: #000;
+        }
+
+        .mass-buy-status {
+            margin-top: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #000080;
+        }
+
+        /* ----- Column Left: Game Area ----- */
+        .stats-panel {
+            padding: 10px; text-align: center; background: #c0c0c0;
+            border-bottom: 2px solid #808080;
+        }
+
+        .score-box {
+            background: #000; color: #0f0; padding: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 28px; font-weight: bold; border: 2px inset #fff;
+            margin: 5px 0; text-shadow: 0 0 5px #0f0; transition: color 0.3s;
+        }
+
+        .cps-box { font-size: 16px; color: #333; font-weight: bold; }
+
+        .game-area {
+            flex: 1; position: relative; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; background: radial-gradient(circle, #fff 0%, #d0d0d0 100%);
+        }
+
+        /* เมาส์ยักษ์ */
+        .giant-mouse-wrapper { position: relative; z-index: 10; pointer-events: none; }
+        .giant-mouse {
+            width: 150px; height: 220px; 
+            filter: drop-shadow(10px 10px 0px rgba(0,0,0,0.3));
+            transform-origin: center;
+            transition: transform 0.05s ease-out, filter 0.05s ease-out;
+        }
+
+        .mouse-tier-0 path { fill: white; stroke: black; }
+        .mouse-tier-1 path { fill: #cd7f32; stroke: #5c3a21; } 
+        .mouse-tier-2 path { fill: #e5e4e2; stroke: #707070; } 
+        .mouse-tier-3 path { fill: #ffd700; stroke: #b8860b; filter: drop-shadow(0 0 15px gold); } 
+
+        /* อนิเมชั่นเมาส์เล็ก (Orbiters) */
+        .orbit-container { position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 5; pointer-events: none; }
+        .helper-mouse {
+            position: absolute; width: 20px; height: 30px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 150" fill="white" stroke="black" stroke-width="8" xmlns="http://www.w3.org/2000/svg"><path d="M10 10 L10 130 L40 100 L60 140 L75 130 L55 95 L90 95 Z"/></svg>') no-repeat center;
+            background-size: contain; animation: orbit linear infinite; transition: transform 0.1s;
+        }
+        .helper-mouse.clicking { transform: scale(1.6); filter: brightness(1.5) drop-shadow(0 0 5px yellow); }
+        @keyframes orbit { from { transform: rotate(0deg) translateY(-120px) rotate(0deg); } to { transform: rotate(360deg) translateY(-120px) rotate(-360deg); } }
+
+        /* Combo & Floating Texts */
+        .combo-container { position: absolute; bottom: 10px; left: 10px; right: 10px; height: 20px; background: #000; border: 2px inset #fff; z-index: 20; pointer-events: none; }
+        .combo-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #ff8c00, #ff0000); transition: width 0.1s linear; }
+        .combo-text { position: absolute; width: 100%; text-align: center; color: #fff; font-size: 12px; font-weight: bold; line-height: 16px; top: 0; }
+
+        .click-text { position: absolute; font-weight: bold; pointer-events: none; z-index: 50; }
+        .click-text.normal { color: #000; font-size: 20px; text-shadow: 1px 1px 0 #fff; animation: floatUp 1s forwards; }
+        .click-text.auto { color: #000080; font-size: 14px; text-shadow: 1px 1px 0 #fff; animation: floatUpAuto 1.5s forwards; }
+        .click-text.crit { color: #ff0000; font-size: 28px; text-shadow: 2px 2px 0 #ff0; animation: floatUp 1s forwards; }
+
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-80px) scale(1.5); } }
+        @keyframes floatUpAuto { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(1); } }
+
+        /* ----- Lists & Buttons ----- */
+        .scroll-list { flex: 1; overflow-y: auto; padding: 5px; display: flex; flex-direction: column; gap: 5px; border: 2px inset #fff; background: #fff; }
+
+        .buy-btn {
+            background: #c0c0c0; border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
+            border-right: 2px solid #000000; border-bottom: 2px solid #000000;
+            padding: 6px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; text-align: left; position: relative; transition: background 0.2s;
+        }
+        .buy-btn:active:not(.disabled) { border-style: inset; padding: 7px 5px 5px 7px; }
+
+        .buy-btn.affordable { background: #e8fce8; border-left: 4px solid #00aa00; }
+        .buy-btn.disabled { background: #e0e0e0; color: #888; cursor: not-allowed; border: 2px solid #a0a0a0; }
+
+        .item-info { flex: 1; pointer-events: none; }
+        .item-name { font-weight: bold; font-size: 13px; }
+        .item-desc { font-size: 10px; color: #555; }
+        .item-cost { font-weight: bold; color: #b22222; font-family: 'Courier New', monospace; font-size: 12px;}
+        .item-cost.clickbit { color: #d2691e; }
+        .item-count { font-size: 16px; font-weight: bold; color: #000080; padding-left: 10px; pointer-events: none; text-align: right;}
+        .bulk-max { font-size: 10px; color: #000080; margin-top: 2px; font-weight: bold; }
+
+        .limit-warn { color: #f00; font-size: 10px; font-weight: bold; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* Prestige, Talents & Skills */
+        .prestige-panel { background: #1a1a1a; color: #fff; padding: 10px; text-align: center; border-top: 2px solid #fff; position: relative;}
+        .action-row { display: flex; justify-content: space-between; gap: 5px; margin-top: 5px; }
+        .sys-btn {
+            background: #c0c0c0; color: #000; font-weight: bold; padding: 5px; flex: 1;
+            border-top: 2px solid #fff; border-left: 2px solid #fff; border-right: 2px solid #000; border-bottom: 2px solid #000;
+            cursor: pointer; font-size: 12px;
+        }
+        .sys-btn:active { border-style: inset; }
+        .sys-btn.rebirth { background: #8b0000; color: #fff; text-shadow: 1px 1px 0 #000; border-color: #ffb6c1 #4a0000 #4a0000 #ffb6c1; }
+        .sys-btn.talent { background: #9370db; color: #fff; border-color: #e6e6fa #4b0082 #4b0082 #e6e6fa; }
+        .sys-btn.skill { background: #20b2aa; color: #fff; border-color: #afeeee #008080 #008080 #afeeee; }
+
+        #rebirthCostDisplay { color: #ffff00; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 1px #000; }
+
+        .reset-save-btn {
+            position: absolute; top: 5px; right: 5px; font-size: 9px; color: #888; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0;
+        }
+
+        /* Modals */
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; display: none; justify-content: center; align-items: center; }
+        .modal-window { width: 85%; height: 85%; background: #c0c0c0; border-top: 2px solid #fff; border-left: 2px solid #fff; border-right: 2px solid #000; border-bottom: 2px solid #000; display: flex; flex-direction: column; }
+        .modal-content { padding: 10px; flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .modal-content.single-col { grid-template-columns: 1fr; }
+        .card { background: #fff; border: 2px inset #fff; padding: 8px; }
+        .card.equipped { background: #e0ffff; border: 2px solid #00ced1; }
+        .currency-bar { background: #000; color: #0f0; padding: 5px; text-align: center; font-weight: bold; font-family: monospace; font-size: 14px; border-bottom: 2px solid #808080;}
+
+        /* Arrow Buttons */
+        .nav-btn { position: absolute; background: #c0c0c0; border: 2px outset #fff; padding: 8px 16px; font-weight: bold; cursor: pointer; z-index: 90; }
+        .nav-btn:active { border: 2px inset #fff; }
+        .nav-btn.down { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .nav-btn.up { top: 10px; left: 50%; transform: translateX(-50%); }
+
+        /* ----- Screen 2: Crypto Terminal (Spot Trading) ----- */
+        .crypto-terminal {
+            width: 90vw; height: 85vh; background: #000; border: 4px solid #555; border-radius: 5px;
+            display: flex; flex-direction: column; font-family: 'Courier New', Courier, monospace;
+            box-shadow: 0 0 20px rgba(0,255,0,0.2);
+        }
+        .term-header { background: #008000; color: #fff; padding: 5px 10px; font-weight: bold; }
+        .term-body { flex: 1; display: flex; padding: 10px; gap: 10px; }
+
+        .graph-panel { flex: 2; border: 2px solid #0f0; position: relative; background: #051505; overflow: hidden; display: flex; flex-direction: column; }
+        #cryptoCanvas { width: 100%; height: 100%; }
+        .price-overlay { position: absolute; top: 10px; left: 10px; color: #0f0; font-size: 18px; font-weight: bold; text-shadow: 0 0 5px #0f0; pointer-events: none;}
+
+        .trade-panel { flex: 1; border: 2px solid #0f0; padding: 10px; display: flex; flex-direction: column; color: #0f0; overflow-y: auto;}
+        .trade-section { background: #002200; border: 1px solid #0f0; padding: 10px; margin-bottom: 10px; text-align: center;}
+
+        .trade-btn {
+            background: #000; border: 1px solid #0f0; color: #0f0;
+            padding: 5px 10px; font-weight: bold; cursor: pointer; margin: 3px; font-size: 12px;
+        }
+        .trade-btn:hover { background: #0f0; color: #000; }
+        .trade-btn.sell { border-color: #f00; color: #f00; }
+        .trade-btn.sell:hover { background: #f00; color: #000; }
+
+        .pl-box { background: #111; border: 1px dashed #fff; padding: 5px; margin-top: 10px; font-size: 12px; text-align: left;}
+        .pl-positive { color: #0f0; }
+        .pl-negative { color: #f00; }
+
+        /* Notif */
+        #notifArea { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 200; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 5px;}
+        .notif-msg { background: #fff; color: #000; border: 2px solid #000; padding: 5px 15px; font-weight: bold; box-shadow: 2px 2px 0 #000; animation: fadeOut 3s forwards; }
+        .notif-msg.success { background: #d0f0d0; border-color: #008000; }
+        .notif-msg.auto { background: #e6e6fa; border-color: #4b0082; box-shadow: 2px 2px 0 #4b0082; animation: fadeOut 2s forwards;}
+        @keyframes fadeOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-20px); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="notifArea"></div>
+
+    <div id="appScroller">
+
+        <!-- ==================== SCREEN 1: MAIN GAME ==================== -->
+        <div class="screen" id="screenMain">
+            <div class="window">
+                <div class="title-bar">
+                    <span>GiantMouse.exe - Unlimited Edition</span>
+                    <div class="title-bar-buttons"><button>×</button></div>
+                </div>
+
+                <div class="window-content">
+
+                    <!-- Column 1: Game Area -->
+                    <div class="column col-left">
+                        <div class="stats-panel">
+                            <div style="font-weight: bold;">เงินทุน (Data Bytes)</div>
+                            <div class="score-box" id="scoreDisplay">0</div>
+                            <div class="cps-box">รายได้อัตโนมัติ: <span id="cpsDisplay">0</span> /วิ</div>
+                            <div style="font-size: 12px; margin-top: 5px;">
+                                พลังคลิก: <span id="clickPowerDisplay">1</span> | คริ: <span id="critDisplay">0</span>% 
+                            </div>
+                            <div style="font-size: 12px; font-weight: bold; color: #000080; margin-top: 5px;">
+                                Clickbit (CB): <span id="cbDisplay" style="color: #d2691e;">0</span> ฿
+                                &nbsp;|&nbsp;
+                                Tokens: <span id="tokenDisplay" style="color: #b8860b;">0</span>
+                            </div>
+                        </div>
+
+                        <div class="game-area" id="mouseContainer">
+                            <div class="orbit-container" id="orbitContainer"></div>
+                            <div class="giant-mouse-wrapper">
+                                <svg class="giant-mouse mouse-tier-0" id="giantMouse" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M10 10 L10 130 L40 100 L60 140 L75 130 L55 95 L90 95 Z" stroke-width="4" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div class="combo-container">
+                                <div class="combo-bar" id="comboBar"></div>
+                                <div class="combo-text">Combo: x<span id="comboDisplay">1.0</span></div>
+                            </div>
+                        </div>
+
+                        <div class="prestige-panel">
+                            <button class="reset-save-btn" onclick="resetSave()">[ ลบเซฟเกม ]</button>
+                            <div style="font-size: 13px; margin-bottom: 5px;">
+                                ระดับจุติ (Rebirth Level): <span id="rebirthLvlDisplay" style="color: #ff4500; font-size: 16px; font-weight:bold;">0</span> 
+                                <span style="font-size:10px; color:#aaa;">(โบนัส x<span id="rebirthBonusDisplay">1</span>)</span>
+                            </div>
+                            <div class="action-row">
+                                <button class="sys-btn rebirth" id="btnRebirth">
+                                    [ จุติเกิดใหม่ (Rebirth) ]<br>
+                                    <span id="rebirthCostDisplay">1.00M</span><br>
+                                    <span style="font-size: 9px; color:#ffaaaa;" id="rebirthCbCostSpan"></span>
+                                </button>
+                                <button class="sys-btn skill" id="btnSkillBag">กระเป๋าสกิล<br><span style="font-size: 9px;">(Skills) <span id="equippedCountDisplay">0</span>/3</span></button>
+                                <button class="sys-btn talent" id="btnTalent">พลังแฝง<br><span style="font-size: 9px;">(Talents)</span></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Production -->
+                    <div class="column col-middle">
+                        <div class="section-header">การผลิต (Production)</div>
+                        <div class="mass-buy-panel">
+                            <div style="font-size: 11px; font-weight: bold;">โหมดซื้อแบบยกชุด</div>
+                            <div class="mass-buy-row">
+                                <button class="mass-btn active" id="massBtn1" onclick="setMassBuy(1)">x1</button>
+                                <button class="mass-btn" id="massBtn5" onclick="setMassBuy(5)">x5</button>
+                                <button class="mass-btn" id="massBtn10" onclick="setMassBuy(10)">x10</button>
+                                <button class="mass-btn" id="massBtn15" onclick="setMassBuy(15)">x15</button>
+                                <button class="mass-btn" id="massBtn20" onclick="setMassBuy(20)">x20</button>
+                                <button class="mass-btn" id="massBtnMax" onclick="setMassBuy('max')">MAX</button>
+                            </div>
+                            <div class="mass-buy-status">โหมดปัจจุบัน: <span id="massBuyDisplay">x1</span></div>
+                        </div>
+                        <div class="scroll-list" id="buildingList"></div>
+                    </div>
+
+                    <!-- Column 3: Upgrades -->
+                    <div class="column col-right">
+                        <div class="section-header">อัปเกรด (Upgrades)</div>
+                        <div class="mass-buy-panel">
+                            <div style="font-size: 11px; font-weight: bold;">โหมดซื้อแบบยกชุด</div>
+                            <div class="mass-buy-row">
+                                <button class="mass-btn active" id="massBtn1b" onclick="setMassBuy(1)">x1</button>
+                                <button class="mass-btn" id="massBtn5b" onclick="setMassBuy(5)">x5</button>
+                                <button class="mass-btn" id="massBtn10b" onclick="setMassBuy(10)">x10</button>
+                                <button class="mass-btn" id="massBtn15b" onclick="setMassBuy(15)">x15</button>
+                                <button class="mass-btn" id="massBtn20b" onclick="setMassBuy(20)">x20</button>
+                                <button class="mass-btn" id="massBtnMaxb" onclick="setMassBuy('max')">MAX</button>
+                            </div>
+                            <div class="mass-buy-status">โหมดปัจจุบัน: <span id="massBuyDisplay2">x1</span></div>
+                        </div>
+                        <div class="scroll-list" id="upgradeList"></div>
+                    </div>
+                </div>
+
+                <!-- Arrow Down -->
+                <button class="nav-btn down" onclick="scrollToScreen(1)">
+                    ▼ เลื่อนลงไปศูนย์เทรด (Trade Clickbit) ▼
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== SCREEN 2: CRYPTO TRADING ==================== -->
+        <div class="screen" id="screenCrypto">
+            <button class="nav-btn up" onclick="scrollToScreen(0)">
+                ▲ กลับหน้าเกมหลัก (Back to Game) ▲
+            </button>
+
+            <div class="crypto-terminal">
+                <div class="term-header">MS-DOS Prompt - CLICKBIT_MARKET.EXE (UNLIMITED)</div>
+                <div class="term-body">
+
+                    <div class="graph-panel">
+                        <div class="price-overlay">
+                            1 Clickbit = <span id="cryptoPriceDisplay">100,000</span> Bytes<br>
+                            <span style="font-size: 12px; font-weight: normal; color: #fff;">*สวิง 1% - 50% ซื้อ-ขาย ระวังตัวด้วย!</span>
+                        </div>
+                        <canvas id="cryptoCanvas"></canvas>
+                    </div>
+
+                    <div class="trade-panel">
+                        <h3 style="margin-top:0; text-align:center;">SPOT MARKET</h3>
+
+                        <!-- กระเป๋าและ P/L -->
+                        <div class="pl-box">
+                            <span style="color:#aaa;">Data Bytes:</span> <span id="termMoneyDisplay" style="color:#fff; font-weight:bold;">0</span><br>
+                            <span style="color:#aaa;">Clickbit มี:</span> <span id="termCbDisplay" style="color:#ff8c00; font-weight:bold;">0</span> CB<br>
+                            <hr style="border-color:#555; margin: 5px 0;">
+                            <span style="color:#aaa;">ต้นทุนเฉลี่ย:</span> <span id="avgCostDisplay">0</span> Bytes<br>
+                            <span style="color:#aaa;">กำไร/ขาดทุน (P/L):</span> <br>
+                            <div id="unrealizedPL" style="font-size:16px; font-weight:bold; text-align:center; margin-top:5px;">0 Bytes (0%)</div>
+                        </div>
+
+                        <!-- BUY SECTION -->
+                        <div class="trade-section" style="margin-top: 10px;">
+                            <div style="color: #0f0; margin-bottom: 5px;">[ BUY CB ]</div>
+                            <button class="trade-btn" onclick="tradeCB('buy', 1)">ซื้อ 1 CB</button>
+                            <button class="trade-btn" onclick="tradeCB('buy', 10)">ซื้อ 10 CB</button>
+                            <button class="trade-btn" onclick="tradeCB('buy', 100)">ซื้อ 100 CB</button>
+                            <button class="trade-btn" onclick="tradeCB('buy', 'max')" style="background:#0f0; color:#000;">ซื้อ MAX</button>
+                        </div>
+
+                        <!-- SELL SECTION -->
+                        <div class="trade-section" style="border-color: #f00;">
+                            <div style="color: #f00; margin-bottom: 5px;">[ SELL CB ]</div>
+                            <button class="trade-btn sell" onclick="tradeCB('sell', 1)">ขาย 1 CB</button>
+                            <button class="trade-btn sell" onclick="tradeCB('sell', 10)">ขาย 10 CB</button>
+                            <button class="trade-btn sell" onclick="tradeCB('sell', 100)">ขาย 100 CB</button>
+                            <button class="trade-btn sell" onclick="tradeCB('sell', 'max')" style="background:#f00; color:#000;">ขาย MAX</button>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="talentModal">
+        <div class="modal-window">
+            <div class="title-bar"><span>Talent_Tree.dll - พลังแฝง (Talents)</span><div class="title-bar-buttons"><button onclick="closeModal('talentModal')">×</button></div></div>
+            <div class="currency-bar">Golden Tokens: <span id="modalTokenDisplay">0</span></div>
+            <div class="modal-content" id="talentContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="skillModal">
+        <div class="modal-window">
+            <div class="title-bar"><span>Skill_Bag.exe - ติดตั้งสกิล (Skills)</span><div class="title-bar-buttons"><button onclick="closeModal('skillModal')">×</button></div></div>
+            <div class="currency-bar">Clickbit: <span id="modalCbDisplay">0</span> | ติดตั้งแล้ว: <span id="modalEquipCount">0</span>/3</div>
+            <div class="modal-content single-col" id="skillContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ---------------------------------------------------
+        // Data & State 
+        // ---------------------------------------------------
+        const SAVE_KEY = "GiantMouse_SaveData";
+
+        let state = {
+            score: 0, totalScore: 0, clicks: 0, combo: 0,
+            tokens: 0, clickbit: 0, prestigeLevel: 0,
+            cps: 0, clickPower: 1, critChance: 0, critMultiplier: 2, globalMultiplier: 1,
+            cryptoPrice: 100000, 
+            cryptoHistory: Array(50).fill(100000), 
+            cbAvgCost: 0, 
+            notifiedItems: {},
+            lastSaved: Date.now(),
+            massBuy: 1
+        };
+
+        let buildings = [
+            { id: 'b_cursor', name: 'Auto Cursor', desc: 'คลิกแทนคุณ', baseCost: 15, baseCps: 0.5, count: 0 },
+            { id: 'b_farm', name: 'Click Farm', desc: 'ฟาร์มรับจ้างคลิก', baseCost: 150, baseCps: 5, count: 0 },
+            { id: 'b_bot', name: 'AI Bot', desc: 'บอทอัจฉริยะ', baseCost: 1800, baseCps: 45, count: 0 },
+            { id: 'b_factory', name: 'Data Factory', desc: 'โรงงานผลิตข้อมูล', baseCost: 25000, baseCps: 400, count: 0 },
+            { id: 'b_server', name: 'Server Rack', desc: 'เซิร์ฟเวอร์ประมวลผล', baseCost: 400000, baseCps: 5000, count: 0 },
+            { id: 'b_quantum', name: 'Quantum PC', desc: 'ควอนตัมคอมพิวเตอร์', baseCost: 8e6, baseCps: 65000, count: 0 }
+        ];
+
+        let upgrades = [
+            { id: 'u_c1', name: 'นิ้วแข็งแรง', desc: 'พลังคลิก +1 /Lv', baseCost: 100, currency: 'score', type: 'click_flat', value: 1, count: 0 },
+            { id: 'u_c2', name: 'เมาส์เกมมิ่ง', desc: 'พลังคลิก x2 /Lv', baseCost: 800, currency: 'score', type: 'click_multi', value: 2, count: 0 },
+            { id: 'u_b1', name: 'ลูกกลิ้งเมาส์', desc: 'Cursor แรง x2 /Lv', baseCost: 2000, currency: 'score', type: 'build_multi', target: 'b_cursor', value: 2, count: 0 },
+            { id: 'u_cr1', name: 'เล็งจุดตาย', desc: 'คริติคอล +5% /Lv', baseCost: 5000, currency: 'score', type: 'crit_chance', value: 5, count: 0 },
+            { id: 'u_cb1', name: 'การ์ดจอเหมืองแตก', desc: 'รายได้รวม x2 /Lv', baseCost: 10, currency: 'clickbit', type: 'global_multi', value: 2, count: 0 },
+            { id: 'u_cb2', name: 'แฮกเกอร์รับจ้าง', desc: 'พลังคลิก x10 /Lv', baseCost: 50, currency: 'clickbit', type: 'click_multi', value: 10, count: 0 }
+        ];
+
+        let invSkills = [
+            { id: 'sk1', name: 'นิ้วทองคำ', desc: 'พลังคลิก x2', reqRebirth: 1, costCb: 0, clickMult: 2, cpsMult: 1, unlocked: false, equipped: false },
+            { id: 'sk2', name: 'เศรษฐีหน้าใหม่', desc: 'รายได้ CPS x2', reqRebirth: 2, costCb: 0, clickMult: 1, cpsMult: 2, unlocked: false, equipped: false },
+            { id: 'sk3', name: 'เซียนคีย์บอร์ด', desc: 'พลังคลิก x5, CPS x2', reqRebirth: 4, costCb: 5, clickMult: 5, cpsMult: 2, unlocked: false, equipped: false },
+            { id: 'sk4', name: 'เส้นสายตลาดมืด', desc: 'รายได้ CPS x10', reqRebirth: 6, costCb: 20, clickMult: 1, cpsMult: 10, unlocked: false, equipped: false },
+            { id: 'sk5', name: 'วาฬคริปโตขั้นเทพ', desc: 'พลังคลิก x25, CPS x25', reqRebirth: 10, costCb: 150, clickMult: 25, cpsMult: 25, unlocked: false, equipped: false }
+        ];
+
+        let talents = [
+            { id: 't_cps', name: 'Idle Core', desc: 'CPS +50% /Lv', level: 0, baseCost: 1 },
+            { id: 't_click', name: 'Titan Finger', desc: 'พลังคลิก +100% /Lv', level: 0, baseCost: 1 },
+            { id: 't_combo', name: 'Combo Mastery', desc: 'Max Combo +50 /Lv', level: 0, baseCost: 3 },
+            { id: 't_critc', name: 'Precision', desc: 'โอกาสคริติคอล +2% /Lv', level: 0, baseCost: 5 },
+            { id: 't_critd', name: 'Lethality', desc: 'ดาเมจคริติคอล +50% /Lv', level: 0, baseCost: 5 },
+            { id: 't_disc', name: 'Negotiator', desc: 'ลดราคาซื้อ 2% /Lv (ทบต้น)', level: 0, baseCost: 10 },
+            { id: 't_trade', name: 'Insider Trading', desc: 'เทรดคุ้มขึ้น 2% /Lv', level: 0, baseCost: 20 }
+        ];
+
+        // ---------------------------------------------------
+        // Local Storage System
+        // ---------------------------------------------------
+        function saveGame(silent = true) {
+            state.lastSaved = Date.now();
+            const saveData = {
+                state: state,
+                bCounts: buildings.map(b => b.count),
+                uCounts: upgrades.map(u => u.count),
+                sEquipped: invSkills.map(s => ({ unlocked: s.unlocked, equipped: s.equipped })),
+                tLevels: talents.map(t => t.level)
+            };
+            localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+            if (!silent) showNotif('บันทึกเกมอัตโนมัติ (Auto-saved)', 'auto');
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem(SAVE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.state) Object.assign(state, data.state);
+
+                    if(data.bCounts) buildings.forEach((b, i) => b.count = data.bCounts[i] || 0);
+                    if(data.uCounts) upgrades.forEach((u, i) => u.count = data.uCounts[i] || 0);
+                    if(data.sEquipped) invSkills.forEach((s, i) => { 
+                        if(data.sEquipped[i]) { s.unlocked = data.sEquipped[i].unlocked; s.equipped = data.sEquipped[i].equipped; }
+                    });
+                    if(data.tLevels) talents.forEach((t, i) => t.level = data.tLevels[i] || 0);
+
+                    // ป้องกันบัคถ้าปิดเกมตอนราคาบัค
+                    if(!state.cryptoPrice || state.cryptoPrice <= 0) state.cryptoPrice = 100000;
+                    if(!state.cryptoHistory || state.cryptoHistory.length !== 50) state.cryptoHistory = Array(50).fill(state.cryptoPrice);
+
+                    showNotif('โหลดเซฟเกมสำเร็จแล้ว!', 'success');
+                } catch (e) {
+                    console.error("Save file corrupted", e);
+                }
+            }
+        }
+
+        function getOfflineRewardText(seconds) {
+            const abs = Math.max(0, Math.floor(seconds));
+            const hours = Math.floor(abs / 3600);
+            const mins = Math.floor((abs % 3600) / 60);
+            const secs = abs % 60;
+            return `${hours} ชม. ${mins} นาที ${secs} วิ`;
+        }
+
+        function applyOfflineProgress() {
+            const now = Date.now();
+            const last = Number(state.lastSaved || now);
+            const diffMs = now - last;
+            const seconds = Math.floor(diffMs / 1000);
+
+            state.lastSaved = now;
+
+            if (seconds <= 0) return;
+
+            const offlineGain = state.cps * seconds;
+            if (offlineGain > 0) {
+                state.score += offlineGain;
+                state.totalScore += offlineGain;
+                showNotif(`ระหว่างที่คุณไม่อยู่ ${getOfflineRewardText(seconds)} ได้รับ +${formatNumber(offlineGain)} Bytes`, 'success');
+            } else {
+                showNotif(`เจอเวลาหายไป ${getOfflineRewardText(seconds)} แต่ยังไม่มี CPS จึงไม่ได้รับเงิน`, 'normal');
+            }
+            saveGame(true);
+        }
+
+        window.resetSave = () => {
+            if(confirm("คำเตือน: คุณต้องการลบเซฟทั้งหมดและเริ่มใหม่แต่แรกใช่หรือไม่? (ลบแล้วกู้คืนไม่ได้!)")) {
+                localStorage.removeItem(SAVE_KEY);
+                location.reload();
+            }
+        };
+
+        // ---------------------------------------------------
+        // Mass Buy System
+        // ---------------------------------------------------
+        function setMassBuy(mode) {
+            state.massBuy = mode;
+            updateMassBuyUI();
+            renderLists();
+            updateUI();
+        }
+
+        function updateMassBuyUI() {
+            const ids = [
+                'massBtn1','massBtn5','massBtn10','massBtn15','massBtn20','massBtnMax',
+                'massBtn1b','massBtn5b','massBtn10b','massBtn15b','massBtn20b','massBtnMaxb'
+            ];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.remove('active');
+            });
+
+            const map = {
+                1: ['massBtn1','massBtn1b'],
+                5: ['massBtn5','massBtn5b'],
+                10: ['massBtn10','massBtn10b'],
+                15: ['massBtn15','massBtn15b'],
+                20: ['massBtn20','massBtn20b'],
+                max: ['massBtnMax','massBtnMaxb']
+            };
+            (map[state.massBuy] || []).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('active');
+            });
+
+            const text = state.massBuy === 'max' ? 'MAX' : `x${state.massBuy}`;
+            const disp1 = document.getElementById('massBuyDisplay');
+            const disp2 = document.getElementById('massBuyDisplay2');
+            if (disp1) disp1.innerText = text;
+            if (disp2) disp2.innerText = text;
+        }
+
+        function getRequestedBulkAmount() {
+            return state.massBuy === 'max' ? Infinity : Number(state.massBuy || 1);
+        }
+
+        // ---------------------------------------------------
+        // Core Logic & Math (Exponential Scaling)
+        // ---------------------------------------------------
+
+        function getRebirthCostMoney() { return Math.floor(1000000 * Math.pow(2, state.prestigeLevel * 1.5)); }
+        function getRebirthCostClickbit() { return state.prestigeLevel >= 5 ? (state.prestigeLevel - 4) * 10 : 0; }
+
+        function getBuildingCostDetails(b) {
+            let discLvl = talents.find(t => t.id === 't_disc').level;
+            let discountFactor = Math.pow(0.98, discLvl);
+            let multiplier = Math.pow(1.15, b.count) * discountFactor;
+            let moneyCost = Math.floor(b.baseCost * multiplier);
+
+            let cbCost = 0;
+            let reqRebirth = 0;
+
+            if(b.count >= 100) {
+                reqRebirth = Math.floor(b.count / 100);
+                let excess = b.count - 99; 
+                cbCost = Math.floor(1 + Math.pow(1.1, excess));
+            }
+            return { money: moneyCost, cb: cbCost, reqRebirth: reqRebirth };
+        }
+
+        function getUpgradeCost(u) {
+            return Math.floor(u.baseCost * Math.pow(1.6, u.count));
+        }
+
+        function getTalentCost(t) { 
+            return Math.floor(t.baseCost * Math.pow(3.0, t.level)); 
+        }
+
+        function getBulkBuildingPurchase(b, requested) {
+            const limit = requested === Infinity ? Number.MAX_SAFE_INTEGER : requested;
+            let buyCount = 0;
+            let totalMoney = 0;
+            let totalCb = 0;
+
+            while (buyCount < limit) {
+                const temp = { ...b, count: b.count + buyCount };
+                const cost = getBuildingCostDetails(temp);
+
+                if (state.prestigeLevel < cost.reqRebirth) break;
+                if (state.score < totalMoney + cost.money) break;
+                if (state.clickbit < totalCb + cost.cb) break;
+
+                totalMoney += cost.money;
+                totalCb += cost.cb;
+                buyCount++;
+            }
+
+            return { count: buyCount, money: totalMoney, cb: totalCb };
+        }
+
+        function getBulkUpgradePurchase(u, requested) {
+            const limit = requested === Infinity ? Number.MAX_SAFE_INTEGER : requested;
+            let buyCount = 0;
+            let totalCost = 0;
+
+            while (buyCount < limit) {
+                const temp = { ...u, count: u.count + buyCount };
+                const cost = getUpgradeCost(temp);
+
+                if (u.currency === 'score') {
+                    if (state.score < totalCost + cost) break;
+                } else {
+                    if (state.clickbit < totalCost + cost) break;
+                }
+
+                totalCost += cost;
+                buyCount++;
+            }
+
+            return { count: buyCount, cost: totalCost };
+        }
+
+        function recalculateStats() {
+            let rebirthBonus = 1 + (state.prestigeLevel * 0.5);
+            let skillClickMult = 1, skillCpsMult = 1;
+            invSkills.forEach(sk => { if(sk.equipped) { skillClickMult *= sk.clickMult; skillCpsMult *= sk.cpsMult; } });
+
+            state.globalMultiplier = rebirthBonus;
+            upgrades.forEach(u => { 
+                if(u.count > 0 && u.type === 'global_multi') {
+                    state.globalMultiplier *= Math.pow(u.value, u.count); 
+                }
+            });
+
+            state.cps = 0;
+            buildings.forEach(b => {
+                let bMult = 1;
+                upgrades.forEach(u => { 
+                    if(u.count > 0 && u.type === 'build_multi' && u.target === b.id) {
+                        bMult *= Math.pow(u.value, u.count);
+                    }
+                });
+                state.cps += (b.count * b.baseCps * bMult);
+            });
+            let cpsTalent = talents.find(t => t.id === 't_cps');
+            state.cps *= (1 + (cpsTalent.level * 0.5)) * state.globalMultiplier * skillCpsMult;
+
+            let baseClick = 1, clickMult = 1;
+            upgrades.forEach(u => {
+                if(u.count > 0 && u.type === 'click_flat') baseClick += (u.value * u.count);
+                if(u.count > 0 && u.type === 'click_multi') clickMult *= Math.pow(u.value, u.count);
+            });
+            let clickTalent = talents.find(t => t.id === 't_click');
+            clickMult *= (1 + (clickTalent.level * 1.0));
+
+            let maxCombo = 100 + (talents.find(t => t.id === 't_combo').level * 50); 
+            if(state.combo > maxCombo) state.combo = maxCombo;
+            let comboMult = 1 + (state.combo / 100);
+
+            state.clickPower = baseClick * clickMult * comboMult * state.globalMultiplier * skillClickMult;
+
+            state.critChance = talents.find(t => t.id === 't_critc').level * 2;
+            upgrades.forEach(u => { if(u.count > 0 && u.type === 'crit_chance') state.critChance += (u.value * u.count); });
+            state.critMultiplier = 2 + (talents.find(t => t.id === 't_critd').level * 0.5);
+
+            let ts = state.totalScore;
+            let el = document.getElementById('giantMouse');
+            el.className.baseVal = ts >= 1e12 ? 'giant-mouse mouse-tier-3' : (ts >= 1e9 ? 'giant-mouse mouse-tier-2' : (ts >= 1e6 ? 'giant-mouse mouse-tier-1' : 'giant-mouse mouse-tier-0'));
+        }
+
+        // ---------------------------------------------------
+        // Interactions 
+        // ---------------------------------------------------
+
+        function spawnFloatingText(text, type, isAuto=false, x=null, y=null) {
+            let el = document.createElement('div');
+            el.className = `click-text ${type}`;
+            if(isAuto) {
+                let cont = document.getElementById('mouseContainer');
+                el.style.left = (cont.offsetWidth/2 + (Math.random()*60-30)) + 'px';
+                el.style.top = (cont.offsetHeight/2 + (Math.random()*60-30)) + 'px';
+            } else {
+                el.style.left = (x - 20 + (Math.random()*40-20)) + 'px';
+                el.style.top = (y - 20) + 'px';
+            }
+            el.innerText = text;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), isAuto ? 1500 : 1000);
+        }
+
+        const gameArea = document.getElementById('mouseContainer');
+        const giantMouse = document.getElementById('giantMouse');
+
+        gameArea.addEventListener('mousedown', (e) => {
+            giantMouse.style.transform = 'scale(0.85) rotate(-3deg)';
+            giantMouse.style.filter = 'drop-shadow(4px 4px 0px rgba(0,0,0,0.5)) brightness(1.3)';
+
+            let maxCombo = 100 + (talents.find(t => t.id === 't_combo').level * 50);
+            state.combo = Math.min(maxCombo, state.combo + 10);
+            recalculateStats(); 
+
+            let isCrit = (Math.random() * 100 < state.critChance);
+            let damage = state.clickPower * (isCrit ? state.critMultiplier : 1);
+
+            state.score += damage;
+            state.totalScore += damage;
+            state.clicks++;
+
+            if(Math.random() < 0.005) state.tokens++; 
+
+            spawnFloatingText((isCrit ? 'CRIT! ' : '') + '+' + formatNumber(damage), isCrit ? 'crit' : 'normal', false, e.clientX, e.clientY);
+
+            checkAffordableItems(); 
+            updateUI();
+        });
+
+        const resetMouse = () => {
+            giantMouse.style.transform = 'scale(1) rotate(0deg)';
+            giantMouse.style.filter = 'drop-shadow(10px 10px 0px rgba(0,0,0,0.3)) brightness(1)';
+        };
+        gameArea.addEventListener('mouseup', resetMouse);
+        gameArea.addEventListener('mouseleave', resetMouse);
+
+
+        function buyBuilding(index) {
+            let b = buildings[index];
+            const requested = getRequestedBulkAmount();
+            const bulk = getBulkBuildingPurchase(b, requested);
+            if (bulk.count <= 0) {
+                return showNotif('ทรัพยากรไม่เพียงพอ!');
+            }
+
+            state.score -= bulk.money;
+            state.clickbit -= bulk.cb;
+            b.count += bulk.count;
+            if(b.id === 'b_cursor') updateOrbiters();
+            recalculateStats();
+            renderLists();
+            updateUI();
+            showNotif(`ซื้อ ${b.name} จำนวน x${bulk.count} แล้ว`, 'success');
+        }
+
+        function buyUpgrade(index) {
+            let u = upgrades[index];
+            const requested = getRequestedBulkAmount();
+            const bulk = getBulkUpgradePurchase(u, requested);
+
+            if (bulk.count <= 0) {
+                return showNotif('ทรัพยากรไม่เพียงพอ!');
+            }
+
+            if (u.currency === 'score') {
+                state.score -= bulk.cost;
+            } else {
+                state.clickbit -= bulk.cost;
+            }
+
+            u.count += bulk.count;
+            recalculateStats(); 
+            renderLists();
+            updateUI();
+            showNotif(`อัปเกรด ${u.name} จำนวน x${bulk.count} แล้ว`, 'success');
+        }
+
+        function updateOrbiters() {
+            let cursorCount = buildings.find(b => b.id === 'b_cursor').count;
+            let displayCount = Math.min(cursorCount, 25); 
+            let container = document.getElementById('orbitContainer');
+            container.innerHTML = '';
+            for(let i=0; i<displayCount; i++) {
+                let orb = document.createElement('div');
+                orb.className = 'helper-mouse';
+                orb.id = `orbiter_${i}`;
+                orb.style.animationDuration = (3 + Math.random()*3) + 's';
+                orb.style.animationDelay = (Math.random() * -10) + 's';
+                if(i % 2 === 0) orb.style.animationDirection = 'reverse';
+                container.appendChild(orb);
+            }
+        }
+
+        // --- Rebirth System ---
+        document.getElementById('btnRebirth').onclick = () => {
+            let costM = getRebirthCostMoney();
+            let costCb = getRebirthCostClickbit();
+
+            if(state.score >= costM && state.clickbit >= costCb) {
+                if(confirm(`ยืนยันการจุติ (Rebirth) Lv.${state.prestigeLevel + 1} ?\nคำเตือน: เงิน สิ่งปลูกสร้าง และอัปเกรดฝั่งคะแนน จะถูกรีเซ็ตกลับเป็น 0`)) {
+                    state.clickbit -= costCb; 
+
+                    state.score = 0; 
+                    state.combo = 0;
+                    buildings.forEach(b => b.count = 0);
+                    upgrades.forEach(u => { if(u.currency === 'score') u.count = 0; });
+
+                    state.prestigeLevel++;
+                    state.notifiedItems = {}; 
+
+                    updateOrbiters();
+                    recalculateStats();
+                    renderLists();
+                    saveGame();
+                    showNotif('การจุติสำเร็จ! โบนัสทำงานแล้ว!', 'success');
+                }
+            } else {
+                showNotif('ทรัพยากรไม่เพียงพอต่อการจุติ');
+            }
+        };
+
+        // --- UI & Modals ---
+        document.getElementById('btnSkillBag').onclick = () => { renderSkillModal(); document.getElementById('skillModal').style.display = 'flex'; };
+        document.getElementById('btnTalent').onclick = () => { renderTalentModal(); document.getElementById('talentModal').style.display = 'flex'; };
+        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+        function renderSkillModal() {
+            document.getElementById('modalCbDisplay').innerText = formatNumber(state.clickbit);
+            document.getElementById('modalEquipCount').innerText = invSkills.filter(s => s.equipped).length;
+            let content = document.getElementById('skillContent'); content.innerHTML = '';
+            invSkills.forEach(sk => {
+                let canUnlock = state.prestigeLevel >= sk.reqRebirth && state.clickbit >= sk.costCb;
+                let btnHtml = sk.unlocked ? `<button onclick="toggleSkill('${sk.id}')" style="background:${sk.equipped?'#f00':'#0f0'}">${sk.equipped?'ถอดออก (Unequip)':'ติดตั้ง (Equip)'}</button>` 
+                                          : `<button ${canUnlock?'':'disabled'} onclick="unlockSkill('${sk.id}')">ปลดล็อค (${sk.costCb} CB)</button>`;
+                let card = document.createElement('div'); card.className = `card ${sk.equipped ? 'equipped' : ''}`;
+                card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; color:#000080;">${sk.name}</div><div style="font-size:11px;">${sk.desc}</div>${!sk.unlocked ? `<div style="font-size:10px; color:red;">เงื่อนไข: รีเบิร์ต Lv.${sk.reqRebirth}</div>` : ''}</div><div>${btnHtml}</div></div>`;
+                content.appendChild(card);
+            });
+        }
+        window.unlockSkill = (id) => { let sk = invSkills.find(s => s.id === id); if(state.prestigeLevel >= sk.reqRebirth && state.clickbit >= sk.costCb) { state.clickbit -= sk.costCb; sk.unlocked = true; renderSkillModal(); updateUI(); } };
+        window.toggleSkill = (id) => { let sk = invSkills.find(s => s.id === id); if(sk.equipped) sk.equipped = false; else { if(invSkills.filter(s => s.equipped).length >= 3) return showNotif('ติดตั้งสกิลได้สูงสุด 3 อัน!'); sk.equipped = true; } recalculateStats(); renderSkillModal(); updateUI(); };
+
+        function renderTalentModal() {
+            document.getElementById('modalTokenDisplay').innerText = formatNumber(state.tokens);
+            let content = document.getElementById('talentContent'); content.innerHTML = '';
+            talents.forEach((t) => {
+                let cost = getTalentCost(t);
+                let btnHtml = `<button ${state.tokens >= cost ? '' : 'disabled'} onclick="buyTalent('${t.id}')">อัปเกรด (${formatNumber(cost)} Token)</button>`;
+                let card = document.createElement('div'); card.className = `card`;
+                card.innerHTML = `<div style="font-weight:bold;">${t.name} (Lv.${t.level} <span style="font-size:10px;color:green;">+∞</span>)</div><div style="font-size:11px; margin:5px 0;">${t.desc}</div>${btnHtml}`;
+                content.appendChild(card);
+            });
+        }
+        window.buyTalent = (id) => { let t = talents.find(x => x.id === id); let cost = getTalentCost(t); if(state.tokens >= cost) { state.tokens -= cost; t.level++; recalculateStats(); renderTalentModal(); updateUI(); } };
+
+        function formatNumber(num) {
+            if(num === undefined || num === null || isNaN(num)) return "0";
+            if (num < 1000) return Math.floor(num).toString();
+            const THRESHOLDS = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
+            let e = Math.floor(Math.log10(num) / 3);
+            if(e >= THRESHOLDS.length) return num.toExponential(2); 
+            return (num / Math.pow(10, e * 3)).toFixed(2) + THRESHOLDS[e];
+        }
+
+        // ระบบแจ้งเตือนปลดล็อคใหม่
+        function checkAffordableItems() {
+            buildings.forEach(b => {
+                let cost = getBuildingCostDetails(b);
+                let canAfford = state.score >= cost.money && state.clickbit >= cost.cb && state.prestigeLevel >= cost.reqRebirth;
+                let notifKey = `b_${b.id}_${b.count}`; 
+                if(canAfford && !state.notifiedItems[notifKey]) {
+                    state.notifiedItems[notifKey] = true;
+                    if(b.count === 0) showNotif(`✨ ปลดล็อค: ${b.name} แล้ว!`, 'success');
+                }
+            });
+
+            upgrades.forEach(u => {
+                let cost = getUpgradeCost(u);
+                let canAfford = (u.currency === 'score' && state.score >= cost) || (u.currency === 'clickbit' && state.clickbit >= cost);
+                let notifKey = `u_${u.id}_${u.count}`;
+                if(canAfford && !state.notifiedItems[notifKey]) {
+                    state.notifiedItems[notifKey] = true;
+                    showNotif(`💡 พร้อมอัปเกรด: ${u.name} Lv.${u.count+1}`, 'success');
+                }
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerText = formatNumber(state.score);
+            document.getElementById('cpsDisplay').innerText = formatNumber(state.cps);
+            document.getElementById('clickPowerDisplay').innerText = formatNumber(state.clickPower);
+            document.getElementById('critDisplay').innerText = state.critChance;
+            document.getElementById('cbDisplay').innerText = formatNumber(state.clickbit);
+            document.getElementById('tokenDisplay').innerText = formatNumber(state.tokens);
+
+            let maxCombo = 100 + (talents.find(t => t.id === 't_combo').level * 50);
+            document.getElementById('comboBar').style.width = (state.combo / maxCombo * 100) + '%';
+            document.getElementById('comboDisplay').innerText = (1 + (state.combo/100)).toFixed(2);
+
+            document.getElementById('rebirthLvlDisplay').innerText = state.prestigeLevel;
+            document.getElementById('rebirthBonusDisplay').innerText = (1 + (state.prestigeLevel * 0.5)).toFixed(1);
+
+            let costM = getRebirthCostMoney(); let costCb = getRebirthCostClickbit();
+            document.getElementById('rebirthCostDisplay').innerText = "Cost: $" + formatNumber(costM);
+            document.getElementById('rebirthCostDisplay').style.color = state.score >= costM ? '#ffff00' : '#ffaaaa';
+
+            let cbSpan = document.getElementById('rebirthCbCostSpan');
+            cbSpan.innerHTML = costCb > 0 ? `+ <span style="color:${state.clickbit >= costCb ? '#ffff00' : '#ffaaaa'}">${costCb} CB</span>` : '';
+
+            document.getElementById('equippedCountDisplay').innerText = invSkills.filter(s => s.equipped).length;
+
+            document.getElementById('termMoneyDisplay').innerText = formatNumber(state.score);
+            document.getElementById('termCbDisplay').innerText = formatNumber(state.clickbit);
+
+            updatePLDisplay();
+            updateButtonStatesRealtime();
+            updateMassBuyUI();
+        }
+
+        // ระบบใหม่: เช็คเงินแล้วเปลี่ยนปุ่มเป็นสีเขียวทันทีโดยไม่ต้องสร้าง DOM ใหม่ (ลดอาการกระตุก)
+        function updateButtonStatesRealtime() {
+            buildings.forEach((b, idx) => {
+                let btn = document.getElementById(`btn_build_${idx}`);
+                if(!btn) return;
+                let bulk = getBulkBuildingPurchase(b, getRequestedBulkAmount());
+                let locked = state.prestigeLevel < getBuildingCostDetails(b).reqRebirth;
+                btn.className = `buy-btn ${locked ? 'disabled' : (bulk.count > 0 ? 'affordable' : 'disabled')}`;
+            });
+
+            upgrades.forEach((u, idx) => {
+                let btn = document.getElementById(`btn_upg_${idx}`);
+                if(!btn) return;
+                let bulk = getBulkUpgradePurchase(u, getRequestedBulkAmount());
+                btn.className = `buy-btn ${bulk.count > 0 ? 'affordable' : 'disabled'}`;
+            });
+        }
+
+        function renderLists() {
+            let bList = document.getElementById('buildingList'); bList.innerHTML = '';
+            buildings.forEach((b, idx) => {
+                let cost = getBuildingCostDetails(b);
+                let bulk = getBulkBuildingPurchase(b, getRequestedBulkAmount());
+
+                let btn = document.createElement('div');
+                btn.id = `btn_build_${idx}`;
+                btn.onclick = () => buyBuilding(idx);
+
+                let locked = state.prestigeLevel < cost.reqRebirth;
+                let lockMsg = locked ? `<div class="limit-warn">ต้องการจุติ Lv.${cost.reqRebirth}</div>` : '';
+                let cbMsg = cost.cb > 0 ? `<span style="color:#d2691e;"> + ${cost.cb} CB</span>` : '';
+
+                btn.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name">${b.name}</div>
+                        <div class="item-desc">+${formatNumber(b.baseCps * state.globalMultiplier)} cps</div>
+                        <div class="item-cost">$${formatNumber(cost.money)}${cbMsg}</div>
+                        <div class="bulk-max">ซื้อได้สูงสุด x${bulk.count}</div>
+                        ${lockMsg}
+                    </div>
+                    <div class="item-count">Lv.${b.count}</div>
+                `;
+                bList.appendChild(btn);
+            });
+
+            let uList = document.getElementById('upgradeList'); uList.innerHTML = '';
+            upgrades.forEach((u, idx) => {
+                let cost = getUpgradeCost(u);
+                let bulk = getBulkUpgradePurchase(u, getRequestedBulkAmount());
+                let isCb = u.currency === 'clickbit';
+
+                let btn = document.createElement('div');
+                btn.id = `btn_upg_${idx}`;
+                btn.onclick = () => buyUpgrade(idx);
+                btn.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name" style="${isCb?'color:#d2691e;':''}">${u.name}</div>
+                        <div class="item-desc">${u.desc}</div>
+                        <div class="item-cost ${isCb?'clickbit':''}">${isCb?'CB ':'$'}${formatNumber(cost)}</div>
+                        <div class="bulk-max">ซื้อได้สูงสุด x${bulk.count}</div>
+                    </div>
+                    <div class="item-count">Lv.${u.count}</div>
+                `;
+                uList.appendChild(btn);
+            });
+
+            updateButtonStatesRealtime();
+        }
+
+        // ---------------------------------------------------
+        // Screen 2: Dynamic Crypto Spot Trading
+        // ---------------------------------------------------
+        window.scrollToScreen = (index) => { document.getElementById('appScroller').style.transform = `translateY(-${index * 100}vh)`; };
+
+        const canvas = document.getElementById('cryptoCanvas'); const ctx = canvas.getContext('2d');
+        function resizeCanvas() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; }
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawGraph() {
+            if(canvas.width === 0) resizeCanvas();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#004000'; ctx.lineWidth = 1;
+            for(let i=0; i<canvas.width; i+=50) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
+            for(let i=0; i<canvas.height; i+=50) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke(); }
+
+            let hist = state.cryptoHistory;
+            let min = Math.min(...hist) * 0.9; let max = Math.max(...hist) * 1.1; let range = max - min;
+            if(range === 0) range = 1;
+            ctx.beginPath(); ctx.strokeStyle = '#0f0'; ctx.lineWidth = 3;
+            for(let i=0; i<hist.length; i++) {
+                let x = (i / (hist.length-1)) * canvas.width;
+                let y = canvas.height - ((hist[i] - min) / range * canvas.height);
+                if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            }
+            ctx.stroke();
+        }
+
+        // กราฟสวิง 1% - 50% ทุกวินาที ตามความหายาก
+        setInterval(() => {
+            let roll = Math.random();
+            let percentChange = 0;
+
+            if(roll > 0.99) percentChange = (Math.random() * 0.20) + 0.30; // 1% สวิงหายนะ/มหาเศรษฐี (30-50%)
+            else if(roll > 0.95) percentChange = (Math.random() * 0.20) + 0.10; // 4% สวิงปานกลาง (10-30%)
+            else percentChange = (Math.random() * 0.09) + 0.01; // 95% สวิงเบาๆ ทั่วไป (1-10%)
+
+            let dir = Math.random() > 0.5 ? 1 : -1;
+
+            // คุมไม่ให้ราคาหลุดโลกจนเกินเบอร์
+            if (state.cryptoPrice > 1e12) dir = -1; 
+            if (state.cryptoPrice < 100) dir = 1;
+
+            let changeMultiplier = 1 + (percentChange * dir);
+            state.cryptoPrice *= changeMultiplier;
+            state.cryptoPrice = Math.max(1, state.cryptoPrice); 
+
+            state.cryptoHistory.push(state.cryptoPrice); state.cryptoHistory.shift();
+
+            document.getElementById('cryptoPriceDisplay').innerText = formatNumber(state.cryptoPrice);
+            document.getElementById('cryptoPriceDisplay').style.color = dir > 0 ? '#0f0' : '#f00';
+            drawGraph();
+            updatePLDisplay(); 
+        }, 1000);
+
+        function updatePLDisplay() {
+            document.getElementById('avgCostDisplay').innerText = formatNumber(state.cbAvgCost);
+
+            let plDiv = document.getElementById('unrealizedPL');
+            if(state.clickbit <= 0) {
+                plDiv.innerHTML = `<span style="color:#888;">0 Bytes (0%)</span>`;
+                return;
+            }
+
+            let tradeTalent = 1 + (talents.find(t => t.id === 't_trade').level * 0.02);
+            let sellPrice = state.cryptoPrice * tradeTalent; 
+
+            let currentValue = state.clickbit * sellPrice;
+            let costBasis = state.clickbit * state.cbAvgCost;
+            let profit = currentValue - costBasis;
+            let percent = costBasis > 0 ? (profit / costBasis) * 100 : 0;
+
+            if(profit >= 0) {
+                plDiv.innerHTML = `<span class="pl-positive">+${formatNumber(profit)} Bytes (+${percent.toFixed(2)}%)</span>`;
+            } else {
+                plDiv.innerHTML = `<span class="pl-negative">${formatNumber(profit)} Bytes (${percent.toFixed(2)}%)</span>`;
+            }
+        }
+
+        window.tradeCB = (action, amountInput) => {
+            let currentPrice = state.cryptoPrice;
+            let tradeTalent = 1 + (talents.find(t => t.id === 't_trade').level * 0.02); 
+
+            if(action === 'buy') {
+                let discountPrice = currentPrice / tradeTalent; 
+                let amountToBuy = amountInput;
+
+                if(amountInput === 'max') {
+                    amountToBuy = Math.floor(state.score / discountPrice);
+                }
+
+                if(amountToBuy <= 0) return showNotif('เงินไม่พอ หรือซื้อไม่ได้!');
+
+                let cost = amountToBuy * discountPrice;
+                if(state.score >= cost) {
+                    let totalOldCost = state.clickbit * state.cbAvgCost;
+                    let totalNewCost = totalOldCost + cost;
+
+                    state.score -= cost;
+                    state.clickbit += amountToBuy;
+
+                    state.cbAvgCost = totalNewCost / state.clickbit; 
+
+                    showNotif(`💰 ซื้อสำเร็จ: ${formatNumber(amountToBuy)} CB`, 'success');
+                } else {
+                    showNotif('เงิน Data Bytes ไม่เพียงพอ!');
+                }
+
+            } else if(action === 'sell') {
+                let premiumPrice = currentPrice * tradeTalent; 
+                let amountToSell = amountInput;
+
+                if(amountInput === 'max') {
+                    amountToSell = state.clickbit;
+                }
+
+                if(amountToSell <= 0 || state.clickbit < amountToSell) return showNotif('คุณมี CB ไม่พอขาย!');
+
+                let revenue = amountToSell * premiumPrice;
+                let costBasis = amountToSell * state.cbAvgCost;
+                let profit = revenue - costBasis;
+
+                state.clickbit -= amountToSell;
+                state.score += revenue;
+
+                if(state.clickbit <= 0) {
+                    state.clickbit = 0;
+                    state.cbAvgCost = 0;
+                }
+
+                if(profit >= 0) {
+                    showNotif(`📈 ขายกำไร: +${formatNumber(profit)} Bytes`, 'success');
+                } else {
+                    showNotif(`📉 ยอมตัดขาดทุน: ${formatNumber(profit)} Bytes`, 'normal');
+                }
+            }
+
+            updateUI();
+            checkAffordableItems(); 
+        };
+
+        function showNotif(msg, type='normal') {
+            let el = document.createElement('div'); 
+            el.className = `notif-msg ${type}`; 
+            el.innerText = msg;
+            document.getElementById('notifArea').appendChild(el); 
+            setTimeout(() => el.remove(), type==='auto' ? 1900 : 2900);
+        }
+
+        // ---------------------------------------------------
+        // Main Game Loop & Animations
+        // ---------------------------------------------------
+        let lastTime = Date.now();
+        setInterval(() => {
+            let now = Date.now(); let dt = (now - lastTime) / 1000; lastTime = now;
+
+            if(state.cps > 0) {
+                let tickGain = state.cps * dt;
+                state.score += tickGain; state.totalScore += tickGain;
+            }
+
+            if(state.combo > 0) {
+                state.combo -= 5 * dt;
+                if(state.combo < 0) state.combo = 0;
+                recalculateStats();
+            }
+
+            if(Math.random() < 0.2) checkAffordableItems();
+            updateUI(); // อันนี้อัปเดตสีปุ่มอัปเกรดแบบเรียลไทม์แล้ว
+        }, 50);
+
+        // Auto Save (ทุกๆ 10 วินาที)
+        setInterval(() => saveGame(true), 10000);
+
+        window.addEventListener('beforeunload', () => saveGame(true));
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) saveGame(true);
+        });
+
+        // Auto Clicks Animation
+        setInterval(() => {
+            if(state.cps > 0) {
+                spawnFloatingText('+' + formatNumber(state.cps) + '/s', 'auto', true);
+                let cursorCount = Math.min(buildings.find(b => b.id === 'b_cursor').count, 25);
+                if(cursorCount > 0) {
+                    let randomIdx = Math.floor(Math.random() * cursorCount);
+                    let orb = document.getElementById(`orbiter_${randomIdx}`);
+                    if(orb) {
+                        orb.classList.add('clicking');
+                        setTimeout(() => orb.classList.remove('clicking'), 200);
+                    }
+                }
+            }
+        }, 1000);
+
+        // Initialize Game
+        setTimeout(() => {
+            resizeCanvas();
+            loadGame(); 
+            recalculateStats();
+            applyOfflineProgress();
+            updateOrbiters();
+            renderLists();
+            updateUI();
+        }, 100);
+    </script>
+</body>
+</html>
