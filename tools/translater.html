@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translater & Developer Toolkit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- CryptoJS for Hashing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;700&family=Kanit:wght@300;400;500&display=swap');
+
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+        }
+
+        body {
+            font-family: 'Inter', 'Kanit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Tool Section Transitions */
+        .tool-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tool-section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glassmorphism Inputs */
+        .dev-input {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: #f8fafc;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .dev-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Dropdown Option Fix */
+        select { background-color: #0f172a; color: #f8fafc; }
+        select option {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            padding: 10px;
+        }
+
+        /* Translator Textareas */
+        .trans-textarea {
+            background-color: transparent;
+            border: none;
+            color: #f8fafc;
+            width: 100%;
+            resize: none;
+            outline: none;
+            box-shadow: none;
+        }
+        .trans-textarea:focus { outline: none; box-shadow: none; }
+        .trans-textarea::placeholder { color: #475569; }
+
+        /* Checklist animation */
+        .check-item { transition: all 0.3s ease; }
+        .check-item.valid { color: #4ade80; }
+        .check-item.invalid { color: #64748b; }
+
+        /* File Drop Zone */
+        .file-drop-zone {
+            border: 2px dashed #334155;
+            border-radius: 0.5rem;
+            background-color: rgba(15, 23, 42, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .file-drop-zone:hover, .file-drop-zone.dragover {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Toast */
+        #toast-container {
+            position: fixed; bottom: 20px; right: 20px; z-index: 50;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .toast {
+            background-color: #1e293b; border-left: 4px solid #3b82f6;
+            color: white; padding: 12px 20px; border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s forwards, slideOut 0.3s forwards 2.7s;
+            opacity: 0; transform: translateX(100%);
+        }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.success { border-left-color: #10b981; }
+
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOut { to { opacity: 0; transform: translateX(100%); } }
+
+        /* Sidebar responsive */
+        @media (max-width: 768px) {
+            #sidebar { transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 40; position: fixed; }
+            #sidebar.open { transform: translateX(0); }
+            #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 30; }
+            #overlay.active { display: block; }
+        }
+        
+        .pulse-mic {
+            animation: pulse-red 1.5s infinite;
+            color: #ef4444 !important;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* --- HACKER ANIMATION CSS --- */
+        .hacker-mode {
+            animation: hacker-shake 0.1s infinite;
+            border-color: #10b981 !important; /* Emerald green border */
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3), inset 0 0 20px rgba(16, 185, 129, 0.1) !important;
+            z-index: 40;
+            position: relative;
+        }
+        .hacker-mode input#pg-output {
+            color: #10b981; /* bright green text */
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+            background-color: #022c22; /* dark green bg */
+            border-color: #10b981;
+        }
+        @keyframes hacker-shake {
+            0% { transform: scale(1.03) translate(1px, 1px) rotate(0deg); }
+            20% { transform: scale(1.03) translate(-2px, -1px) rotate(-1deg); }
+            40% { transform: scale(1.03) translate(-1px, 2px) rotate(1deg); }
+            60% { transform: scale(1.03) translate(2px, 1px) rotate(0deg); }
+            80% { transform: scale(1.03) translate(1px, -2px) rotate(-1deg); }
+            100% { transform: scale(1.03) translate(-1px, -1px) rotate(1deg); }
+        }
+        /* Smooth transition out of hacker mode */
+        #pg-container {
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="flex h-screen antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Overlay for mobile -->
+    <div id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-[#1e293b] border-r border-gray-800 flex flex-col h-full flex-shrink-0">
+        <div class="p-5 border-b border-gray-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold shadow-lg">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white tracking-tight">DevToolkit</h1>
+            </div>
+            <button class="md:hidden text-gray-400 hover:text-white" onclick="toggleSidebar()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-4">
+            <div class="relative">
+                <i class="fa-solid fa-search absolute left-3 top-3 text-gray-500 text-sm"></i>
+                <input type="text" id="tool-search" placeholder="Search tools..." class="dev-input pl-9 py-2 text-sm" onkeyup="searchTools()">
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-3 space-y-1" id="nav-menu">
+            <a href="#" onclick="switchTool('translator', this)" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800 text-white transition-colors">
+                <i class="fa-solid fa-earth-americas w-5 text-center text-blue-400"></i>
+                <span class="text-sm font-medium">Text Translator</span>
+            </a>
+            <a href="#" onclick="switchTool('password-gen', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-key w-5 text-center text-emerald-400"></i>
+                <span class="text-sm font-medium">Password Tool</span>
+            </a>
+            <a href="#" onclick="switchTool('thai-eng', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-keyboard w-5 text-center text-cyan-400"></i>
+                <span class="text-sm font-medium">Layout Fixer</span>
+            </a>
+            <a href="#" onclick="switchTool('json-formatter', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                <i class="fa-brands fa-js w-5 text-center text-yellow-400"></i>
+                <span class="text-sm font-medium">JSON Formatter</span>
+            </a>
+            <a href="#" onclick="switchTool('base64-tool', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-shield-halved w-5 text-center text-green-400"></i>
+                <span class="text-sm font-medium">Base64 Text</span>
+            </a>
+            <a href="#" onclick="switchTool('file-tools', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-file-shield w-5 text-center text-orange-400"></i>
+                <span class="text-sm font-medium">File Hash & Encode</span>
+            </a>
+            <a href="#" onclick="switchTool('number-converter', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-calculator w-5 text-center text-purple-400"></i>
+                <span class="text-sm font-medium">Number Converter</span>
+            </a>
+            <a href="#" onclick="switchTool('text-encoder', this)" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-font w-5 text-center text-pink-400"></i>
+                <span class="text-sm font-medium">URL/HTML Encode</span>
+            </a>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-800">
+            <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>DevToolkit v3.6 Pro</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-[#0f172a]">
+        <!-- Header -->
+        <header class="h-16 flex items-center justify-between px-6 border-b border-gray-800 bg-[#1e293b]/50 backdrop-blur">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-gray-400 hover:text-white" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h2 id="current-tool-title" class="text-xl font-semibold text-white">Full-Featured Translator</h2>
+            </div>
+        </header>
+
+        <!-- Tools Container -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8" id="main-scroll-area">
+            <div class="max-w-6xl mx-auto">
+                
+                <!-- TOOL: PRO Translator -->
+                <section id="translator" class="tool-section active">
+                    <div class="bg-[#1e293b] rounded-2xl border border-gray-700 shadow-2xl relative overflow-hidden flex flex-col md:flex-row min-h-[450px]">
+                        <!-- LEFT PANEL: Source -->
+                        <div class="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-gray-700 bg-[#1e293b]">
+                            <!-- Header / Controls -->
+                            <div class="flex items-center justify-between p-4 border-b border-gray-700/50">
+                                <select id="trans-source-lang" onchange="triggerAutoTranslate()" class="bg-transparent text-gray-200 text-sm outline-none border-none cursor-pointer hover:text-white font-semibold max-w-[200px] truncate">
+                                    <option value="auto">🌟 Auto Detect (ตรวจจับภาษาอัตโนมัติ)</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="clearTranslatorInput()" class="text-gray-400 hover:text-gray-200 w-8 h-8 rounded-full hover:bg-gray-700 flex items-center justify-center transition" title="Clear Text"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+                            </div>
+                            <!-- Textarea -->
+                            <div class="flex-1 p-4 relative group">
+                                <textarea id="trans-input" class="trans-textarea h-full text-2xl font-medium" placeholder="พิมพ์ข้อความที่นี่ หรือกดไมค์เพื่อพูด..." oninput="triggerAutoTranslate()"></textarea>
+                            </div>
+                            <!-- Footer Controls -->
+                            <div class="p-3 flex items-center justify-between text-gray-400">
+                                <div class="flex items-center gap-1">
+                                    <button id="btn-mic" onclick="toggleSpeechRecognition()" class="w-10 h-10 rounded-full hover:bg-gray-700 hover:text-white flex items-center justify-center transition text-lg" title="พูดเพื่อแปล (Speech to Text)">
+                                        <i class="fa-solid fa-microphone"></i>
+                                    </button>
+                                    <button onclick="speakText('trans-input', 'trans-source-lang')" class="w-10 h-10 rounded-full hover:bg-gray-700 hover:text-white flex items-center justify-center transition text-lg" title="ฟังเสียงอ่าน (Text to Speech)">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-mono bg-gray-800 px-2 py-1 rounded" id="char-count">0 / 5000</div>
+                            </div>
+                        </div>
+
+                        <!-- SWAP BUTTON -->
+                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden md:flex">
+                            <button onclick="swapLanguages()" class="bg-blue-600 hover:bg-blue-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-4 border-[#1e293b] transition transform hover:rotate-180" title="สลับภาษา">
+                                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                            </button>
+                        </div>
+                        <div class="md:hidden flex justify-center -my-4 relative z-10">
+                            <button onclick="swapLanguages()" class="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-4 border-[#1e293b] transition">
+                                <i class="fa-solid fa-arrow-down-up-across-line"></i>
+                            </button>
+                        </div>
+
+                        <!-- RIGHT PANEL: Target -->
+                        <div class="flex-1 flex flex-col bg-[#111827]"> 
+                            <!-- Header / Controls -->
+                            <div class="flex items-center justify-between p-4 border-b border-gray-700/50">
+                                <select id="trans-target-lang" onchange="triggerAutoTranslate()" class="bg-transparent text-blue-400 text-sm outline-none border-none cursor-pointer hover:text-blue-300 font-semibold max-w-[200px] truncate">
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <!-- Textarea & Loader -->
+                            <div class="flex-1 p-4 relative flex flex-col">
+                                <!-- Loading Indicator -->
+                                <div id="trans-loader" class="hidden flex-1 flex-col items-center justify-center text-blue-400 gap-3">
+                                    <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i> 
+                                    <span class="text-lg font-medium animate-pulse">กำลังแปล...</span>
+                                </div>
+                                <!-- Output Textarea -->
+                                <textarea id="trans-output" class="trans-textarea flex-1 text-2xl font-medium text-blue-100" readonly placeholder="คำแปลจะแสดงที่นี่อัตโนมัติ..."></textarea>
+                            </div>
+                            <!-- Footer Controls -->
+                            <div class="p-3 flex items-center justify-between text-gray-400">
+                                <div class="flex items-center gap-1">
+                                    <button onclick="speakText('trans-output', 'trans-target-lang')" class="w-10 h-10 rounded-full hover:bg-gray-700 hover:text-white flex items-center justify-center transition text-lg" title="ฟังเสียงแปล (Text to Speech)">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                </div>
+                                <button onclick="copyText('trans-output')" class="hover:text-white hover:bg-gray-700 px-3 py-1.5 rounded-lg flex items-center gap-2 transition text-sm font-medium" title="คัดลอกคำแปล">
+                                    <i class="fa-regular fa-copy"></i> คัดลอก
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- TOOL: Password Generator & Validator -->
+                <section id="password-gen" class="tool-section">
+                    <!-- Added ID "pg-container" for the hacker animation target -->
+                    <div id="pg-container" class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg">
+                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-wand-magic-sparkles text-blue-400 mr-2"></i>Password Generator</h3>
+                        <div class="mb-6">
+                            <div class="relative">
+                                <input type="text" id="pg-output" class="dev-input font-mono text-2xl py-4 text-center tracking-wider bg-[#0f172a] text-emerald-400 font-bold pr-12 transition-colors duration-200" readonly placeholder="Click Generate">
+                                <button onclick="copyToClipboard('pg-output')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-2" title="Copy">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Password Length: <span id="pg-length-val" class="text-blue-400 font-bold">16</span></label>
+                                <input type="range" id="pg-length" min="6" max="64" value="16" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500" oninput="document.getElementById('pg-length-val').innerText = this.value; if(!isGeneratingPw) generatePassword();">
+                                
+                                <button id="btn-generate-pw" onclick="generatePassword()" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                                    <i class="fa-solid fa-bolt"></i> Generate Password
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" id="pg-upper" checked class="w-5 h-5 rounded border-gray-600 text-blue-500 bg-gray-700" onchange="if(!isGeneratingPw) generatePassword()">
+                                    <span class="text-gray-300 group-hover:text-white transition">Uppercase (A-Z)</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" id="pg-lower" checked class="w-5 h-5 rounded border-gray-600 text-blue-500 bg-gray-700" onchange="if(!isGeneratingPw) generatePassword()">
+                                    <span class="text-gray-300 group-hover:text-white transition">Lowercase (a-z)</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" id="pg-num" checked class="w-5 h-5 rounded border-gray-600 text-blue-500 bg-gray-700" onchange="if(!isGeneratingPw) generatePassword()">
+                                    <span class="text-gray-300 group-hover:text-white transition">Numbers (0-9)</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" id="pg-sym" checked class="w-5 h-5 rounded border-gray-600 text-blue-500 bg-gray-700" onchange="if(!isGeneratingPw) generatePassword()">
+                                    <span class="text-gray-300 group-hover:text-white transition">Symbols (!@#$%)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-10 border-t border-gray-800 pt-8">
+                            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-shield-halved text-green-400 mr-2"></i>Password Validator</h3>
+                            <div class="relative mb-4">
+                                <input type="text" id="validator-input" class="dev-input font-mono" placeholder="Enter password to check..." oninput="checkPasswordStrength(this.value)">
+                                <button onclick="togglePasswordVisibility('validator-input', 'eye-icon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-2">
+                                    <i id="eye-icon" class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div id="val-strength-bar" class="h-full w-0 bg-red-500 transition-all duration-300"></div>
+                                </div>
+                                <span id="val-strength-text" class="text-sm font-bold text-gray-500 w-24 text-right">No Data</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-medium">
+                                <div id="req-length" class="check-item invalid"><i class="fa-solid fa-xmark w-5"></i> 8+ Characters</div>
+                                <div id="req-upper" class="check-item invalid"><i class="fa-solid fa-xmark w-5"></i> Uppercase Letter</div>
+                                <div id="req-lower" class="check-item invalid"><i class="fa-solid fa-xmark w-5"></i> Lowercase Letter</div>
+                                <div id="req-num" class="check-item invalid"><i class="fa-solid fa-xmark w-5"></i> Number</div>
+                                <div id="req-sym" class="check-item invalid"><i class="fa-solid fa-xmark w-5"></i> Special Symbol</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TOOL: Thai <-> English Fixer -->
+                <section id="thai-eng" class="tool-section">
+                    <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg mb-6 relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-4 relative z-10">
+                            <div>
+                                <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-keyboard text-cyan-400 mr-2"></i>Keyboard Layout Fixer</h3>
+                                <p class="text-xs text-gray-400">ลืมเปลี่ยนภาษา? พิมพ์ผิดเลย์เอาต์? แก้ไขได้ที่นี่ (e.g. lสวัสดี -> l;yfwxi)</p>
+                            </div>
+                            <button onclick="clearInputs(['lang-input','lang-output'])" class="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-3 py-1.5 rounded transition"><i class="fa-solid fa-trash mr-1"></i> Clear</button>
+                        </div>
+                        
+                        <textarea id="lang-input" class="dev-input h-28 font-mono text-lg mb-4 resize-y relative z-10" placeholder="Type nonsense here... (e.g. ฟหกด or asdf)"></textarea>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3 relative z-10">
+                            <button onclick="fixLanguage('th-en')" class="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <span class="text-lg">🇹🇭</span> ➔ <span class="text-lg">🇬🇧</span> (ฟหกด ➔ asdf)
+                            </button>
+                            <button onclick="fixLanguage('en-th')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <span class="text-lg">🇬🇧</span> ➔ <span class="text-lg">🇹🇭</span> (asdf ➔ ฟหกด)
+                            </button>
+                            <button onclick="detectAndFixLanguage()" class="flex-1 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles text-yellow-400"></i> Auto Fix
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-300">Fixed Text Result</label>
+                            <button onclick="copyText('lang-output')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition"><i class="fa-regular fa-copy mr-1"></i>Copy</button>
+                        </div>
+                        <textarea id="lang-output" class="dev-input h-24 font-mono text-lg resize-y text-cyan-300 bg-[#0f172a]" readonly></textarea>
+                    </div>
+                </section>
+
+                <!-- TOOL: JSON Formatter -->
+                <section id="json-formatter" class="tool-section">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-140px)] min-h-[500px]">
+                        <div class="bg-[#1e293b] rounded-xl border border-gray-800 flex flex-col shadow-lg overflow-hidden">
+                            <div class="p-3 border-b border-gray-800 flex justify-between items-center bg-[#0f172a]/50">
+                                <span class="text-sm font-medium text-gray-300"><i class="fa-solid fa-code mr-2"></i>Input JSON</span>
+                                <button onclick="clearInput('json-input')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition"><i class="fa-solid fa-trash mr-1"></i>Clear</button>
+                            </div>
+                            <textarea id="json-input" class="flex-1 dev-input rounded-none border-0 resize-none font-mono text-sm leading-relaxed" placeholder="Paste your raw JSON here..."></textarea>
+                            <div class="p-3 border-t border-gray-800 bg-[#0f172a]/50 flex gap-2">
+                                <button onclick="processJson('format')" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition"><i class="fa-solid fa-align-left mr-2"></i>Format</button>
+                                <button onclick="processJson('minify')" class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium py-2 px-4 rounded transition"><i class="fa-solid fa-compress mr-2"></i>Minify</button>
+                            </div>
+                        </div>
+                        <div class="bg-[#1e293b] rounded-xl border border-gray-800 flex flex-col shadow-lg overflow-hidden relative">
+                            <div class="p-3 border-b border-gray-800 flex justify-between items-center bg-[#0f172a]/50">
+                                <span class="text-sm font-medium text-gray-300"><i class="fa-solid fa-file-code mr-2"></i>Output</span>
+                                <button onclick="copyText('json-output')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition"><i class="fa-regular fa-copy mr-1"></i>Copy</button>
+                            </div>
+                            <textarea id="json-output" class="flex-1 dev-input rounded-none border-0 resize-none font-mono text-sm leading-relaxed text-blue-300 bg-[#0f172a]" readonly></textarea>
+                            <div id="json-error" class="hidden absolute inset-0 bg-red-900/90 flex flex-col items-center justify-center p-6 text-center z-10">
+                                <i class="fa-solid fa-triangle-exclamation text-4xl text-red-400 mb-3"></i>
+                                <h3 class="text-lg font-bold text-white mb-2">Invalid JSON</h3>
+                                <p id="json-error-msg" class="text-sm text-red-200 font-mono break-all"></p>
+                                <button onclick="document.getElementById('json-error').classList.add('hidden')" class="mt-4 bg-gray-800 text-white px-4 py-2 rounded border border-red-500 hover:bg-gray-700">Dismiss</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TOOL: Base64 Text Tool -->
+                <section id="base64-tool" class="tool-section">
+                    <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg mb-6">
+                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-shield-halved text-green-400 mr-2"></i>Base64 Text Encoder/Decoder</h3>
+                        <textarea id="b64-input" class="dev-input h-32 font-mono resize-y" placeholder="Enter text to encode or Base64 to decode..."></textarea>
+                        <div class="flex gap-3 mt-4">
+                            <button onclick="processBase64('encode')" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white font-medium">Encode</button>
+                            <button onclick="processBase64('decode')" class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg text-white font-medium">Decode</button>
+                        </div>
+                    </div>
+                    <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-300">Result</label>
+                            <button onclick="copyText('b64-output')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition"><i class="fa-regular fa-copy mr-1"></i>Copy</button>
+                        </div>
+                        <textarea id="b64-output" class="dev-input h-32 font-mono resize-y text-green-400 bg-[#0f172a]" readonly></textarea>
+                    </div>
+                </section>
+
+                <!-- TOOL: File Hash & Base64 Encoder -->
+                <section id="file-tools" class="tool-section">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <!-- File Hasher (One-Way) -->
+                        <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg">
+                            <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-file-shield text-orange-400 mr-2"></i>File Hash Generator</h3>
+                            <p class="text-xs text-gray-400 mb-4">สร้างค่า Hash ของไฟล์เพื่อนำไปใช้ตรวจสอบความถูกต้อง (Checksum) โดยการเข้ารหัสนี้เป็นแบบทางเดียว (ถอดรหัสไม่ได้)</p>
+                            
+                            <!-- Dropzone -->
+                            <div class="file-drop-zone p-6 flex flex-col items-center justify-center text-center mb-4" onclick="document.getElementById('hash-file-input').click()">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-300 font-medium">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
+                                <p id="hash-file-name" class="text-xs text-orange-400 mt-2 hidden"></p>
+                                <input type="file" id="hash-file-input" class="hidden" onchange="handleFileSelect('hash-file-input', 'hash-file-name')">
+                            </div>
+
+                            <div class="flex items-center gap-3 mb-4">
+                                <label class="text-sm font-medium text-gray-300">Algorithm:</label>
+                                <select id="hash-type" class="dev-input py-1.5 px-3 w-auto flex-1 text-sm font-mono">
+                                    <option value="MD5">MD5</option>
+                                    <option value="SHA1">SHA-1</option>
+                                    <option value="SHA256" selected>SHA-256</option>
+                                    <option value="SHA512">SHA-512</option>
+                                </select>
+                            </div>
+
+                            <button onclick="generateFileHash()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 mb-4">
+                                <i class="fa-solid fa-fingerprint"></i> Generate Hash
+                            </button>
+
+                            <div class="relative">
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Hash Output:</label>
+                                <input type="text" id="hash-output" class="dev-input font-mono text-sm text-orange-300 pr-10" readonly placeholder="Result will appear here...">
+                                <button onclick="copyText('hash-output')" class="absolute right-2 bottom-2 text-gray-400 hover:text-white p-1" title="Copy">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- File <-> Base64 (Two-Way Encode/Decode) -->
+                        <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg">
+                            <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-file-code text-indigo-400 mr-2"></i>File ⇄ Base64</h3>
+                            <p class="text-xs text-gray-400 mb-4">แปลงไฟล์ให้กลายเป็นตัวอักษร Base64 (Encode) หรือ นำโค้ด Base64 มาถอดรหัสเป็นไฟล์ (Decode)</p>
+                            
+                            <!-- Encode Section -->
+                            <div class="mb-6 pb-6 border-b border-gray-800">
+                                <label class="block text-sm font-medium text-indigo-300 mb-2">1. Encode File to Base64</label>
+                                <div class="flex gap-2">
+                                    <input type="file" id="b64-file-input" class="dev-input text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+                                    <button onclick="encodeFileToBase64()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap">Encode</button>
+                                </div>
+                            </div>
+
+                            <!-- Decode Section -->
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="block text-sm font-medium text-emerald-300">2. Base64 String / Output</label>
+                                    <button onclick="copyText('file-b64-textarea')" class="text-xs text-gray-400 hover:text-white"><i class="fa-regular fa-copy"></i> Copy</button>
+                                </div>
+                                <textarea id="file-b64-textarea" class="dev-input h-32 font-mono text-xs resize-y mb-3" placeholder="Paste Base64 string here to decode, or see encode result here..."></textarea>
+                                
+                                <button onclick="decodeBase64ToFile()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-download"></i> Decode Base64 to File
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TOOL: Number Converter -->
+                <section id="number-converter" class="tool-section">
+                    <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-calculator text-purple-400 mr-2"></i>Number Base Converter</h3>
+                            <button onclick="clearInputs(['num-dec', 'num-hex', 'num-bin', 'num-oct'])" class="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-3 py-1.5 rounded transition"><i class="fa-solid fa-trash mr-1"></i> Clear All</button>
+                        </div>
+                        
+                        <p class="text-sm text-gray-400 mb-4">พิมพ์ตัวเลขในช่องใดก็ได้ ระบบจะแปลงเป็นฐานอื่นๆ ให้อัตโนมัติ (Real-time)</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Decimal (Base 10)</label>
+                                <input type="text" id="num-dec" class="dev-input font-mono text-lg text-white" placeholder="e.g. 42" oninput="convertNumber('dec')">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Hexadecimal (Base 16)</label>
+                                <input type="text" id="num-hex" class="dev-input font-mono text-lg uppercase text-purple-400" placeholder="e.g. 2A" oninput="convertNumber('hex')">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Binary (Base 2)</label>
+                                <input type="text" id="num-bin" class="dev-input font-mono text-lg text-green-400" placeholder="e.g. 101010" oninput="convertNumber('bin')">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Octal (Base 8)</label>
+                                <input type="text" id="num-oct" class="dev-input font-mono text-lg text-yellow-400" placeholder="e.g. 52" oninput="convertNumber('oct')">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TOOL: Text Encoder/Decoder -->
+                <section id="text-encoder" class="tool-section">
+                    <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg mb-6">
+                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-font text-pink-400 mr-2"></i>URL & HTML Encoder/Decoder</h3>
+                        <textarea id="text-enc-input" class="dev-input h-32 font-mono resize-y mb-4" placeholder="Enter text or URL to encode/decode..."></textarea>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <button onclick="processTextEncoding('url-enc')" class="bg-[#0f172a] hover:bg-gray-800 border border-gray-700 py-3 rounded-lg text-pink-400 font-medium text-sm transition shadow-sm hover:shadow-pink-500/10"><i class="fa-solid fa-link mr-2"></i>URL Encode</button>
+                            <button onclick="processTextEncoding('url-dec')" class="bg-[#0f172a] hover:bg-gray-800 border border-gray-700 py-3 rounded-lg text-indigo-400 font-medium text-sm transition shadow-sm hover:shadow-indigo-500/10"><i class="fa-solid fa-link-slash mr-2"></i>URL Decode</button>
+                            <button onclick="processTextEncoding('html-enc')" class="bg-[#0f172a] hover:bg-gray-800 border border-gray-700 py-3 rounded-lg text-rose-400 font-medium text-sm transition shadow-sm hover:shadow-rose-500/10"><i class="fa-solid fa-code mr-2"></i>HTML Encode</button>
+                            <button onclick="processTextEncoding('html-dec')" class="bg-[#0f172a] hover:bg-gray-800 border border-gray-700 py-3 rounded-lg text-violet-400 font-medium text-sm transition shadow-sm hover:shadow-violet-500/10"><i class="fa-brands fa-html5 mr-2"></i>HTML Decode</button>
+                        </div>
+                    </div>
+                    <div class="bg-[#1e293b] rounded-xl border border-gray-800 p-6 shadow-lg relative">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-300">Result</label>
+                            <div class="flex gap-2">
+                                <button onclick="clearInput('text-enc-output')" class="text-xs bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white px-2 py-1 rounded transition"><i class="fa-solid fa-trash mr-1"></i>Clear</button>
+                                <button onclick="copyText('text-enc-output')" class="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition"><i class="fa-regular fa-copy mr-1"></i>Copy</button>
+                            </div>
+                        </div>
+                        <textarea id="text-enc-output" class="dev-input h-32 font-mono resize-y text-pink-300 bg-[#0f172a]" readonly></textarea>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script>
+        // --- CORE LOGIC & UI ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check mr-2 text-green-400"></i>' : '<i class="fa-solid fa-circle-exclamation mr-2 text-red-400"></i>';
+            toast.innerHTML = `${icon} ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function copyText(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el.value) { showToast("ไม่มีอะไรให้คัดลอก!", "error"); return; }
+            navigator.clipboard.writeText(el.value).then(() => showToast("คัดลอกแล้ว!"))
+            .catch(() => { el.select(); document.execCommand('copy'); showToast("คัดลอกแล้ว!"); });
+        }
+        function copyToClipboard(elementId) { copyText(elementId); }
+
+        function clearInput(elementId) { document.getElementById(elementId).value = ''; }
+        function clearInputs(ids) { ids.forEach(id => document.getElementById(id).value = ''); }
+
+        const toolsMap = {
+            'translator': 'Full-Featured Translator',
+            'password-gen': 'Password Generator',
+            'thai-eng': 'Keyboard Layout Fixer',
+            'json-formatter': 'JSON Formatter',
+            'base64-tool': 'Base64 Text Encoder/Decoder',
+            'file-tools': 'File Hash & Encode',
+            'number-converter': 'Number Base Converter',
+            'text-encoder': 'URL & HTML Encoder/Decoder'
+        };
+
+        function switchTool(toolId, navElement) {
+            document.querySelectorAll('.tool-section').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(toolId);
+            if(target) target.classList.add('active');
+            if(toolsMap[toolId]) document.getElementById('current-tool-title').innerText = toolsMap[toolId];
+            
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-gray-800', 'text-white');
+                el.classList.add('text-gray-300');
+            });
+            if(navElement) {
+                navElement.classList.remove('text-gray-300');
+                navElement.classList.add('bg-gray-800', 'text-white');
+            }
+            if (window.innerWidth < 768) toggleSidebar();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function searchTools() {
+            const query = document.getElementById('tool-search').value.toLowerCase();
+            document.querySelectorAll('#nav-menu .nav-item').forEach(item => {
+                item.style.display = item.innerText.toLowerCase().includes(query) ? 'flex' : 'none';
+            });
+        }
+
+
+        // ==========================================
+        // 🌐 TRANSLATOR LOGIC
+        // ==========================================
+        // ... (Translator Logic Remains Identical) ...
+        const LANGUAGES = {
+            "th": "Thai (ไทย)", "en": "English", "ja": "Japanese (日本語)", "ko": "Korean (한국어)", "zh-CN": "Chinese Simplified (简体中文)", 
+            "zh-TW": "Chinese Traditional (繁體中文)", "fr": "French (Français)", "de": "German (Deutsch)", "es": "Spanish (Español)", 
+            "it": "Italian (Italiano)", "ru": "Russian (Русский)", "ar": "Arabic (العربية)", "hi": "Hindi (हिन्दी)", "vi": "Vietnamese (Tiếng Việt)"
+        };
+
+        function initLanguages() {
+            const srcSelect = document.getElementById('trans-source-lang');
+            const tgtSelect = document.getElementById('trans-target-lang');
+            for (let code in LANGUAGES) tgtSelect.innerHTML += `<option value="${code}">${LANGUAGES[code]}</option>`;
+            for (let code in LANGUAGES) srcSelect.innerHTML += `<option value="${code}">${LANGUAGES[code]}</option>`;
+            srcSelect.value = 'en'; tgtSelect.value = 'th';
+        }
+
+        function swapLanguages() {
+            const srcSelect = document.getElementById('trans-source-lang');
+            const tgtSelect = document.getElementById('trans-target-lang');
+            const inText = document.getElementById('trans-input').value;
+            const outText = document.getElementById('trans-output').value;
+
+            if (srcSelect.value === 'auto') {
+                srcSelect.value = tgtSelect.value; tgtSelect.value = 'en';
+            } else {
+                const temp = srcSelect.value; srcSelect.value = tgtSelect.value; tgtSelect.value = temp;
+            }
+
+            if (outText && !outText.includes("Error")) {
+                document.getElementById('trans-input').value = outText;
+                document.getElementById('trans-output').value = inText;
+                triggerAutoTranslate();
+            }
+        }
+
+        function clearTranslatorInput() {
+            document.getElementById('trans-input').value = '';
+            document.getElementById('trans-output').value = '';
+            document.getElementById('char-count').innerText = '0 / 5000';
+            document.getElementById('trans-loader').classList.add('hidden');
+        }
+
+        let translateTimeout;
+        function triggerAutoTranslate() {
+            const input = document.getElementById('trans-input');
+            const text = input.value;
+            const output = document.getElementById('trans-output');
+            const loader = document.getElementById('trans-loader');
+            
+            document.getElementById('char-count').innerText = `${text.length} / 5000`;
+            if (text.length > 5000) input.value = text.substring(0, 5000);
+
+            clearTimeout(translateTimeout);
+            if (text.trim() === '') { output.value = ''; loader.classList.add('hidden'); output.classList.remove('hidden'); return; }
+
+            output.classList.add('hidden'); loader.classList.remove('hidden'); loader.classList.add('flex');
+            translateTimeout = setTimeout(() => { fetchTranslation(text.trim()); }, 600);
+        }
+
+        async function fetchTranslation(text) {
+            const src = document.getElementById('trans-source-lang').value;
+            const tgt = document.getElementById('trans-target-lang').value;
+            const output = document.getElementById('trans-output');
+            const loader = document.getElementById('trans-loader');
+
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${tgt}&dt=t&q=${encodeURIComponent(text)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                let translatedText = '';
+                if (data && data[0]) data[0].forEach(chunk => { if (chunk[0]) translatedText += chunk[0]; });
+                output.value = translatedText || "Translation failed";
+            } catch (error) {
+                output.value = "Error: ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์แปลภาษาได้";
+            } finally {
+                loader.classList.add('hidden'); loader.classList.remove('flex'); output.classList.remove('hidden');
+            }
+        }
+
+        function speakText(elementId, langElementId) {
+            const text = document.getElementById(elementId).value;
+            let langCode = document.getElementById(langElementId).value;
+            if (!text) return;
+            if (langCode === 'auto') langCode = 'en'; 
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voiceLangMap = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'en': 'en-US' };
+                utterance.lang = voiceLangMap[langCode] || langCode;
+                window.speechSynthesis.speak(utterance);
+            } else showToast("เบราว์เซอร์ของคุณไม่รองรับการอ่านออกเสียง", "error");
+        }
+
+        let recognition = null; let isRecording = false;
+        function toggleSpeechRecognition() {
+            const micBtn = document.getElementById('btn-mic');
+            const input = document.getElementById('trans-input');
+            let langCode = document.getElementById('trans-source-lang').value;
+            if (langCode === 'auto') langCode = 'th-TH';
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showToast("เบราว์เซอร์นี้ไม่รองรับการพิมพ์ด้วยเสียง", "error"); return;
+            }
+
+            if (isRecording) { recognition.stop(); return; }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true; recognition.interimResults = true;
+            recognition.lang = langCode === 'en' ? 'en-US' : (langCode === 'th' ? 'th-TH' : langCode);
+
+            recognition.onstart = function() {
+                isRecording = true; micBtn.classList.add('pulse-mic'); input.placeholder = "กำลังฟัง... พูดได้เลย";
+            };
+
+            let finalTranscript = input.value; 
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript + ' ';
+                    else interimTranscript += event.results[i][0].transcript;
+                }
+                input.value = finalTranscript + interimTranscript; triggerAutoTranslate(); 
+            };
+
+            recognition.onerror = function() { recognition.stop(); };
+            recognition.onend = function() {
+                isRecording = false; micBtn.classList.remove('pulse-mic'); input.placeholder = "พิมพ์ข้อความที่นี่ หรือกดไมค์เพื่อพูด...";
+            };
+            recognition.start();
+        }
+
+        // ==========================================
+        // 🔐 PASSWORD GENERATOR LOGIC (WITH HACKER ANIMATION)
+        // ==========================================
+        let isGeneratingPw = false; // Flag to prevent multiple clicks
+
+        function generatePassword() {
+            if (isGeneratingPw) return; // Prevent overlapping animations
+            
+            const length = parseInt(document.getElementById('pg-length').value);
+            const useUpper = document.getElementById('pg-upper').checked;
+            const useLower = document.getElementById('pg-lower').checked;
+            const useNum = document.getElementById('pg-num').checked;
+            const useSym = document.getElementById('pg-sym').checked;
+            
+            let charset = '';
+            if (useUpper) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (useLower) charset += 'abcdefghijklmnopqrstuvwxyz';
+            if (useNum) charset += '0123456789';
+            if (useSym) charset += '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+            
+            if (charset === '') { 
+                document.getElementById('pg-output').value = ''; 
+                showToast("Select at least one character type", "error"); 
+                return; 
+            }
+            
+            // Generate the final password target
+            let finalPassword = '';
+            for (let i = 0; i < length; i++) finalPassword += charset.charAt(Math.floor(Math.random() * charset.length));
+            
+            // UI Elements for animation
+            const outputEl = document.getElementById('pg-output');
+            const containerEl = document.getElementById('pg-container');
+            const btnEl = document.getElementById('btn-generate-pw');
+            
+            // Start Hacker Animation
+            isGeneratingPw = true;
+            containerEl.classList.add('hacker-mode');
+            btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Hacking...';
+            btnEl.classList.add('opacity-75', 'cursor-not-allowed');
+            
+            let frame = 0;
+            const maxFrames = 25; // How many times it scrambles (Duration)
+            
+            const interval = setInterval(() => {
+                // Generate random scramble text for each frame
+                let randomText = '';
+                for (let i = 0; i < length; i++) {
+                    // Use a more chaotic charset for the animation effect
+                    const chaoticCharset = charset + "010101010101"; 
+                    randomText += chaoticCharset.charAt(Math.floor(Math.random() * chaoticCharset.length));
+                }
+                outputEl.value = randomText;
+                frame++;
+                
+                // End animation
+                if (frame >= maxFrames) {
+                    clearInterval(interval);
+                    
+                    // Set final password
+                    outputEl.value = finalPassword;
+                    document.getElementById('validator-input').value = finalPassword;
+                    checkPasswordStrength(finalPassword);
+                    
+                    // Revert UI to normal
+                    containerEl.classList.remove('hacker-mode');
+                    btnEl.innerHTML = '<i class="fa-solid fa-bolt"></i> Generate Password';
+                    btnEl.classList.remove('opacity-75', 'cursor-not-allowed');
+                    isGeneratingPw = false;
+                }
+            }, 35); // 35ms per frame (approx 800ms total)
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId); const icon = document.getElementById(iconId);
+            if (input.type === "password") { input.type = "text"; icon.className = "fa-solid fa-eye-slash"; } 
+            else { input.type = "password"; icon.className = "fa-solid fa-eye"; }
+        }
+
+        function setChecklistItem(id, isValid) {
+            const el = document.getElementById(id);
+            if (isValid) { el.className = "check-item valid"; el.innerHTML = '<i class="fa-solid fa-check w-5"></i> ' + el.innerText; } 
+            else { el.className = "check-item invalid"; el.innerHTML = '<i class="fa-solid fa-xmark w-5"></i> ' + el.innerText; }
+        }
+
+        function checkPasswordStrength(pw) {
+            const bar = document.getElementById('val-strength-bar'); const text = document.getElementById('val-strength-text');
+            if (!pw) {
+                bar.style.width = '0%'; text.innerText = 'No Data';
+                ['req-length', 'req-upper', 'req-lower', 'req-num', 'req-sym'].forEach(id => setChecklistItem(id, false)); return;
+            }
+
+            const hasLen = pw.length >= 8; const hasUpper = /[A-Z]/.test(pw); const hasLower = /[a-z]/.test(pw);
+            const hasNum = /[0-9]/.test(pw); const hasSym = /[^A-Za-z0-9]/.test(pw);
+
+            setChecklistItem('req-length', hasLen); setChecklistItem('req-upper', hasUpper); setChecklistItem('req-lower', hasLower);
+            setChecklistItem('req-num', hasNum); setChecklistItem('req-sym', hasSym);
+
+            let score = 0;
+            if (hasLen) score += 20; if (pw.length > 12) score += 10; if (hasUpper) score += 15;
+            if (hasLower) score += 15; if (hasNum) score += 20; if (hasSym) score += 20;
+
+            bar.className = 'h-full transition-all duration-300 ';
+            if (score <= 40) { bar.style.width = '33%'; bar.classList.add('bg-red-500'); text.innerText = 'Weak'; text.className = 'text-sm font-bold w-24 text-right text-red-500'; } 
+            else if (score < 80) { bar.style.width = '66%'; bar.classList.add('bg-yellow-500'); text.innerText = 'Medium'; text.className = 'text-sm font-bold w-24 text-right text-yellow-500'; } 
+            else { bar.style.width = '100%'; bar.classList.add('bg-green-500'); text.innerText = 'Strong'; text.className = 'text-sm font-bold w-24 text-right text-green-500'; }
+        }
+
+        // ==========================================
+        // 🇹🇭 🇬🇧 LAYOUT FIXER LOGIC
+        // ==========================================
+        const engKeysRow = "1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?";
+        const thaiKeysRow = "ๅ/-ภถุึคตจขชๆไำพะัีรนยบลฃฟหกดเ้่าสวงผปแอิืทมใฝ+๑๒๓๔ู฿๕๖๗๘๙๐\"ฎฑธํ๊ณฯญฐ,ฤฆฏโฌ็๋ษศซ.()ฉฮฺ์?ฒฬฦ";
+        const engToThaiMap = {}; const thaiToEngMap = {};
+        for (let i = 0; i < engKeysRow.length; i++) { engToThaiMap[engKeysRow[i]] = thaiKeysRow[i]; thaiToEngMap[thaiKeysRow[i]] = engKeysRow[i]; }
+
+        function fixLanguage(direction) {
+            const input = document.getElementById('lang-input').value; const output = document.getElementById('lang-output');
+            if (!input) return;
+            let result = '';
+            for (let i = 0; i < input.length; i++) {
+                let char = input[i]; result += direction === 'en-th' ? (engToThaiMap[char] || char) : (thaiToEngMap[char] || char);
+            }
+            output.value = result; showToast("แก้ไขข้อความแล้ว!");
+        }
+
+        function detectAndFixLanguage() {
+            const input = document.getElementById('lang-input').value; if (!input) return;
+            let thaiCount = 0; let engCount = 0;
+            for (let i = 0; i < input.length; i++) {
+                if (thaiToEngMap[input[i]]) thaiCount++; if (engToThaiMap[input[i]]) engCount++;
+            }
+            if (thaiCount > engCount) { fixLanguage('th-en'); showToast("อัตโนมัติ: แก้เป็นภาษาอังกฤษ", "success"); } 
+            else { fixLanguage('en-th'); showToast("อัตโนมัติ: แก้เป็นภาษาไทย", "success"); }
+        }
+
+        // ==========================================
+        // 🔄 JSON & BASE64 TEXT LOGIC
+        // ==========================================
+        function processJson(action) {
+            const input = document.getElementById('json-input').value; const output = document.getElementById('json-output');
+            const errorOverlay = document.getElementById('json-error');
+            if (!input.trim()) return;
+            errorOverlay.classList.add('hidden');
+            try {
+                const parsed = JSON.parse(input);
+                if (action === 'format') output.value = JSON.stringify(parsed, null, 4);
+                else if (action === 'minify') output.value = JSON.stringify(parsed);
+                showToast("JSON Processed");
+            } catch (e) {
+                document.getElementById('json-error-msg').innerText = e.message; errorOverlay.classList.remove('hidden');
+            }
+        }
+        
+        function processBase64(action) {
+            const input = document.getElementById('b64-input').value; const output = document.getElementById('b64-output');
+            if (!input) return;
+            try {
+                if (action === 'encode') output.value = btoa(unescape(encodeURIComponent(input)));
+                else output.value = decodeURIComponent(escape(atob(input)));
+                showToast("Base64 Processed");
+            } catch (e) { showToast("Error processing text", "error"); }
+        }
+
+        // ==========================================
+        // 📂 FILE HASH & BASE64
+        // ==========================================
+        function handleFileSelect(inputId, labelId) {
+            const input = document.getElementById(inputId);
+            const label = document.getElementById(labelId);
+            if (input.files && input.files.length > 0) {
+                label.innerText = "Selected: " + input.files[0].name;
+                label.classList.remove('hidden');
+            } else {
+                label.classList.add('hidden');
+            }
+        }
+
+        function generateFileHash() {
+            const fileInput = document.getElementById('hash-file-input');
+            const hashType = document.getElementById('hash-type').value;
+            const output = document.getElementById('hash-output');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showToast("กรุณาเลือกไฟล์ก่อน", "error"); return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            output.value = "Calculating " + hashType + "...";
+
+            reader.onload = function(e) {
+                try {
+                    const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
+                    let hash;
+                    if(hashType === 'MD5') hash = CryptoJS.MD5(wordArray);
+                    else if(hashType === 'SHA1') hash = CryptoJS.SHA1(wordArray);
+                    else if(hashType === 'SHA256') hash = CryptoJS.SHA256(wordArray);
+                    else if(hashType === 'SHA512') hash = CryptoJS.SHA512(wordArray);
+                    
+                    output.value = hash.toString(CryptoJS.enc.Hex);
+                    showToast("สร้างค่า Hash สำเร็จ!");
+                } catch(err) {
+                    output.value = "Error generating hash";
+                    showToast("เกิดข้อผิดพลาดในการคำนวณ", "error");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function encodeFileToBase64() {
+            const fileInput = document.getElementById('b64-file-input');
+            const output = document.getElementById('file-b64-textarea');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showToast("กรุณาเลือกไฟล์เพื่อ Encode", "error"); return;
+            }
+
+            const file = fileInput.files[0];
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showToast("ไฟล์ใหญ่เกินไป (ไม่ควรเกิน 10MB)", "error"); return;
+            }
+
+            output.value = "Encoding file...";
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                output.value = e.target.result;
+                showToast("Encode ไฟล์สำเร็จ!");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function decodeBase64ToFile() {
+            const b64Input = document.getElementById('file-b64-textarea').value.trim();
+            if(!b64Input) {
+                showToast("กรุณาใส่โค้ด Base64 ก่อน", "error"); return;
+            }
+
+            let mime = 'application/octet-stream';
+            let base64Data = b64Input;
+
+            if (b64Input.startsWith('data:')) {
+                const parts = b64Input.split(',');
+                if (parts.length === 2) {
+                    const mimeMatch = parts[0].match(/:(.*?);/);
+                    if (mimeMatch) mime = mimeMatch[1];
+                    base64Data = parts[1];
+                }
+            }
+
+            try {
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {type: mime});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                
+                let ext = 'bin';
+                if(mime.includes('image/png')) ext = 'png';
+                else if(mime.includes('image/jpeg')) ext = 'jpg';
+                else if(mime.includes('application/pdf')) ext = 'pdf';
+                else if(mime.includes('text/plain')) ext = 'txt';
+                
+                link.download = 'decoded_file.' + ext;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast("เตรียมดาวน์โหลดไฟล์เรียบร้อย");
+            } catch(e) {
+                showToast("โค้ด Base64 ไม่ถูกต้อง หรือเสียหาย", "error");
+            }
+        }
+
+        // ==========================================
+        // 🔢 NUMBER CONVERTER LOGIC
+        // ==========================================
+        function convertNumber(source) {
+            const decInput = document.getElementById('num-dec');
+            const hexInput = document.getElementById('num-hex');
+            const binInput = document.getElementById('num-bin');
+            const octInput = document.getElementById('num-oct');
+
+            let val = document.getElementById(`num-${source}`).value.trim();
+            
+            if (val === '') {
+                decInput.value = ''; hexInput.value = ''; binInput.value = ''; octInput.value = ''; return;
+            }
+
+            let decimalValue;
+            try {
+                if (source === 'dec') decimalValue = parseInt(val, 10);
+                if (source === 'hex') decimalValue = parseInt(val, 16);
+                if (source === 'bin') decimalValue = parseInt(val, 2);
+                if (source === 'oct') decimalValue = parseInt(val, 8);
+
+                if (isNaN(decimalValue)) return; 
+
+                if (source !== 'dec') decInput.value = decimalValue.toString(10);
+                if (source !== 'hex') hexInput.value = decimalValue.toString(16).toUpperCase();
+                if (source !== 'bin') binInput.value = decimalValue.toString(2);
+                if (source !== 'oct') octInput.value = decimalValue.toString(8);
+            } catch (e) {
+                console.log("Invalid number format");
+            }
+        }
+
+        // ==========================================
+        // 🔠 TEXT ENCODER / DECODER LOGIC
+        // ==========================================
+        function processTextEncoding(action) {
+            const input = document.getElementById('text-enc-input').value;
+            const output = document.getElementById('text-enc-output');
+            
+            if (!input) { showToast("โปรดใส่ข้อความก่อน", "error"); return; }
+            
+            try {
+                let result = '';
+                switch(action) {
+                    case 'url-enc': result = encodeURIComponent(input); break;
+                    case 'url-dec': result = decodeURIComponent(input); break;
+                    case 'html-enc': 
+                        result = input.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                                      .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                                      .replace(/'/g, '&#039;');
+                        break;
+                    case 'html-dec': 
+                        const txt = document.createElement("textarea");
+                        txt.innerHTML = input;
+                        result = txt.value;
+                        break;
+                }
+                output.value = result;
+                showToast("ประมวลผลสำเร็จ!");
+            } catch(e) {
+                showToast("รูปแบบข้อความไม่ถูกต้อง", "error");
+            }
+        }
+
+        // Initialize
+        window.onload = () => {
+            initLanguages();
+            // Wait a split second so elements are fully loaded before generating default password
+            setTimeout(() => {
+                if(!isGeneratingPw) generatePassword();
+            }, 100);
+            switchTool('translator', document.querySelector('.nav-item')); 
+        };
+    </script>
+</body>
+</html>
