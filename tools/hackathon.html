@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGuide AI - ผู้ช่วยค้นหาตัวตนและการศึกษาต่อ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Scrollbar for chat area */
+        .chat-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 10px;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        /* Typing animation */
+        .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen font-sans antialiased overflow-hidden selection:bg-blue-200">
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-800 z-50 flex flex-col items-center justify-center p-4 transition-opacity duration-500">
+        
+        <!-- Step 1: Realistic Login Mockup -->
+        <div id="auth-step-1" class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center transform transition-all duration-300">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-robot text-3xl text-blue-600"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-1">ยินดีต้อนรับสู่ EduGuide AI</h1>
+            <p class="text-gray-500 mb-6 text-sm">เข้าสู่ระบบเพื่อรับคำปรึกษาด้านการศึกษา</p>
+            
+            <form id="login-form-real" class="space-y-4">
+                <div class="text-left">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                    <input type="email" required placeholder="example@email.com" value="demo@eduguide.ai" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+                <div class="text-left">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                    <input type="password" required placeholder="••••••••" value="password123" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center text-gray-600 cursor-pointer">
+                        <input type="checkbox" class="mr-2 rounded text-blue-600 focus:ring-blue-500" checked> จำการเข้าสู่ระบบ
+                    </label>
+                    <a href="#" class="text-blue-600 hover:underline">ลืมรหัสผ่าน?</a>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 mt-2 shadow-lg shadow-blue-500/30">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-300"></div></div>
+                    <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-500">หรือเข้าสู่ระบบด้วย</span></div>
+                </div>
+                <div class="mt-6 flex flex-col gap-3">
+                    <div class="flex gap-3">
+                        <button type="button" onclick="goToProfileStep()" class="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 text-sm">
+                            <i class="fab fa-google text-red-500"></i> Google
+                        </button>
+                        <button type="button" onclick="goToProfileStep()" class="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 text-sm">
+                            <i class="fab fa-facebook text-blue-600"></i> Facebook
+                        </button>
+                    </div>
+                    <!-- Guest Mode Button -->
+                    <button type="button" onclick="goToProfileStep()" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition-colors text-gray-700 text-sm font-medium">
+                        <i class="fas fa-user-astronaut"></i> เข้าใช้งานโหมด Guest (ไม่ต้องล็อกอิน)
+                    </button>
+                </div>
+            </div>
+            <p class="mt-6 text-xs text-gray-400">นี่เป็นเพียงระบบ Mockup สามารถกดเข้าสู่ระบบได้เลย</p>
+        </div>
+
+        <!-- Step 2: Profile Setup (Initially Hidden) -->
+        <div id="auth-step-2" class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center transform transition-all duration-300 hidden">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-user-graduate text-3xl text-blue-600"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">สร้างโปรไฟล์ของคุณ</h1>
+            <p class="text-gray-500 mb-6 text-sm">ข้อมูลนี้จะช่วยให้ AI วิเคราะห์และแนะนำได้แม่นยำขึ้น</p>
+            
+            <form id="profile-form" class="space-y-4">
+                <div class="text-left">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อเล่น / ชื่อเรียกของคุณ</label>
+                    <input type="text" id="username-input" required placeholder="เช่น น้องนนท์, ฟ้าใส" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+                <div class="text-left">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">สายการเรียนปัจจุบัน (พิมพ์เองได้เลย)</label>
+                    <input type="text" id="study-track" list="track-options" required placeholder="เช่น วิทย์-คณิต, ศิลป์-ญี่ปุ่น, ปวช.ช่างกล" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white">
+                    <datalist id="track-options">
+                        <option value="วิทย์-คณิต">
+                        <option value="ศิลป์-คำนวณ">
+                        <option value="ศิลป์-ภาษา">
+                        <option value="ปวช. / สายอาชีพ">
+                        <option value="กศน. / เทียบโอน">
+                    </datalist>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 mt-6 shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
+                    <span>เริ่มต้นใช้งาน AI</span>
+                    <i class="fas fa-arrow-right text-sm"></i>
+                </button>
+            </form>
+            <button type="button" onclick="goToLoginStep()" class="mt-4 text-sm text-gray-500 hover:text-gray-700 underline">ย้อนกลับ</button>
+        </div>
+    </div>
+
+    <!-- Main App UI -->
+    <div id="main-app" class="h-full flex flex-col md:flex-row hidden opacity-0 transition-opacity duration-500">
+        
+        <!-- Sidebar -->
+        <aside class="hidden md:flex w-64 bg-gray-900 text-white flex-col h-full border-r border-gray-800 shrink-0">
+            <div class="p-4 border-b border-gray-800 flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-robot text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-lg leading-tight">EduGuide AI</h2>
+                    <span class="text-xs text-blue-400">ผู้ช่วยแนะแนวการศึกษา</span>
+                </div>
+            </div>
+            
+            <div class="p-4 flex-1 overflow-y-auto">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">โปรไฟล์ของคุณ</h3>
+                <div class="bg-gray-800 p-3 rounded-lg mb-6">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-sm">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <div>
+                            <p id="sidebar-username" class="text-sm font-medium">ผู้ใช้งาน</p>
+                            <p id="sidebar-track" class="text-xs text-gray-400">สายการเรียน</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">คำถามแนะนำ</h3>
+                <ul id="sidebar-suggestions" class="space-y-2 text-sm text-gray-300">
+                    <!-- Dynamic suggestions will be injected here via JS -->
+                </ul>
+            </div>
+
+            <div class="p-4 border-t border-gray-800">
+                <button onclick="logout()" class="w-full text-left p-2 text-red-400 hover:bg-gray-800 rounded transition-colors text-sm flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                </button>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="flex-1 flex flex-col h-full bg-white relative overflow-hidden">
+            <!-- Mobile Header -->
+            <header class="md:hidden shrink-0 flex items-center justify-between p-4 border-b border-gray-200 bg-white shadow-sm z-10">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot text-blue-600 text-sm"></i>
+                    </div>
+                    <h1 class="font-bold text-gray-800">EduGuide AI</h1>
+                </div>
+                <button onclick="logout()" class="text-gray-500 hover:text-red-500">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </header>
+
+            <!-- Chat Messages Container -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 chat-scroll">
+                <!-- Messages will be injected here -->
+            </div>
+
+            <!-- Input Area -->
+            <div class="shrink-0 w-full bg-white pt-4 pb-4 px-4 md:px-8 border-t border-gray-200 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] relative">
+                
+                <!-- Attachment Preview Tooltip (Hidden by default) -->
+                <div id="attachment-preview" class="hidden absolute -top-12 left-4 md:left-8 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 shadow-sm animate-fade-in">
+                    <i class="fas fa-file-pdf text-red-500 text-lg"></i>
+                    <span class="font-medium">My_Portfolio_2026.pdf</span>
+                    <button type="button" onclick="removeAttachment()" class="text-gray-400 hover:text-red-500 ml-2 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="max-w-4xl mx-auto relative">
+                    <form id="chat-form" class="flex gap-2 items-center">
+                        <div class="relative flex-1 bg-white shadow-md rounded-2xl border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all flex items-center">
+                            
+                            <!-- Attach Button -->
+                            <button type="button" onclick="triggerMockUpload()" class="pl-4 pr-2 text-gray-400 hover:text-blue-600 transition-colors" title="แนบพอร์ตฟอลิโอจำลองเพื่อวิเคราะห์">
+                                <i class="fas fa-paperclip text-lg"></i>
+                            </button>
+
+                            <input type="text" id="chat-input" placeholder="พิมพ์ถามได้เลย เช่น 'อยากเรียนวิศวะ ลาดกระบัง ต้องเตรียมตัวยังไง'..." class="w-full py-4 pl-2 pr-4 outline-none text-gray-700 bg-transparent">
+                        </div>
+                        <button type="submit" id="send-btn" class="bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-2xl shadow-md flex items-center justify-center transition-transform transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                    <div class="text-center mt-2">
+                        <span class="text-[10px] text-gray-400">ข้อมูลอ้างอิงและประมวลผลจำลองมาจาก www.mytcas.com (Mockup Data)</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- State ---
+        let currentUser = { name: '', track: '' };
+        let isWaitingForAI = false;
+        let isFileAttached = false;
+        let currentSuggestions = []; // For storing the randomized questions
+
+        // --- Suggestion Pool ---
+        const suggestionPool = [
+            { text: 'อยากเรียนวิศวะ ลาดกระบัง ต้องเตรียมตัวยังไง?', label: 'วิศวะ ลาดกระบัง เตรียมตัวยังไง', icon: 'fas fa-university', color: 'text-blue-400' },
+            { text: 'นิติศาสตร์ มธ. ใช้เกณฑ์คะแนนอะไรบ้าง?', label: 'เกณฑ์คะแนนนิติ มธ.', icon: 'fas fa-balance-scale', color: 'text-yellow-400' },
+            { text: 'พยาบาลเรียนหนักไหม จบมาได้เงินเดือนเท่าไหร่?', label: 'สถิติและเงินเดือนพยาบาล', icon: 'fas fa-user-nurse', color: 'text-pink-400' },
+            { text: 'แนะนำวิธีทำพอร์ตครุศาสตร์ให้หน่อย', label: 'แนะนำทำพอร์ตครู', icon: 'fas fa-folder-open', color: 'text-purple-400' },
+            { text: 'เรียนบัญชี จบมาทำงานอะไรได้บ้าง?', label: 'อาชีพสายบัญชี', icon: 'fas fa-chart-pie', color: 'text-green-400' },
+            { text: 'แพทย์ ขอนแก่น ค่าเทอมเท่าไหร่?', label: 'ค่าเทอมแพทย์ มข.', icon: 'fas fa-stethoscope', color: 'text-red-400' },
+            { text: 'นิเทศศาสตร์ ม.กรุงเทพ รับกี่คน?', label: 'จำนวนรับนิเทศ ม.กรุงเทพ', icon: 'fas fa-camera', color: 'text-orange-400' },
+            { text: 'สถาปัตย์ จุฬา โอกาสสอบติดเยอะไหม?', label: 'สถิติสถาปัตย์ จุฬา', icon: 'fas fa-drafting-compass', color: 'text-gray-400' },
+            { text: 'ดึงข้อมูล tcas สถาปัตย์ จุฬา', label: 'ดึงข้อมูล TCAS สถาปัตย์', icon: 'fas fa-database', color: 'text-indigo-400' }
+        ];
+
+        // --- DOM Elements ---
+        const loginScreen = document.getElementById('login-screen');
+        const authStep1 = document.getElementById('auth-step-1');
+        const authStep2 = document.getElementById('auth-step-2');
+        const loginFormReal = document.getElementById('login-form-real');
+        const profileForm = document.getElementById('profile-form');
+        const mainApp = document.getElementById('main-app');
+        
+        const usernameInput = document.getElementById('username-input');
+        const studyTrackInput = document.getElementById('study-track');
+        const sidebarUsername = document.getElementById('sidebar-username');
+        const sidebarTrack = document.getElementById('sidebar-track');
+        const chatContainer = document.getElementById('chat-container');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const attachmentPreview = document.getElementById('attachment-preview');
+        const sidebarSuggestionsUl = document.getElementById('sidebar-suggestions');
+
+        // --- Initialize Random Suggestions ---
+        function randomizeSuggestions() {
+            // Shuffle and pick 4 items
+            const shuffled = [...suggestionPool].sort(() => 0.5 - Math.random());
+            currentSuggestions = shuffled.slice(0, 4);
+            
+            if (sidebarSuggestionsUl) {
+                sidebarSuggestionsUl.innerHTML = currentSuggestions.map(s => `
+                    <li onclick="insertSuggest('${s.text}')" class="p-2 hover:bg-gray-800 rounded cursor-pointer transition-colors flex items-center gap-2">
+                        <i class="${s.icon} ${s.color}"></i> ${s.label}
+                    </li>
+                `).join('');
+            }
+        }
+        
+        // Execute on script load to populate sidebar instantly
+        randomizeSuggestions();
+
+        // Login Step Navigation
+        function goToProfileStep() {
+            authStep1.classList.add('hidden');
+            authStep2.classList.remove('hidden');
+            setTimeout(() => usernameInput.focus(), 50);
+        }
+
+        function goToLoginStep() {
+            authStep2.classList.add('hidden');
+            authStep1.classList.remove('hidden');
+        }
+
+        loginFormReal.addEventListener('submit', (e) => {
+            e.preventDefault();
+            goToProfileStep();
+        });
+
+        // Profile Form Submit
+        profileForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = usernameInput.value.trim();
+            const track = studyTrackInput.value.trim();
+            
+            if(name && track) {
+                currentUser.name = name;
+                currentUser.track = track;
+                
+                sidebarUsername.textContent = name;
+                sidebarTrack.textContent = track;
+                
+                loginScreen.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    loginScreen.classList.add('hidden');
+                    mainApp.classList.remove('hidden');
+                    setTimeout(() => {
+                        mainApp.classList.remove('opacity-0');
+                        sendWelcomeMessage();
+                    }, 50);
+                }, 500);
+            }
+        });
+
+        window.logout = function() {
+            mainApp.classList.add('opacity-0');
+            setTimeout(() => {
+                mainApp.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
+                goToLoginStep();
+                loginScreen.classList.remove('opacity-0', 'pointer-events-none');
+                chatContainer.innerHTML = '';
+                removeAttachment();
+                usernameInput.value = '';
+                studyTrackInput.value = '';
+                
+                // Randomize suggestions again for next login
+                randomizeSuggestions();
+            }, 500);
+        };
+
+        // UI Helpers
+        function insertSuggest(text) {
+            if(!isWaitingForAI) {
+                chatInput.value = text;
+                chatInput.focus();
+            }
+        }
+
+        function triggerMockUpload() {
+            if(isWaitingForAI) return;
+            isFileAttached = true;
+            attachmentPreview.classList.remove('hidden');
+            chatInput.value = "";
+            chatInput.placeholder = "พิมพ์คณะที่ต้องการให้ AI ตรวจพอร์ต เช่น 'วิศวะ', 'หมอ', 'บัญชี'...";
+            chatInput.focus();
+
+            const msg = `<em>ระบบ: คุณได้เตรียมแนบไฟล์พอร์ตฟอลิโอ กรุณาพิมพ์ <strong>ชื่อคณะ</strong> ที่ต้องการยื่นในช่องแชท เพื่อให้ AI ตรวจสอบความเหมาะสมและวิเคราะห์น้ำหนักผลงานครับ</em>`;
+            appendMessage('system', msg);
+        }
+
+        function removeAttachment() {
+            isFileAttached = false;
+            attachmentPreview.classList.add('hidden');
+            chatInput.placeholder = "พิมพ์ถามได้เลย เช่น 'อยากเรียนวิศวะ ลาดกระบัง ต้องเตรียมตัวยังไง'...";
+        }
+
+        // --- NEW: KNOWLEDGE BASE ENGINE (SMART DICTIONARY) ---
+        const facultyDB = [
+            {
+                id: "med",
+                keys: ["หมอ", "แพทย์", "แพทยศาสตร์"],
+                name: "แพทยศาสตร์",
+                gradRate: "อัตราการจบสูงมาก <strong>95%+</strong> (แต่เรียนหนักและกดดันสูง ช่วงปี 1-3 อาจมีคนซิ่ว 5-10%)",
+                admitRate: "การแข่งขันสูงสุดในประเทศ! โอกาสสอบติดเฉลี่ย <strong class='text-red-600'>5-10%</strong> (1 ต่อ 10-20 คน)",
+                seat: "กลุ่ม กสพท. รับรวมทั่วประเทศ <strong class='text-green-600'>ประมาณ 1,100 - 1,200 ที่นั่ง</strong> ต่อปี",
+                score: "TPAT1 (วิชาเฉพาะแพทย์) 30% + A-Level 7 วิชาหลัก 70% (ต้องได้เกิน 30% ทุกวิชา)",
+                univ: "ม.มหิดล (ศิริราช/รามา), จุฬาฯ, ม.เชียงใหม่, ม.ขอนแก่น",
+                cost: "ม.รัฐ 20,000 - 50,000 บาท/เทอม | เอกชน 400,000+ บาท/เทอม",
+                job: "แพทย์เฉพาะทาง, ศัลยแพทย์, นักวิจัยทางการแพทย์",
+                salary: "เริ่มต้น 50,000 - 100,000+ บาท/เดือน (รวมค่าเข้าเวรและใบประกอบ)",
+                portfolio: "เน้นผลสอบ IELTS/BMAT, <strong>ชั่วโมงกิจกรรมจิตอาสา (สำคัญมาก)</strong>, โครงงานวิจัยวิทยาศาสตร์สุขภาพ",
+                chanceText: "35% (แข่งขันสูงมาก ต้องเตรียมตัวตั้งแต่เนิ่นๆ)",
+                recommend: "ต้องสอบ กสพท. (TPAT1) และ A-Level 7 วิชาหลักให้ได้เฉลี่ย 60% ขึ้นไป",
+                icon: "fa-stethoscope text-red-500"
+            },
+            {
+                id: "nurse",
+                keys: ["พยาบาล"],
+                name: "พยาบาลศาสตร์",
+                gradRate: "อัตราการจบประมาณ <strong>90%</strong> (มีการฝึกปฏิบัติงานจริง (ขึ้นวอร์ด) ที่หนักและอดนอนค่อนข้างเยอะ)",
+                admitRate: "การแข่งขันปานกลาง-สูง โอกาสติด <strong class='text-red-600'>20-30%</strong>",
+                seat: "รับค่อนข้างเยอะ วิทยาลัยพยาบาลบรมราชชนนีทั่วประเทศรับรวม <strong class='text-green-600'>หลักพันที่นั่ง</strong>",
+                score: "TGAT 20%, TPAT3 20%, A-Level (คณิต1, เคมี, ชีวะ, อังกฤษ) 60%",
+                univ: "วิทยาลัยพยาบาลบรมราชชนนี, ม.มหิดล, ม.เชียงใหม่, ม.ขอนแก่น",
+                cost: "ม.รัฐ 15,000 - 30,000 บาท/เทอม (บางที่มีทุนเรียนฟรีแลกกับการทำงานใช้ทุน)",
+                job: "พยาบาลวิชาชีพ, พยาบาลเฉพาะทาง (ICU, ห้องผ่าตัด)",
+                salary: "เริ่มต้น 25,000 - 45,000+ บาท/เดือน (รวมค่าเวรและ OT)",
+                portfolio: "ใบประกาศผ่านการอบรมปฐมพยาบาล (CPR), จิตอาสาช่วยงานโรงพยาบาลหรืออนามัย",
+                chanceText: "50-60% (เกรดเฉลี่ยควรเกิน 3.00)",
+                recommend: "เน้นทำคะแนน A-Level ชีววิทยาและภาษาอังกฤษให้ได้สูงๆ",
+                icon: "fa-user-nurse text-pink-500"
+            },
+            {
+                id: "eng",
+                keys: ["วิศวะ", "วิศวกรรม", "engineering"],
+                name: "วิศวกรรมศาสตร์",
+                gradRate: "จบตามเวลา 4 ปี อยู่ที่ <strong>70-80%</strong> (วิชาคำนวณอย่าง Calculus/Physics หินมาก มีอัตราการติด F และเปอร์สูง)",
+                admitRate: "มหาวิทยาลัย Top 3 โอกาสติด <strong class='text-red-600'>10-15%</strong> แต่ภาพรวมมหาลัยอื่นอยู่ที่ 50-70%",
+                seat: "รับเยอะมาก เฉพาะกลุ่ม 3 พระจอมเกล้าก็รับรวม <strong class='text-green-600'>หลายพันที่นั่ง</strong>",
+                score: "TGAT 20% + TPAT3 (ความถนัดวิทย์-เทคโนโลยี) 30% + A-Level (คณิต1, ฟิสิกส์, เคมี) 50%",
+                univ: "สจล. (ลาดกระบัง), มจธ. (บางมด), จุฬาฯ, ม.เกษตรศาสตร์, มพจ. (พระนครเหนือ)",
+                cost: "ม.รัฐ 20,000 - 40,000 บาท/เทอม | อินเตอร์ 60,000 - 100,000+ บาท",
+                job: "วิศวกรโยธา, วิศวกรโครงการ, Software Engineer, Data Engineer",
+                salary: "เริ่มต้น 25,000 - 45,000 บาท/เดือน (สาย Tech จบใหม่มหาลัยท็อปอาจสตาร์ท 40-60k)",
+                portfolio: "โครงงานสิ่งประดิษฐ์ (IoT/Robotics), เกียรติบัตรค่ายวิศวะ, หรือถ้าเข้าคอมฯ ต้องมี <strong>ลิงก์ GitHub โชว์โค้ด</strong>",
+                chanceText: "78% (ประเมินจากเกณฑ์รับรวมทั่วประเทศ)",
+                recommend: "เน้นทำคะแนน TPAT3 ให้ได้เกิน 60 คะแนนขึ้นไปจะปลอดภัยมาก",
+                icon: "fa-cogs text-blue-500"
+            },
+            {
+                id: "biz",
+                keys: ["บัญชี", "บริหาร", "ธุรกิจ", "การตลาด", "bba"],
+                name: "บริหารธุรกิจและบัญชี",
+                gradRate: "อัตราการเรียนจบสูง <strong>90%+</strong>",
+                admitRate: "การแข่งขันเข้ามหาลัยชั้นนำ (จุฬา/มธ.) โอกาสติด <strong class='text-red-600'>15-20%</strong>",
+                seat: "รับจำนวนมากในแต่ละปี (หลายร้อยคนต่อมหาวิทยาลัย)",
+                score: "คณิตศาสตร์ประยุกต์ 1 หรือ 2 (น้ำหนักเยอะสุด) และภาษาอังกฤษ (A-Level)",
+                univ: "จุฬาลงกรณ์ฯ (CBS), ธรรมศาสตร์ (TBS), ม.เกษตรศาสตร์, ม.เชียงใหม่",
+                cost: "ม.รัฐ 15,000 - 30,000 บาท/เทอม",
+                job: "ผู้สอบบัญชีรับอนุญาต (CPA), นักวิเคราะห์การเงิน (CFA), นักการตลาด, ฝ่ายบุคคล",
+                salary: "เริ่มต้น 20,000 - 35,000 บาท/เดือน (ถ้าได้ CPA/CFA รายได้จะก้าวกระโดดเป็นหลักแสน)",
+                portfolio: "กิจกรรมความเป็นผู้นำ (ประธานนักเรียน), เกียรติบัตรแข่งตอบปัญหาธุรกิจ, ใบประกาศ Pitching แผนธุรกิจ",
+                chanceText: "65%",
+                recommend: "ทำคะแนน A-Level คณิตศาสตร์ประยุกต์และภาษาอังกฤษให้โดดเด่น",
+                icon: "fa-chart-pie text-yellow-500"
+            },
+            {
+                id: "art",
+                keys: ["นิเทศ", "สื่อ", "วารสาร", "นิเทศศาสตร์"],
+                name: "นิเทศศาสตร์และสื่อสารมวลชน",
+                gradRate: "อัตราการเรียนจบสูง <strong>95%</strong> (เน้นการทำงานโปรเจกต์กลุ่มและการปฏิบัติจริง)",
+                admitRate: "มหาลัยท็อป <strong class='text-red-600'>20-25%</strong> รับทุกสายการเรียนทำให้คนสมัครเยอะ",
+                seat: "รับประมาณ 150 - 300 ที่นั่งต่อคณะในมหาวิทยาลัยใหญ่",
+                score: "TGAT (น้ำหนัก 50-70%) + A-Level (ภาษาอังกฤษ/ภาษาที่3)",
+                univ: "จุฬาลงกรณ์ฯ, ม.กรุงเทพ (BU), วารสารฯ ธรรมศาสตร์, มศว",
+                cost: "ม.รัฐ 20,000 - 40,000 บาท/เทอม | เอกชน 35,000 - 55,000 บาท/เทอม",
+                job: "Content Creator, ผู้กำกับ, AE, นักการตลาดดิจิทัล, PR",
+                salary: "เริ่มต้น 18,000 - 30,000 บาท/เดือน (รายได้เสริม/สปอนเซอร์เยอะถ้ารับฟรีแลนซ์)",
+                portfolio: "ต้องมี <strong>'ผลงานจริง'</strong> เช่น QR Code ลิงก์ไปหนังสั้น, แฟ้มภาพถ่าย, หรือช่อง TikTok/YouTube ของตัวเอง",
+                chanceText: "70%",
+                recommend: "เน้นทำคะแนน TGAT พาร์ทการสื่อสารและตรรกะให้ได้สูงที่สุด",
+                icon: "fa-camera text-orange-500"
+            },
+            {
+                id: "law",
+                keys: ["นิติ", "กฎหมาย", "นิติศาสตร์"],
+                name: "นิติศาสตร์",
+                gradRate: "จบ 4 ปี <strong class='text-orange-600'>ประมาณ 60-70%</strong> (ข้อสอบเป็นอัตนัย 100% เขียนตอบกฎหมายล้วนๆ โหดมาก)",
+                admitRate: "ม.ปิด (จุฬา/มธ.) โอกาสติด <strong class='text-red-600'>15-20%</strong> แต่ ม.เปิด (รามฯ/มสธ.) รับไม่จำกัด 100%",
+                seat: "ม.ปิดรับประมาณ 200-400 ที่นั่ง | ม.เปิดรับไม่จำกัด",
+                score: "TGAT 20% + A-Level (ภาษาไทย, สังคม, อังกฤษ, คณิต2/ภาษาที่3) สัดส่วนละ 20%",
+                univ: "ม.ธรรมศาสตร์, จุฬาฯ, ม.รามคำแหง, ม.เชียงใหม่",
+                cost: "ม.รัฐ/ปิด 15,000 - 25,000 บาท/เทอม | ม.เปิด (รามคำแหง) ไม่เกิน 2,000 บาท/เทอม",
+                job: "ทนายความ, อัยการ, ผู้พิพากษา, นิติกรประจำบริษัท (Legal Consultant)",
+                salary: "เริ่มต้น 18,000 - 35,000 บาท (ถ้าสอบผ่านเนติบัณฑิต หรือได้ตั๋วทนาย องค์กรใหญ่จ่าย 50k-100k+)",
+                portfolio: "เกียรติบัตรการโต้วาที, แข่งตอบปัญหากฎหมายศาลยุติธรรม, สภานักเรียน",
+                chanceText: "55%",
+                recommend: "ฝึกทักษะการอ่านจับใจความและการเขียนเรียงความภาษาไทยให้เป๊ะ เพราะข้อสอบมหาลัยเป็นการเขียนล้วน",
+                icon: "fa-balance-scale text-yellow-600"
+            },
+            {
+                id: "edu",
+                keys: ["ครู", "ครุ", "ศึกษาศาสตร์", "ครุศาสตร์", "สอน"],
+                name: "ครุศาสตร์/ศึกษาศาสตร์",
+                gradRate: "อัตราเรียนจบสูง <strong>90%+</strong> (เรียน 4 ปี และต้องมีการฝึกสอนในโรงเรียนจริง 1 ปีการศึกษา)",
+                admitRate: "แข่งขันสูงมากในสาขายอดฮิต (เอกอิง, เอกคณิต) โอกาสติด <strong class='text-red-600'>15-25%</strong>",
+                seat: "รับประมาณ 30-50 คน ต่อสาขาวิชาเอก ในแต่ละมหาวิทยาลัย",
+                score: "TGAT + TPAT5 (ความถนัดวิชาชีพครู) น้ำหนักสูง + A-Level ตามวิชาเอกที่เลือก",
+                univ: "จุฬาฯ, มศว, ม.เชียงใหม่, และกลุ่มมหาวิทยาลัยราชภัฏทั่วประเทศ",
+                cost: "ม.รัฐ 15,000 - 25,000 บาท/เทอม",
+                job: "ข้าราชการครู, ติวเตอร์สถาบันกวดวิชา, นักวิชาการศึกษา",
+                salary: "เริ่มต้น 15,000 - 25,000 บาท (หากรับราชการจะมีเงินประจำตำแหน่งและวิทยฐานะตามอายุงานมั่นคงมาก)",
+                portfolio: "รูปภาพค่ายจิตอาสาสอนหนังสือเด็ก, เกียรติบัตรแข่งขันทักษะวิชาการ, ประกาศนียบัตรผู้นำเยาวชน",
+                chanceText: "65%",
+                recommend: "ทำคะแนน TPAT5 (วิชาชีพครู) ให้สูง และเตรียมตัวสอบสัมภาษณ์เพื่อเช็คทัศนคติความเป็นครู",
+                icon: "fa-chalkboard-teacher text-teal-500"
+            },
+            {
+                id: "arch",
+                keys: ["สถาปัตย์", "ออกแบบ", "สถาปัตยกรรม"],
+                name: "สถาปัตยกรรมศาสตร์",
+                gradRate: "อัตราเรียนจบ <strong class='text-orange-600'>60-70%</strong> (งานโปรเจกต์เยอะมาก อดนอนบ่อย มีอัตราการดรอปและซิ่วสูง)",
+                admitRate: "การแข่งขันสูง โอกาสติด <strong class='text-red-600'>15-20%</strong>",
+                seat: "รับประมาณ 50-100 ที่นั่งต่อมหาวิทยาลัย",
+                score: "TPAT4 (ความถนัดสถาปัตย์) 40% + TGAT 20% + A-Level (คณิต, ฟิสิกส์, อังกฤษ) 40%",
+                univ: "ม.ศิลปากร, จุฬาฯ, สจล. (ลาดกระบัง), มจธ. (บางมด)",
+                cost: "ม.รัฐ 25,000 - 45,000 บาท/เทอม (มีค่าอุปกรณ์วาดรูปและตัดโมเดลเพิ่มตลอดเทอม)",
+                job: "สถาปนิก, นักออกแบบภายใน, ภูมิสถาปนิก",
+                salary: "เริ่มต้น 20,000 - 35,000 บาท/เดือน (ถ้าได้เซ็นแบบหรือเปิดบริษัทเองรายได้ไร้ขีดจำกัด)",
+                portfolio: "ผลงานวาดรูป (Perspective, Tive), งานออกแบบผลิตภัณฑ์, โมเดลกระดาษหรือ 3D",
+                chanceText: "40%",
+                recommend: "ฝึกสกิลการวาดรูป Perspective และฝึกทำคะแนน TPAT4 ให้ได้มากที่สุด",
+                icon: "fa-drafting-compass text-gray-600"
+            }
+        ];
+
+        const univDB = [
+            { id: "chula", keys: ["จุฬา"], name: "จุฬาลงกรณ์มหาวิทยาลัย" },
+            { id: "kmitl", keys: ["ลาดกระบัง", "สจล", "พระจอมเกล้าลาดกระบัง"], name: "สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง (สจล.)" },
+            { id: "kmutt", keys: ["บางมด", "มจธ"], name: "มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี (บางมด)" },
+            { id: "kmutnb", keys: ["พระนครเหนือ", "มพจ", "มจพ"], name: "มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ (มจพ.)" },
+            { id: "tu", keys: ["มธ", "ธรรมศาสตร์"], name: "มหาวิทยาลัยธรรมศาสตร์" },
+            { id: "mu", keys: ["มหิดล"], name: "มหาวิทยาลัยมหิดล" },
+            { id: "ku", keys: ["มก", "เกษตร", "เกษตรศาสตร์"], name: "มหาวิทยาลัยเกษตรศาสตร์" },
+            { id: "cmu", keys: ["มช", "เชียงใหม่"], name: "มหาวิทยาลัยเชียงใหม่" },
+            { id: "kku", keys: ["มข", "ขอนแก่น"], name: "มหาวิทยาลัยขอนแก่น" },
+            { id: "swu", keys: ["มศว", "ประสานมิตร", "ศรีนครินทรวิโรฒ"], name: "มหาวิทยาลัยศรีนครินทรวิโรฒ (มศว)" },
+            { id: "bu", keys: ["ม.กรุงเทพ", "ม. กรุงเทพ", "bangkok university"], name: "มหาวิทยาลัยกรุงเทพ" },
+            { id: "su", keys: ["ศิลปากร"], name: "มหาวิทยาลัยศิลปากร" },
+            { id: "nu", keys: ["มน", "นเรศวร"], name: "มหาวิทยาลัยนเรศวร" },
+            { id: "psu", keys: ["มอ", "สงขลา", "สงขลานครินทร์"], name: "มหาวิทยาลัยสงขลานครินทร์" }
+        ];
+
+        // --- Logic Functions ---
+        function sendWelcomeMessage() {
+            const time = new Date().getHours();
+            let greeting = "สวัสดีครับ";
+            if (time < 12) greeting = "สวัสดีตอนเช้าครับ";
+            else if (time < 18) greeting = "สวัสดีตอนบ่ายครับ";
+            else greeting = "สวัสดีตอนเย็นครับ";
+            
+            // Build suggestion list for welcome message from randomized array
+            let suggestListStr = currentSuggestions.map(s => `- <em>"${s.text}"</em>`).join('<br>');
+
+            const msg = `${greeting} คุณ <strong>${currentUser.name}</strong> (สาย: ${currentUser.track}) 👋<br><br>ยินดีต้อนรับสู่ <strong>EduGuide AI</strong> ครับ!<br><br>
+            พี่คือผู้ช่วยแนะแนวการศึกษาต่อของคุณ อยากรู้ข้อมูลคณะไหน มหาวิทยาลัยอะไร ถามพี่ได้เลยครับ<br><br>
+            🎯 <strong>ลองเริ่มต้นบทสนทนาด้วยคำถามเหล่านี้ดูสิครับ:</strong><br>
+            ${suggestListStr}<br><br>
+            พิมพ์มาถามพี่ได้เลยครับ!`;
+            
+            appendMessage('ai', msg, null);
+        }
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (isWaitingForAI) return;
+
+            const text = chatInput.value.trim();
+            if (!text && !isFileAttached) return;
+
+            let displayMsg = text;
+            if (isFileAttached) {
+                displayMsg = `<div class="bg-white/20 p-2 rounded flex items-center gap-2 mb-2 text-sm border border-white/30"><i class="fas fa-file-pdf text-red-200"></i> My_Portfolio_2026.pdf</div>${text ? text : '(แนบไฟล์พอร์ตฟอลิโอ)'}`;
+            }
+            appendMessage('user', displayMsg);
+            chatInput.value = '';
+            
+            processAIResponse(text, isFileAttached);
+            if (isFileAttached) removeAttachment(); 
+        });
+
+        // ==========================================
+        // V8.0 SMART ENGINE LOGIC (UNIV SPECIFIC)
+        // ==========================================
+        function processAIResponse(inputText, hasFile) {
+            isWaitingForAI = true;
+            chatInput.disabled = true;
+            sendBtn.disabled = true;
+            document.querySelector('.fa-paperclip').parentElement.disabled = true;
+            showTypingIndicator();
+
+            const delay = Math.floor(Math.random() * 800) + 1200; // Faster response feel
+            
+            setTimeout(() => {
+                removeTypingIndicator();
+                let foundMatch = null;
+                const lowerInput = inputText.toLowerCase();
+
+                // 1. MATCH INTENTS (What is the user asking?)
+                const intents = {
+                    file: hasFile,
+                    portfolio: /(พอร์ต|portfolio|แฟ้มสะสม|ผลงาน)/i.test(lowerInput),
+                    gradRate: /(เปอร์เซ็นต์จบ|เปอร์เซ็นต์การจบ|อัตราการจบ|อัตราจบ|โอกาสเรียนจบ|จบกี่|เรียนจบยาก|เปอร์|ซิ่ว|เรียนหนัก)/i.test(lowerInput),
+                    admitRate: /(เปอร์เซ็นต์สอบติด|โอกาสติด|อัตราการติด|อัตราการรับ|อัตราสอบติด|สอบติด|แข่งขัน)/i.test(lowerInput),
+                    seat: /(รับกี่คน|รับเท่าไร|รับเท่าไหร่|จำนวนรับ|ที่นั่ง)/i.test(lowerInput),
+                    score: /(ใช้คะแนน|สอบอะไร|เกณฑ์คะแนน|สัดส่วนคะแนน|คะแนนต่ำสุด|เตรียมตัวยังไง|tpat|tgat|a-level)/i.test(lowerInput),
+                    tcas: /(tcas|ดึงข้อมูล|ข้อมูล tcas)/i.test(lowerInput),
+                    univ: /(มหาลัย|มหาวิทยาลัย|ที่ไหน|เปิดสอน)/i.test(lowerInput),
+                    cost: /(ค่าใช้จ่าย|ค่าเทอม|แพง|กี่บาท)/i.test(lowerInput),
+                    job: /(งาน|อาชีพ|ทำอะไร|จบมา|สายงาน)/i.test(lowerInput),
+                    salary: /(เงินเดือน|รายได้|ได้เงิน|ค่าตอบแทน|รวย)/i.test(lowerInput),
+                    camp: /(ค่าย|camp|กิจกรรม|เก็บพอร์ต)/i.test(lowerInput),
+                    interest: /(ชอบ|สนใจ|เวลาว่าง|ถนัด)/i.test(lowerInput)
+                };
+
+                const isSpecificDeepQuery = intents.portfolio || intents.gradRate || intents.admitRate || intents.seat || intents.score || intents.univ || intents.cost || intents.job || intents.salary;
+
+                // 2. MATCH FACULTY & UNIVERSITY
+                let matchedFac = null;
+                for (let i = 0; i < facultyDB.length; i++) {
+                    if (facultyDB[i].keys.some(k => lowerInput.includes(k))) {
+                        matchedFac = facultyDB[i];
+                        break;
+                    }
+                }
+
+                let matchedUniv = null;
+                for (let i = 0; i < univDB.length; i++) {
+                    if (univDB[i].keys.some(k => lowerInput.includes(k))) {
+                        matchedUniv = univDB[i];
+                        break;
+                    }
+                }
+
+                // --- ROUTING LOGIC ---
+
+                // CASE 1: File Upload Analysis
+                if (intents.file) {
+                    let facName = matchedFac ? matchedFac.name : (lowerInput || "คณะทั่วไป");
+                    let analysisText = `พี่จำลองการอ่านไฟล์ "My_Portfolio_2026.pdf" สำหรับการยื่น <strong>${facName}</strong> แล้วครับ 📝<br><br>`;
+                    
+                    if (matchedFac) {
+                        analysisText += `✅ <strong>จุดแข็ง:</strong> โครงสร้างแฟ้มจัดเรียงอ่านง่าย มีการใส่ประวัติการศึกษาครบถ้วน<br>
+                        ⚠️ <strong>ข้อเสนอแนะที่ควรเน้นสำหรับสายนี้:</strong> <span class="text-blue-700">${matchedFac.portfolio}</span> แนะนำให้เอาผลงานส่วนนี้ขึ้นหน้าแรกๆ เลยครับ<br><br>
+                        <strong class="text-green-700">📌 สรุปน้ำหนักพอร์ต: 75/100</strong> (ปรับแก้ตามที่พี่แนะนำ จะปังมากครับ!)`;
+                    } else {
+                        analysisText += `ผลงานโดยรวมหลากหลายดีครับ แต่พอร์ตที่ดีควร <strong>"มีธีม (Theme)"</strong> ที่ชัดเจน พี่แนะนำให้คัดผลงานที่ <em>ตรงกับสายที่อยากเข้าที่สุด 3 ชิ้นแรก</em> ไว้หน้าแรกๆ เลยครับ เพราะกรรมการมีเวลาดูพอร์ตแค่ 3-5 นาทีครับ<br><br>
+                        <strong class="text-yellow-600">📌 สรุปน้ำหนักพอร์ต: 70/100</strong> (ปรับการเรียงลำดับผลงานใหม่ให้ตรงสาย)`;
+                    }
+                    foundMatch = { text: analysisText, data: null };
+                }
+
+                // CASE 2: Specific Univ + Specific Fac (THE NEW UPDATE)
+                else if (matchedFac && matchedUniv && (isSpecificDeepQuery || intents.tcas)) {
+                    // Generate Mockup Numbers
+                    let baseSeats = Math.floor(Math.random() * 150) + 50; 
+                    let totalSeats = baseSeats + Math.floor(Math.random() * 100) + 100;
+                    let mockMinScore = (Math.random() * 15 + 50).toFixed(4); // e.g. 62.3412
+
+                    let specText = `ข้อมูลเจาะลึก <strong>${matchedFac.name} ${matchedUniv.name}</strong> 🎯 พี่ดึงข้อมูลจำลอง (Mockup) ล่าสุดมาให้ดังนี้ครับ:<br><br><ul class="list-none space-y-3 text-gray-800">`;
+                    
+                    if(intents.seat || intents.tcas || intents.admitRate) {
+                        specText += `<li class="bg-green-50 p-3 rounded-lg border border-green-100 shadow-sm">
+                            <strong class="text-green-800 block mb-1"><i class="fas fa-users w-5 text-center"></i> จำนวนรับสมัคร (Mockup ปีล่าสุด):</strong> 
+                            เปิดรับรวมทั้งหมด <strong>${totalSeats} ที่นั่ง</strong> แบ่งตามรอบคร่าวๆ คือ<br>
+                            <span class="ml-6 block mt-1">- รอบ 1 Portfolio: ${Math.floor(totalSeats * 0.35)} ที่นั่ง</span>
+                            <span class="ml-6 block">- รอบ 2 Quota: ${Math.floor(totalSeats * 0.15)} ที่นั่ง</span>
+                            <span class="ml-6 block">- รอบ 3 Admission: ${Math.floor(totalSeats * 0.5)} ที่นั่ง</span>
+                        </li>`;
+                        
+                        if(intents.admitRate) {
+                            let ratio = Math.floor(Math.random() * 15) + 5;
+                            specText += `<li class="bg-red-50 p-3 rounded-lg border border-red-100 shadow-sm"><strong class="text-red-800 block mb-1"><i class="fas fa-chart-bar w-5 text-center"></i> อัตราการแข่งขัน:</strong> ของที่นี่อยู่ที่ประมาณ 1 ต่อ ${ratio} คน (โอกาสสอบติด ${Math.floor(100/ratio)}%)</li>`;
+                        }
+                    }
+                    
+                    if(intents.score || intents.tcas) {
+                        specText += `<li class="bg-purple-50 p-3 rounded-lg border border-purple-100 shadow-sm">
+                            <strong class="text-purple-800 block mb-1"><i class="fas fa-clipboard-list w-5 text-center"></i> เกณฑ์คะแนนรอบ 3 / การเตรียมตัว:</strong><br>
+                            ${matchedFac.score}<br>
+                            <div class="mt-2 bg-white/60 p-2 rounded text-sm text-purple-900"><em>* สถิติคะแนนต่ำสุดปีที่แล้วอยู่ที่ <strong>${mockMinScore}</strong> คะแนน</em></div>
+                        </li>`;
+                    }
+
+                    if(intents.cost) {
+                        let mockCost = (Math.floor(Math.random() * 20) + 15) * 1000;
+                        specText += `<li class="bg-yellow-50 p-3 rounded-lg border border-yellow-100 shadow-sm"><strong class="text-yellow-800 block mb-1"><i class="fas fa-coins w-5 text-center"></i> ค่าเทอม:</strong> ประมาณ ${mockCost.toLocaleString()} บาท/เทอม</li>`;
+                    }
+                    
+                    if(intents.portfolio) {
+                        specText += `<li class="bg-blue-50 p-3 rounded-lg border border-blue-100 shadow-sm"><strong class="text-blue-800 block mb-1"><i class="fas fa-folder-open w-5 text-center"></i> แนะนำพอร์ตสำหรับที่นี่:</strong> ${matchedFac.portfolio}</li>`;
+                    }
+
+                    if(!intents.seat && !intents.score && !intents.tcas && !intents.admitRate && !intents.portfolio && !intents.cost) {
+                        specText += `<li class="bg-gray-50 p-3 rounded-lg border border-gray-200 shadow-sm">ที่นี่มีชื่อเสียงด้าน ${matchedFac.name} มากครับ หากต้องการทราบ จำนวนรับ หรือ เกณฑ์คะแนน พิมพ์ถามพี่เจาะจงได้เลย!</li>`;
+                    }
+
+                    specText += `</ul><br><em class="text-[11px] text-gray-500">* ข้อมูลด้านบนเป็นการสุ่มตัวเลข (Mockup) เพื่อแสดงความสามารถในการจำลองตอบคำถามระดับมหาวิทยาลัยครับ</em>`;
+                    foundMatch = { text: specText, data: null };
+                }
+
+                // CASE 3: TCAS (Generic Faculty, no Univ specified)
+                else if (intents.tcas && matchedFac && !matchedUniv) {
+                    const univ1 = matchedFac.univ.split(',')[0] || "มหาวิทยาลัยชั้นนำ";
+                    const univ2 = matchedFac.univ.split(',')[1] || "มหาวิทยาลัยรัฐบาล";
+                    
+                    let mockData = `
+                    <div class="space-y-3">
+                        <div class="bg-white p-3 rounded border border-gray-200 shadow-sm">
+                            <h5 class="font-bold text-gray-800 text-sm">${univ1}</h5>
+                            <div class="text-xs text-gray-600 mt-1 flex justify-between"><span>รอบ 3 Admission</span> <span class="font-bold text-blue-600">รับ ${Math.floor(Math.random()*100)+50} ที่นั่ง</span></div>
+                            <div class="text-xs text-gray-500 mt-1">เกณฑ์: ${matchedFac.score}</div>
+                        </div>
+                        <div class="bg-white p-3 rounded border border-gray-200 shadow-sm">
+                            <h5 class="font-bold text-gray-800 text-sm">${univ2}</h5>
+                            <div class="text-xs text-gray-600 mt-1 flex justify-between"><span>รอบ 3 Admission</span> <span class="font-bold text-blue-600">รับ ${Math.floor(Math.random()*80)+40} ที่นั่ง</span></div>
+                            <div class="text-xs text-gray-500 mt-1">เกณฑ์: ${matchedFac.score}</div>
+                        </div>
+                    </div>`;
+
+                    let text = `
+                    <div class="bg-gray-50 border border-gray-300 rounded-xl p-4 w-full">
+                        <div class="flex items-center gap-2 border-b border-gray-200 pb-2 mb-3">
+                            <i class="fas ${matchedFac.icon}"></i>
+                            <h4 class="font-bold text-gray-800">จำลองข้อมูลจาก www.mytcas.com</h4>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-700 mb-2">${matchedFac.name} (อัปเดตข้อมูลปีล่าสุด)</p>
+                        ${mockData}
+                        <div class="text-[10px] text-gray-400 mt-3 text-right">* ข้อมูลจำลองสำหรับตอบคำถาม AI</div>
+                    </div>`;
+                    foundMatch = { text: text, data: null };
+                }
+                else if (intents.tcas && !matchedFac && !matchedUniv) {
+                    foundMatch = { text: `กรุณาระบุ <strong>"ชื่อคณะ"</strong> (และชื่อมหาวิทยาลัย) ที่ต้องการดึงข้อมูล TCAS ด้วยครับ เช่น <em>"ดึงข้อมูล tcas สถาปัตย์ จุฬา"</em>`, data: null };
+                }
+
+                // CASE 4: Specific Faculty Intents MATCHED (No Univ specified)
+                else if (matchedFac && isSpecificDeepQuery && !intents.camp) {
+                    let specText = `ตอบข้อสงสัยสำหรับ <strong>${matchedFac.name}</strong> 🎯 (ภาพรวมทุกมหาวิทยาลัย):<br><br><ul class="list-none space-y-3 text-gray-800">`;
+                    
+                    if(intents.portfolio) specText += `<li class="bg-blue-50 p-3 rounded-lg border border-blue-100"><strong class="text-blue-800 block mb-1"><i class="fas fa-folder-open w-5 text-center"></i> การทำพอร์ตฟอลิโอ:</strong> ${matchedFac.portfolio}</li>`;
+                    if(intents.gradRate) specText += `<li class="bg-orange-50 p-3 rounded-lg border border-orange-100"><strong class="text-orange-800 block mb-1"><i class="fas fa-graduation-cap w-5 text-center"></i> เปอร์เซ็นต์การจบ/การเรียน:</strong> ${matchedFac.gradRate}</li>`;
+                    if(intents.admitRate) specText += `<li class="bg-red-50 p-3 rounded-lg border border-red-100"><strong class="text-red-800 block mb-1"><i class="fas fa-chart-bar w-5 text-center"></i> เปอร์เซ็นต์สอบติด:</strong> ${matchedFac.admitRate}</li>`;
+                    if(intents.seat) specText += `<li class="bg-green-50 p-3 rounded-lg border border-green-100"><strong class="text-green-800 block mb-1"><i class="fas fa-users w-5 text-center"></i> จำนวนรับ/ที่นั่ง:</strong> ${matchedFac.seat}</li>`;
+                    if(intents.score) specText += `<li class="bg-purple-50 p-3 rounded-lg border border-purple-100"><strong class="text-purple-800 block mb-1"><i class="fas fa-clipboard-list w-5 text-center"></i> เกณฑ์คะแนนสอบ / การเตรียมตัว:</strong> ${matchedFac.score}</li>`;
+                    if(intents.univ) specText += `<li class="bg-gray-50 p-3 rounded-lg border border-gray-200"><strong class="text-gray-800 block mb-1"><i class="fas fa-university w-5 text-center"></i> มหาวิทยาลัยแนะนำ:</strong> ${matchedFac.univ}</li>`;
+                    if(intents.cost) specText += `<li class="bg-gray-50 p-3 rounded-lg border border-gray-200"><strong class="text-gray-800 block mb-1"><i class="fas fa-coins w-5 text-center text-yellow-600"></i> ค่าใช้จ่าย/ค่าเทอม:</strong> ${matchedFac.cost}</li>`;
+                    if(intents.job) specText += `<li class="bg-gray-50 p-3 rounded-lg border border-gray-200"><strong class="text-gray-800 block mb-1"><i class="fas fa-briefcase w-5 text-center text-teal-600"></i> อาชีพหลังเรียนจบ:</strong> ${matchedFac.job}</li>`;
+                    if(intents.salary) specText += `<li class="bg-gray-50 p-3 rounded-lg border border-gray-200"><strong class="text-gray-800 block mb-1"><i class="fas fa-money-bill w-5 text-center text-green-600"></i> เงินเดือนโดยประมาณ:</strong> ${matchedFac.salary}</li>`;
+                    
+                    specText += `</ul><br><em class="text-xs text-gray-500">หากต้องการให้พี่บอกข้อมูลเจาะจงรายมหาลัย พิมพ์ชื่อคณะตามด้วยมหาลัยได้เลยครับ (เช่น "วิศวะ ลาดกระบัง รับกี่คน")</em>`;
+                    foundMatch = { text: specText, data: null };
+                }
+
+                // CASE 5: Faculty matched, but NO specific intent -> Show FULL CARD
+                else if (matchedFac && !intents.camp) {
+                    let text = `ข้อมูลเจาะลึก <strong>${matchedFac.name}</strong> สำหรับคุณ <strong>${currentUser.name}</strong> ครับ:`;
+                    
+                    foundMatch = {
+                        text: text,
+                        data: {
+                            chance: matchedFac.chanceText,
+                            universities: matchedFac.univ,
+                            recommend: matchedFac.recommend,
+                            jobs: matchedFac.job,
+                            salary: matchedFac.salary,
+                            cost: matchedFac.cost,
+                            portfolio: matchedFac.portfolio,
+                            icon: matchedFac.icon
+                        }
+                    };
+                }
+
+                // CASE 6: Univ matched, but NO FACULTY specified
+                else if (matchedUniv && !matchedFac) {
+                    foundMatch = {
+                        text: `คุณ <strong>${currentUser.name}</strong> หมายถึง <strong>คณะอะไร</strong> ใน <strong>${matchedUniv.name}</strong> ครับ? 🤔<br><br>
+                        พิมพ์ชื่อคณะและมหาลัยมาพร้อมกันได้เลยครับ เช่น <em>"วิศวะ ${matchedUniv.keys[0]} รับกี่คน"</em> หรือ <em>"นิติ ${matchedUniv.keys[0]} ใช้คะแนนอะไร"</em>`,
+                        data: null
+                    };
+                }
+
+                // CASE 7: Specific Intents matched, but NO FACULTY specified
+                else if (isSpecificDeepQuery && !matchedFac) {
+                    const facExtractMatch = lowerInput.match(/คณะ([ก-๙a-zA-Z]+)/);
+                    if (facExtractMatch) {
+                        foundMatch = {
+                            text: `พี่อาจจะยังไม่มีข้อมูลสถิติเจาะลึกของ <strong>คณะ${facExtractMatch[1]}</strong> ในฐานข้อมูลตอนนี้ครับ 😅<br>แต่โดยทั่วไปแล้วน้องสามารถค้นหา เกณฑ์คะแนน หรือ อัตราการรับสมัครได้โดยตรงที่เว็บไซต์ <a href="https://www.mytcas.com" target="_blank" class="text-blue-600 underline">mytcas.com</a> ครับ หรือลองถามคณะอื่นอย่าง นิติ, ครุ, สถาปัตย์, วิศวะ ดูได้นะครับ`,
+                            data: null
+                        };
+                    } else {
+                        foundMatch = {
+                            text: `จากคำถามเจาะจงของคุณ <strong>${currentUser.name}</strong> พี่แนะนำให้ระบุ <strong>"ชื่อคณะ"</strong> มาด้วยครับ พี่ถึงจะตอบได้แม่นยำ เช่น:<br>
+                            - <em>"นิติศาสตร์รับกี่คน"</em><br>
+                            - <em>"เปอร์เซ็นต์เรียนจบพยาบาลเท่าไหร่"</em><br>
+                            พิมพ์ถามมาใหม่ได้เลยครับ!`,
+                            data: null
+                        };
+                    }
+                }
+
+                // CASE 8: Camp Intents
+                else if (intents.camp) {
+                    let facNameDisplay = matchedFac ? matchedFac.name : "คณะต่างๆ";
+                    let campList = `
+                    <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100 mb-2">
+                        <strong class="text-indigo-800"><i class="fas fa-campground"></i> ค่ายสานฝันสู่ ${facNameDisplay}</strong>
+                        <p class="text-sm text-gray-700 mt-1">รับเกียรติบัตรและเก็บผลงานเข้าพอร์ต (จำลองข้อมูล)</p>
+                        <div class="text-xs text-red-500 mt-2"><i class="far fa-clock"></i> ปิดรับสมัคร: สิ้นเดือนนี้</div>
+                    </div>`;
+                    
+                    let text = `จัดให้ครับ! นี่คือข้อมูลค่ายและกิจกรรมอัปเดตล่าสุดสำหรับเตรียมพอร์ต <strong>${facNameDisplay}</strong>:<br><br>${campList}`;
+                    foundMatch = { text: text, data: null };
+                }
+
+                // CASE 9: General Interest Matching
+                else if (intents.interest) {
+                    foundMatch = {
+                        text: `จากความชอบของคุณ พี่ประมวลผลแล้ว ขอแนะนำให้ลองศึกษาข้อมูล <strong>คณะบริหารธุรกิจ</strong> หรือ <strong>นิเทศศาสตร์</strong> ดูครับ เพราะเป็นสายที่ประยุกต์ความชอบได้กว้างมาก พิมพ์ "แนะนำบริหาร" หรือ "แนะนำนิเทศ" เพื่อดูข้อมูลต่อได้เลยครับ!`,
+                        data: null
+                    };
+                }
+
+                // CASE 10: Fallback
+                if (!foundMatch) {
+                    foundMatch = {
+                        text: `พี่ EduGuide อยู่นี่แล้วครับ! 👋<br>คำถามน่าสนใจมาก ลองถามเจาะจงลงมาอีกนิด พี่จะได้ดึงข้อมูลให้เป๊ะๆ เลยครับ เช่น:<br><br>
+                        - <em>"อยากเรียนวิศวะ ลาดกระบัง ต้องเตรียมตัวยังไง?"</em><br>
+                        - <em>"นิติศาสตร์ มธ. ใช้เกณฑ์คะแนนอะไรบ้าง?"</em><br>
+                        - <em>"ดึงข้อมูล tcas สถาปัตย์ จุฬา"</em><br>
+                        หรือกด 📎 แนบไฟล์พอร์ตมาให้พี่ช่วยสแกนดูก็ได้นะ!`,
+                        data: null
+                    };
+                }
+
+                appendMessage('ai', foundMatch.text, foundMatch.data);
+                
+                isWaitingForAI = false;
+                chatInput.disabled = false;
+                sendBtn.disabled = false;
+                document.querySelector('.fa-paperclip').parentElement.disabled = false;
+                chatInput.focus();
+
+            }, delay);
+        }
+
+        // Render Message in UI
+        function appendMessage(sender, text, analysisData = null) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex w-full mb-6 ${sender === 'user' ? 'justify-end' : sender === 'system' ? 'justify-center' : 'justify-start'}`;
+
+            if (sender === 'system') {
+                const sysContent = document.createElement('div');
+                sysContent.className = 'bg-gray-100 text-gray-500 text-xs px-4 py-2 rounded-full text-center max-w-[80%]';
+                sysContent.innerHTML = text;
+                wrapper.appendChild(sysContent);
+                chatContainer.appendChild(wrapper);
+                scrollToBottom();
+                return;
+            }
+
+            const bubbleWrap = document.createElement('div');
+            bubbleWrap.className = `flex max-w-[90%] md:max-w-[85%] lg:max-w-[80%] ${sender === 'user' ? 'flex-row-reverse' : 'flex-row'} items-end gap-2`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm ${sender === 'user' ? 'bg-gray-200 text-gray-600' : 'bg-blue-600 text-white shadow-md'}`;
+            avatar.innerHTML = sender === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+
+            const content = document.createElement('div');
+            const bgClass = sender === 'user' 
+                ? 'bg-blue-600 text-white rounded-2xl rounded-br-sm' 
+                : 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-bl-sm shadow-sm';
+            
+            content.className = `px-5 py-3 ${bgClass} relative text-[15px] leading-relaxed w-full`;
+            content.innerHTML = text;
+
+            if (analysisData && sender === 'ai') {
+                const iconHtml = analysisData.icon ? `<i class="fas ${analysisData.icon} text-lg"></i>` : `<i class="fas fa-chart-pie text-blue-500"></i>`;
+                
+                const card = document.createElement('div');
+                card.className = "mt-4 bg-blue-50/40 border border-blue-100 rounded-xl p-4 text-sm text-gray-700 shadow-sm";
+                card.innerHTML = `
+                    <div class="flex items-center gap-2 mb-3 border-b border-blue-100 pb-2">
+                        ${iconHtml}
+                        <h4 class="font-bold text-blue-800">ข้อมูลเจาะลึกรายคณะ (Mockup)</h4>
+                    </div>
+                    <div class="space-y-3">
+                        ${analysisData.chance ? `<div><span class="font-semibold text-gray-800"><i class="fas fa-bullseye w-4 text-center text-red-400"></i> โอกาสสอบติด:</span> <span class="text-blue-600 font-bold">${analysisData.chance}</span></div>` : ''}
+                        
+                        ${analysisData.universities ? `
+                        <div class="bg-purple-50 p-2 rounded-lg border border-purple-100">
+                            <span class="font-semibold text-purple-800 block mb-1"><i class="fas fa-university w-4 text-center text-purple-500"></i> มหาวิทยาลัยแนะนำ:</span> 
+                            <span class="text-gray-700">${analysisData.universities}</span>
+                        </div>
+                        ` : ''}
+
+                        ${analysisData.recommend ? `<div class="bg-white/60 p-2 rounded-lg"><span class="font-semibold text-gray-800 block mb-1"><i class="fas fa-lightbulb w-4 text-center text-yellow-500"></i> คำแนะนำเตรียมตัว:</span> ${analysisData.recommend}</div>` : ''}
+                        
+                        ${analysisData.portfolio ? `
+                        <div class="pt-2 mt-2 border-t border-blue-100 bg-blue-100/50 p-2 rounded-lg border-l-4 border-l-indigo-400">
+                            <span class="font-semibold text-blue-900 block mb-1"><i class="fas fa-folder-open w-4 text-center text-indigo-500"></i> แนวทางการทำพอร์ต:</span> 
+                            <span class="text-gray-700">${analysisData.portfolio}</span>
+                        </div>
+                        ` : ''}
+
+                        ${analysisData.jobs ? `<div><span class="font-semibold text-gray-800"><i class="fas fa-briefcase w-4 text-center text-green-500"></i> อาชีพหลัก:</span> ${analysisData.jobs}</div>` : ''}
+                        ${analysisData.salary ? `<div><span class="font-semibold text-gray-800"><i class="fas fa-money-bill-wave w-4 text-center text-emerald-500"></i> เงินเดือนเฉลี่ย:</span> ${analysisData.salary}</div>` : ''}
+                        ${analysisData.cost ? `<div><span class="font-semibold text-gray-800"><i class="fas fa-coins w-4 text-center text-orange-400"></i> ค่าใช้จ่าย:</span> <span class="text-orange-600 font-medium">${analysisData.cost}</span></div>` : ''}
+                    </div>
+                `;
+                content.appendChild(card);
+            }
+
+            bubbleWrap.appendChild(avatar);
+            bubbleWrap.appendChild(content);
+            wrapper.appendChild(bubbleWrap);
+            
+            chatContainer.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const wrapper = document.createElement('div');
+            wrapper.id = 'typing-indicator-wrap';
+            wrapper.className = `flex w-full mb-6 justify-start`;
+
+            const bubbleWrap = document.createElement('div');
+            bubbleWrap.className = `flex max-w-[80%] flex-row items-end gap-2`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm shadow-md`;
+            avatar.innerHTML = '<i class="fas fa-robot"></i>';
+
+            const content = document.createElement('div');
+            content.className = `px-4 py-4 bg-white border border-gray-200 rounded-2xl rounded-bl-sm shadow-sm typing-indicator flex items-center h-[46px]`;
+            content.innerHTML = '<span></span><span></span><span></span>';
+
+            bubbleWrap.appendChild(avatar);
+            bubbleWrap.appendChild(content);
+            wrapper.appendChild(bubbleWrap);
+            
+            chatContainer.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator-wrap');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 10);
+        }
+
+        // Initialize Focus
+        document.getElementById('login-form-real').querySelector('input').focus();
+
+    </script>
+</body>
+</html>
