@@ -1,3 +1,4 @@
+## What is this? :
 1. This is made with Gemini and my own idea.
 
 2. I built this mainly for myself to quickly view and manage web pages in one place.
@@ -10,7 +11,7 @@ Series 1 /
 Series 3 /
 - webhubV_32p20g1.html ## This is the latest version I'm currently working on.
 
-## How to use
+## How to use :
 1.Open the web file by github page (choose a version from the 'mycode' folder)
 
 2.Log in (optional, if you want to save and use it later)
