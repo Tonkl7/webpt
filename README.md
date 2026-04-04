@@ -1,5 +1,5 @@
 ## What is this? :
-1. This is made with Gemini and my own idea.
+1. This is a web-app that made with Gemini and my own idea.
 
 2. I built this mainly for myself to quickly view and manage web pages in one place.
 
