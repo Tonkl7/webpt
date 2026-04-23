@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <!-- ป้องกันการซูมและการกดสองครั้งในมือถือ -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tonkla's Code Space - fixed V.2</title>
+    <title>Tonkla's Code Space</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -64,24 +64,21 @@
         #codeEditor { line-height: 1.5rem !important; background-color: transparent; z-index: 1; }
         #lineNumbers { font-family: 'JetBrains Mono', monospace; line-height: 1.5rem !important; text-align: right; user-select: none; }
 
-        /* Draggable button group */
-        #viewFloatingBtns {
-            position: absolute;
-            bottom: 24px;
+        /* ปุ่มลอยในหน้า View: ลากได้ทั้งมือถือและเมาส์ */
+        .floating-actions {
+            position: fixed;
             right: 24px;
-            display: flex;
-            gap: 12px;
+            bottom: 24px;
             z-index: 30;
-            cursor: grab;
-            user-select: none;
             touch-action: none;
+            user-select: none;
+            cursor: grab;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
         }
-        #viewFloatingBtns:active {
+        .floating-actions.dragging {
             cursor: grabbing;
-        }
-        #viewFloatingBtns.dragging {
-            cursor: grabbing;
-            opacity: 0.9;
         }
     </style>
 </head>
@@ -178,11 +175,17 @@
         <!-- 4. VIEW (Full Screen) -->
         <div id="page-view" class="page-section bg-white w-full h-full relative">
             <iframe id="fullViewFrame" class="w-full h-full border-none block"></iframe>
+
+            <!-- Loader แบบมินิมอล -->
             <div id="viewLoading" class="absolute inset-0 bg-white flex items-center justify-center z-20 hidden">
-                <i class="fas fa-seedling fa-spin text-4xl md:text-6xl text-green-500"></i>
+                <div class="flex flex-col items-center gap-3">
+                    <div class="w-10 h-10 rounded-full border-4 border-gray-200 border-t-green-500 animate-spin"></div>
+                    <div class="text-xs text-gray-500 font-semibold">กำลังโหลด...</div>
+                </div>
             </div>
-            <!-- Draggable floating buttons -->
-            <div id="viewFloatingBtns">
+
+            <!-- ปุ่มลอยที่ลากได้ -->
+            <div id="floatingActions" class="floating-actions">
                 <button onclick="window.shareCurrentView()" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="แชร์หน้านี้">
                     <i class="fas fa-share-alt text-xl"></i>
                 </button>
@@ -244,8 +247,10 @@
             if(target) target.classList.add('active');
             
             const navbar = document.getElementById('mainNavbar');
-            if (pageId === 'view') navbar.classList.add('hidden');
-            else navbar.classList.remove('hidden');
+            if (pageId === 'view') {
+                navbar.classList.add('hidden');
+                requestAnimationFrame(() => window.initFloatingActionsDrag());
+            } else navbar.classList.remove('hidden');
             
             if (pageId !== 'view' && pageId !== 'list') {
                 try { history.pushState("", document.title, window.location.pathname); } catch(e){}
@@ -341,103 +346,312 @@
             window.updatePreview();
         }
 
-        // =============================================
-        // Draggable floating buttons (view page)
-        // รองรับทั้ง mouse และ touch
-        // =============================================
-        (function initDraggableFloatingBtns() {
-            const el = document.getElementById('viewFloatingBtns');
-            let isDragging = false;
-            let hasMoved = false;
-            let startX, startY, origLeft, origTop;
+        window.togglePreviewFullScreen = function() {
+            const el = document.getElementById('previewContainer');
+            if (!document.fullscreenElement) {
+                el.requestFullscreen().catch(err => {
+                    window.showToast('ไม่สามารถขยายเต็มจอได้');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
 
-            function getPos() {
+        window.saveCode = async function() {
+            const url = localStorage.getItem('codeKeeper_url');
+            const pass = localStorage.getItem('codeKeeper_pass');
+            const title = document.getElementById('codeTitle').value.trim() || 'ไม่ได้ตั้งชื่อ';
+
+            if (!url || !pass) { window.toggleConfig(); return window.showToast('⚠️ ตั้งค่า API ก่อนนะ'); }
+            if (!editor.value.trim()) return window.showToast('⚠️ ยังไม่ได้เขียนโค้ด');
+
+            const btn = document.getElementById('saveBtn');
+            const isUpdate = !!window.currentEditingId;
+            const action = isUpdate ? 'update' : 'create';
+            
+            btn.disabled = true;
+            btn.innerText = "กำลังส่ง...";
+
+            try {
+                const body = { password: pass, code: editor.value, title: title, action: action };
+                if(isUpdate) body.id = window.currentEditingId;
+
+                const response = await fetch(url, { method: 'POST', body: JSON.stringify(body) });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    window.showToast('บันทึกเรียบร้อย! 🎉');
+                    if (!isUpdate) { editor.value = ''; document.getElementById('codeTitle').value = ''; window.updateLineNumbers(); }
+                    window.updatePreview(); 
+                    window.showPage('home');
+                } else { window.showToast('❌ ' + result.message); }
+            } catch (error) { window.showToast('❌ เชื่อมต่อไม่ได้'); } 
+            finally { btn.disabled = false; btn.innerText = "บันทึก"; }
+        }
+
+        window.loadList = async function() {
+            window.showPage('list');
+            const container = document.getElementById('listContainer');
+            const url = localStorage.getItem('codeKeeper_url');
+
+            if (!url) { container.innerHTML = '<div class="text-center text-gray-400 p-10">ไปตั้งค่า API ก่อนครับ</div>'; return; }
+            container.innerHTML = '<div class="text-center mt-10 text-green-600"><i class="fas fa-spinner fa-spin text-3xl"></i><br>กำลังโหลด...</div>';
+
+            try {
+                const response = await fetch(`${url}?action=list`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    if (result.data.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 p-10">ไม่มีข้อมูล</div>'; return; }
+                    let html = '';
+                    result.data.forEach(item => {
+                        const date = new Date(item.timestamp).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+                        html += `
+                            <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex justify-between items-center hover:shadow-md transition">
+                                <div onclick="window.openView('${item.id}', true)" class="cursor-pointer flex-1 overflow-hidden">
+                                    <div class="font-bold text-lg md:text-xl text-gray-800 dark:text-white truncate mb-1">${item.title || 'ไม่ได้ตั้งชื่อ'}</div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 text-[10px] md:text-xs px-2 py-0.5 rounded font-mono font-bold tracking-wide">ID: ${item.id.substring(0, 6)}</span>
+                                        <span class="text-xs text-gray-400 font-light"><i class="far fa-clock mr-1"></i>${date}</span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 pl-3 shrink-0">
+                                    <button onclick="event.stopPropagation(); window.shareCode('${item.id}')" class="text-purple-500 p-2 md:p-3 bg-purple-50 hover:bg-purple-100 rounded-full transition" title="สร้างลิงก์"><i class="fas fa-share-alt md:text-lg"></i></button>
+                                    <button onclick="event.stopPropagation(); window.editCode('${item.id}')" class="text-blue-500 p-2 md:p-3 bg-blue-50 hover:bg-blue-100 rounded-full transition"><i class="fas fa-edit md:text-lg"></i></button>
+                                    <button onclick="event.stopPropagation(); window.deleteCode('${item.id}')" class="text-red-500 p-2 md:p-3 bg-red-50 hover:bg-red-100 rounded-full transition"><i class="fas fa-trash md:text-lg"></i></button>
+                                </div>
+                            </div>`;
+                    });
+                    container.innerHTML = html;
+                } else { container.innerHTML = '<div class="text-center text-red-500 p-10">Server Error</div>'; }
+            } catch (e) { container.innerHTML = '<div class="text-center text-red-500 p-10">Connect Error</div>'; }
+        }
+
+        window.editCode = async function(id) {
+            const url = localStorage.getItem('codeKeeper_url');
+            if(!url) return;
+            window.showToast('กำลังโหลดข้อมูล...');
+            try {
+                const response = await fetch(`${url}?action=view&id=${id}`);
+                const result = await response.json();
+                if(result.status === 'success') {
+                    window.currentEditingId = id;
+                    editor.value = result.code;
+                    document.getElementById('codeTitle').value = result.title || '';
+                    window.updateLineNumbers();
+                    window.updatePreview();
+                    window.showPage('create');
+                }
+            } catch(e) { window.showToast('Error loading'); }
+        }
+
+        window.deleteCode = async function(id) {
+            if(!confirm('ลบจริงๆ นะ?')) return;
+            const url = localStorage.getItem('codeKeeper_url');
+            const pass = localStorage.getItem('codeKeeper_pass');
+            try {
+                const response = await fetch(url, {
+                    method: 'POST', body: JSON.stringify({ password: pass, action: 'delete', id: id })
+                });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    window.showToast('ลบแล้ว 🗑️');
+                    window.loadList();
+                }
+            } catch(e) { window.showToast('Error deleting'); }
+        }
+
+        /* ลากปุ่มลอยได้ทั้งมือถือและเมาส์ */
+        window.initFloatingActionsDrag = function() {
+            const el = document.getElementById('floatingActions');
+            if (!el) return;
+
+            if (el.dataset.dragInit === '1') {
+                window.clampFloatingActions();
+                return;
+            }
+            el.dataset.dragInit = '1';
+
+            let pointerId = null;
+            let startX = 0;
+            let startY = 0;
+            let startLeft = 0;
+            let startTop = 0;
+            let dragging = false;
+            let suppressClickUntil = 0;
+
+            const threshold = 6;
+
+            const clamp = () => {
                 const rect = el.getBoundingClientRect();
-                return { left: rect.left, top: rect.top };
-            }
+                const minLeft = 8;
+                const minTop = 8;
+                const maxLeft = Math.max(minLeft, window.innerWidth - rect.width - 8);
+                const maxTop = Math.max(minTop, window.innerHeight - rect.height - 8);
 
-            function startDrag(clientX, clientY) {
-                isDragging = true;
-                hasMoved = false;
-                const pos = getPos();
-                // Switch from bottom/right to top/left positioning
-                el.style.bottom = 'auto';
+                const left = Math.min(Math.max(rect.left, minLeft), maxLeft);
+                const top = Math.min(Math.max(rect.top, minTop), maxTop);
+
+                el.style.left = `${left}px`;
+                el.style.top = `${top}px`;
+            };
+
+            window.clampFloatingActions = clamp;
+
+            const setInitial = () => {
+                if (el.dataset.positioned === '1') {
+                    clamp();
+                    return;
+                }
+                const rect = el.getBoundingClientRect();
+                const left = Math.max(window.innerWidth - rect.width - 24, 8);
+                const top = Math.max(window.innerHeight - rect.height - 24, 8);
+                el.style.left = `${left}px`;
+                el.style.top = `${top}px`;
                 el.style.right = 'auto';
-                el.style.left = pos.left + 'px';
-                el.style.top = pos.top + 'px';
-                origLeft = pos.left;
-                origTop = pos.top;
-                startX = clientX;
-                startY = clientY;
+                el.style.bottom = 'auto';
+                el.dataset.positioned = '1';
+                clamp();
+            };
+
+            requestAnimationFrame(setInitial);
+
+            el.addEventListener('pointerdown', (e) => {
+                if (e.button !== undefined && e.button !== 0) return;
+
+                pointerId = e.pointerId;
+                dragging = false;
+                startX = e.clientX;
+                startY = e.clientY;
+
+                const rect = el.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+
                 el.classList.add('dragging');
-            }
 
-            function onMove(clientX, clientY) {
-                if (!isDragging) return;
-                const dx = clientX - startX;
-                const dy = clientY - startY;
-                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
-                const viewW = window.innerWidth;
-                const viewH = window.innerHeight;
-                const elW = el.offsetWidth;
-                const elH = el.offsetHeight;
-                let newLeft = origLeft + dx;
-                let newTop = origTop + dy;
-                newLeft = Math.max(8, Math.min(viewW - elW - 8, newLeft));
-                newTop = Math.max(8, Math.min(viewH - elH - 8, newTop));
-                el.style.left = newLeft + 'px';
-                el.style.top = newTop + 'px';
-            }
+                try {
+                    el.setPointerCapture(pointerId);
+                } catch (err) {}
+            });
 
-            function endDrag() {
-                if (!isDragging) return;
-                isDragging = false;
-                el.classList.remove('dragging');
-            }
+            el.addEventListener('pointermove', (e) => {
+                if (pointerId !== e.pointerId) return;
 
-            // Mouse events
-            el.addEventListener('mousedown', function(e) {
-                // Only drag from the container background, not button clicks
-                // We check after mouseup via hasMoved
-                startDrag(e.clientX, e.clientY);
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                if (!dragging && Math.hypot(dx, dy) < threshold) return;
+
+                dragging = true;
+                el.style.left = `${startLeft + dx}px`;
+                el.style.top = `${startTop + dy}px`;
+                el.style.right = 'auto';
+                el.style.bottom = 'auto';
+                clamp();
+
                 e.preventDefault();
             });
-            document.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                onMove(e.clientX, e.clientY);
-            });
-            document.addEventListener('mouseup', function(e) {
-                if (!isDragging) return;
-                const moved = hasMoved;
-                endDrag();
-                if (moved) e.stopPropagation();
-            });
 
-            // Touch events
-            el.addEventListener('touchstart', function(e) {
-                const t = e.touches[0];
-                startDrag(t.clientX, t.clientY);
-            }, { passive: true });
-            el.addEventListener('touchmove', function(e) {
-                if (!isDragging) return;
-                const t = e.touches[0];
-                onMove(t.clientX, t.clientY);
-                if (hasMoved) e.preventDefault();
-            }, { passive: false });
-            el.addEventListener('touchend', function() {
-                endDrag();
-            });
+            const finish = (e) => {
+                if (pointerId !== e.pointerId) return;
 
-            // Prevent button click when dragged
-            el.querySelectorAll('button').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    if (hasMoved) { e.stopPropagation(); e.preventDefault(); }
-                });
-                btn.addEventListener('mousedown', function(e) { e.stopPropagation(); });
-                btn.addEventListener('touchstart', function(e) { e.stopPropagation(); }, { passive: true });
-            });
-        })();
+                try {
+                    el.releasePointerCapture(pointerId);
+                } catch (err) {}
 
+                el.classList.remove('dragging');
+
+                if (dragging) {
+                    suppressClickUntil = Date.now() + 250;
+                }
+
+                pointerId = null;
+                dragging = false;
+            };
+
+            el.addEventListener('pointerup', finish);
+            el.addEventListener('pointercancel', finish);
+
+            el.addEventListener('click', (e) => {
+                if (Date.now() < suppressClickUntil) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+
+            window.addEventListener('resize', () => {
+                if (el.dataset.positioned === '1') clamp();
+            });
+        };
+
+        window.openView = async function(id, fromApp = false) {
+            window.currentViewId = id; 
+            window.showPage('view');
+            document.getElementById('viewBackButton').style.display = fromApp ? 'flex' : 'none';
+            requestAnimationFrame(() => window.initFloatingActionsDrag());
+
+            const loader = document.getElementById('viewLoading');
+            const frame = document.getElementById('fullViewFrame');
+            const url = localStorage.getItem('codeKeeper_url');
+
+            // Reset iframe
+            frame.src = 'about:blank';
+            loader.classList.remove('hidden');
+
+            if (!url) {
+                alert("ไม่มีการตั้งค่า API ไม่สามารถดูได้");
+                window.showPage('home');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${url}?action=view&id=${id}`);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    // Use Blob to prevent spinning issue
+                    const blob = new Blob([result.code], {type: 'text/html'});
+                    const blobUrl = URL.createObjectURL(blob);
+                    frame.src = blobUrl;
+                } else { alert('Not Found'); window.showPage('home'); }
+            } catch(e) { alert('Error'); }
+            finally { loader.classList.add('hidden'); }
+        }
+
+        window.shareCode = async function(id) {
+            window.showToast('กำลังสร้างลิงก์... ⏳');
+            await new Promise(r => setTimeout(r, 500));
+            
+            // Encode API URL into the link so viewers can see it
+            const apiUrl = localStorage.getItem('codeKeeper_url') || '';
+            let paramString = `?id=${id}`;
+            if(apiUrl) {
+                try {
+                    const encodedApi = btoa(apiUrl);
+                    paramString += `&api=${encodedApi}`;
+                } catch(e) {}
+            }
+            
+            const link = `${window.location.origin}${window.location.pathname}${paramString}`;
+            try { await navigator.clipboard.writeText(link); window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success'); }
+            catch (err) {
+                const el = document.createElement('textarea'); el.value = link; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+                window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success');
+            }
+        }
+        window.shareCurrentView = function() { if(window.currentViewId) window.shareCode(window.currentViewId); }
+        window.showToast = function(msg, type='info') {
+            const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('hidden'); setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+        }
+        window.copyCurrentUrl = function() { window.shareCode(new URLSearchParams(window.location.search).get('id')); }
+
+        window.addEventListener('load', () => {
+            window.initTheme();
+            const urlParams = new URLSearchParams(window.location.search);
+            // Check for ID and open view (fromApp = false)
+            if(urlParams.get('id')) window.openView(urlParams.get('id'), false);
+        });
     </script>
 </body>
 </html>
