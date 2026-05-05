@@ -238,15 +238,23 @@
     <script>
         window.currentEditingId = null;
         window.currentViewId = null;
+        window.isSharedLink = false;
 
         window.showPage = function(pageId) {
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById('page-' + pageId);
-            if(target) target.classList.add('active');
+            if (target) target.classList.add('active');
             
             const navbar = document.getElementById('mainNavbar');
+            const actions = document.getElementById('floatingActions');
+
             if (pageId === 'view') {
                 navbar.classList.add('hidden');
+
+                if (window.isSharedLink) {
+                    actions.classList.add('hidden');
+                    actions.style.display = 'none';
+                }
             } else {
                 navbar.classList.remove('hidden');
             }
@@ -266,16 +274,16 @@
         window.initTheme = function() {
             try {
                 const isDark = localStorage.getItem('tonkla_theme') === 'dark';
-                if(isDark) document.documentElement.classList.add('dark');
+                if (isDark) document.documentElement.classList.add('dark');
                 document.getElementById('darkModeToggle').checked = isDark;
                 
                 const urlParams = new URLSearchParams(window.location.search);
                 const apiParam = urlParams.get('api');
                 
-                if(apiParam) {
+                if (apiParam) {
                     try {
                         const decodedApi = atob(apiParam);
-                        if(decodedApi.startsWith('http')) {
+                        if (decodedApi.startsWith('http')) {
                             localStorage.setItem('codeKeeper_url', decodedApi);
                         }
                     } catch(e) {}
@@ -288,7 +296,7 @@
 
         window.toggleDarkMode = function() {
             const isDark = document.getElementById('darkModeToggle').checked;
-            if(isDark) document.documentElement.classList.add('dark');
+            if (isDark) document.documentElement.classList.add('dark');
             else document.documentElement.classList.remove('dark');
             localStorage.setItem('tonkla_theme', isDark ? 'dark' : 'light');
         }
@@ -329,6 +337,7 @@
             window.previewTimeout = setTimeout(window.updatePreview, 800);
         });
 
+        // Use Blob URL to prevent mobile spinner
         window.updatePreview = function() {
             const content = editor.value;
             const blob = new Blob([content], {type: 'text/html'});
@@ -337,7 +346,7 @@
         }
 
         window.insertTemplate = function() {
-            if(editor.value && !confirm('ทับโค้ดเดิมไหม?')) return;
+            if (editor.value && !confirm('ทับโค้ดเดิมไหม?')) return;
             editor.value = `<!DOCTYPE html>
 <html>
 <head>
@@ -383,19 +392,29 @@
 
             try {
                 const body = { password: pass, code: editor.value, title: title, action: action };
-                if(isUpdate) body.id = window.currentEditingId;
+                if (isUpdate) body.id = window.currentEditingId;
 
                 const response = await fetch(url, { method: 'POST', body: JSON.stringify(body) });
                 const result = await response.json();
 
                 if (result.status === 'success') {
                     window.showToast('บันทึกเรียบร้อย! 🎉');
-                    if (!isUpdate) { editor.value = ''; document.getElementById('codeTitle').value = ''; window.updateLineNumbers(); }
+                    if (!isUpdate) {
+                        editor.value = '';
+                        document.getElementById('codeTitle').value = '';
+                        window.updateLineNumbers();
+                    }
                     window.updatePreview(); 
                     window.showPage('home');
-                } else { window.showToast('❌ ' + result.message); }
-            } catch (error) { window.showToast('❌ เชื่อมต่อไม่ได้'); } 
-            finally { btn.disabled = false; btn.innerText = "บันทึก"; }
+                } else {
+                    window.showToast('❌ ' + result.message);
+                }
+            } catch (error) {
+                window.showToast('❌ เชื่อมต่อไม่ได้');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "บันทึก";
+            }
         }
 
         window.loadList = async function() {
@@ -403,7 +422,10 @@
             const container = document.getElementById('listContainer');
             const url = localStorage.getItem('codeKeeper_url');
 
-            if (!url) { container.innerHTML = '<div class="text-center text-gray-400 p-10">ไปตั้งค่า API ก่อนครับ</div>'; return; }
+            if (!url) {
+                container.innerHTML = '<div class="text-center text-gray-400 p-10">ไปตั้งค่า API ก่อนครับ</div>';
+                return;
+            }
             container.innerHTML = '<div class="text-center mt-10 text-green-600"><i class="fas fa-spinner fa-spin text-3xl"></i><br>กำลังโหลด...</div>';
 
             try {
@@ -411,7 +433,10 @@
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    if (result.data.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 p-10">ไม่มีข้อมูล</div>'; return; }
+                    if (result.data.length === 0) {
+                        container.innerHTML = '<div class="text-center text-gray-400 p-10">ไม่มีข้อมูล</div>';
+                        return;
+                    }
                     let html = '';
                     result.data.forEach(item => {
                         const date = new Date(item.timestamp).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
@@ -432,18 +457,22 @@
                             </div>`;
                     });
                     container.innerHTML = html;
-                } else { container.innerHTML = '<div class="text-center text-red-500 p-10">Server Error</div>'; }
-            } catch (e) { container.innerHTML = '<div class="text-center text-red-500 p-10">Connect Error</div>'; }
+                } else {
+                    container.innerHTML = '<div class="text-center text-red-500 p-10">Server Error</div>';
+                }
+            } catch (e) {
+                container.innerHTML = '<div class="text-center text-red-500 p-10">Connect Error</div>';
+            }
         }
 
         window.editCode = async function(id) {
             const url = localStorage.getItem('codeKeeper_url');
-            if(!url) return;
+            if (!url) return;
             window.showToast('กำลังโหลดข้อมูล...');
             try {
                 const response = await fetch(`${url}?action=view&id=${id}`);
                 const result = await response.json();
-                if(result.status === 'success') {
+                if (result.status === 'success') {
                     window.currentEditingId = id;
                     editor.value = result.code;
                     document.getElementById('codeTitle').value = result.title || '';
@@ -451,28 +480,43 @@
                     window.updatePreview();
                     window.showPage('create');
                 }
-            } catch(e) { window.showToast('Error loading'); }
+            } catch(e) {
+                window.showToast('Error loading');
+            }
         }
 
         window.deleteCode = async function(id) {
-            if(!confirm('ลบจริงๆ นะ?')) return;
+            if (!confirm('ลบจริงๆ นะ?')) return;
             const url = localStorage.getItem('codeKeeper_url');
             const pass = localStorage.getItem('codeKeeper_pass');
             try {
                 const response = await fetch(url, {
-                    method: 'POST', body: JSON.stringify({ password: pass, action: 'delete', id: id })
+                    method: 'POST',
+                    body: JSON.stringify({ password: pass, action: 'delete', id: id })
                 });
                 const result = await response.json();
-                if(result.status === 'success') {
+                if (result.status === 'success') {
                     window.showToast('ลบแล้ว 🗑️');
                     window.loadList();
                 }
-            } catch(e) { window.showToast('Error deleting'); }
+            } catch(e) {
+                window.showToast('Error deleting');
+            }
         }
 
+        /* ลากปุ่มลอยได้ทั้งมือถือและเมาส์ */
         window.initFloatingActionsDrag = function() {
             const el = document.getElementById('floatingActions');
             if (!el) return;
+
+            if (window.isSharedLink) {
+                el.classList.add('hidden');
+                el.style.display = 'none';
+                return;
+            }
+
+            el.classList.remove('hidden');
+            el.style.display = 'flex';
 
             if (el.dataset.dragInit === '1') {
                 window.clampFloatingActions();
@@ -594,7 +638,9 @@
         };
 
         window.openView = async function(id, fromApp = false) {
-            window.currentViewId = id; 
+            window.currentViewId = id;
+            window.isSharedLink = !fromApp;
+
             window.showPage('view');
 
             const loader = document.getElementById('viewLoading');
@@ -608,10 +654,12 @@
 
             if (fromApp) {
                 actions.classList.remove('hidden');
+                actions.style.display = 'flex';
                 backBtn.style.display = 'flex';
                 requestAnimationFrame(() => window.initFloatingActionsDrag());
             } else {
                 actions.classList.add('hidden');
+                actions.style.display = 'none';
                 backBtn.style.display = 'none';
             }
 
@@ -628,9 +676,15 @@
                     const blob = new Blob([result.code], {type: 'text/html'});
                     const blobUrl = URL.createObjectURL(blob);
                     frame.src = blobUrl;
-                } else { alert('Not Found'); window.showPage('home'); }
-            } catch(e) { alert('Error'); }
-            finally { loader.classList.add('hidden'); }
+                } else {
+                    alert('Not Found');
+                    window.showPage('home');
+                }
+            } catch(e) {
+                alert('Error');
+            } finally {
+                loader.classList.add('hidden');
+            }
         }
 
         window.shareCode = async function(id) {
@@ -639,7 +693,7 @@
             
             const apiUrl = localStorage.getItem('codeKeeper_url') || '';
             let paramString = `?id=${id}`;
-            if(apiUrl) {
+            if (apiUrl) {
                 try {
                     const encodedApi = btoa(apiUrl);
                     paramString += `&api=${encodedApi}`;
@@ -647,40 +701,41 @@
             }
             
             const link = `${window.location.origin}${window.location.pathname}${paramString}`;
-            try { 
-                await navigator.clipboard.writeText(link); 
-                window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success'); 
-            }
-            catch (err) {
-                const el = document.createElement('textarea'); 
-                el.value = link; 
-                document.body.appendChild(el); 
-                el.select(); 
-                document.execCommand('copy'); 
+            try {
+                await navigator.clipboard.writeText(link);
+                window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success');
+            } catch (err) {
+                const el = document.createElement('textarea');
+                el.value = link;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
                 document.body.removeChild(el);
                 window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success');
             }
         }
 
-        window.shareCurrentView = function() { 
-            if(window.currentViewId) window.shareCode(window.currentViewId); 
+        window.shareCurrentView = function() {
+            if (window.currentViewId) window.shareCode(window.currentViewId);
         }
 
         window.showToast = function(msg, type='info') {
-            const toast = document.getElementById('toast'); 
+            const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
-            toast.classList.remove('hidden'); 
+            toast.classList.remove('hidden');
             setTimeout(() => { toast.classList.add('hidden'); }, 3000);
         }
 
-        window.copyCurrentUrl = function() { 
-            window.shareCode(new URLSearchParams(window.location.search).get('id')); 
+        window.copyCurrentUrl = function() {
+            window.shareCode(new URLSearchParams(window.location.search).get('id'));
         }
 
         window.addEventListener('load', () => {
             window.initTheme();
             const urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.get('id')) window.openView(urlParams.get('id'), false);
+            if (urlParams.get('id')) {
+                window.openView(urlParams.get('id'), false);
+            }
         });
     </script>
 </body>
