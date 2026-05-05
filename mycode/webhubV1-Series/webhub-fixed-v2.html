@@ -25,7 +25,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&family=Mitr:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     
     <style>
-        /* ตั้งค่าพื้นฐานสำหรับมือถือ */
         body { 
             font-family: 'Sarabun', sans-serif; 
             -webkit-tap-highlight-color: transparent;
@@ -64,7 +63,6 @@
         #codeEditor { line-height: 1.5rem !important; background-color: transparent; z-index: 1; }
         #lineNumbers { font-family: 'JetBrains Mono', monospace; line-height: 1.5rem !important; text-align: right; user-select: none; }
 
-        /* ปุ่มลอยในหน้า View: ลากได้ทั้งมือถือและเมาส์ */
         .floating-actions {
             position: fixed;
             right: 24px;
@@ -185,7 +183,7 @@
             </div>
 
             <!-- ปุ่มลอยที่ลากได้ -->
-            <div id="floatingActions" class="floating-actions">
+            <div id="floatingActions" class="floating-actions hidden">
                 <button onclick="window.shareCurrentView()" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-xl transition transform active:scale-90 flex items-center justify-center w-14 h-14" title="แชร์หน้านี้">
                     <i class="fas fa-share-alt text-xl"></i>
                 </button>
@@ -249,8 +247,9 @@
             const navbar = document.getElementById('mainNavbar');
             if (pageId === 'view') {
                 navbar.classList.add('hidden');
-                requestAnimationFrame(() => window.initFloatingActionsDrag());
-            } else navbar.classList.remove('hidden');
+            } else {
+                navbar.classList.remove('hidden');
+            }
             
             if (pageId !== 'view' && pageId !== 'list') {
                 try { history.pushState("", document.title, window.location.pathname); } catch(e){}
@@ -270,7 +269,6 @@
                 if(isDark) document.documentElement.classList.add('dark');
                 document.getElementById('darkModeToggle').checked = isDark;
                 
-                // Load from URL (Encoded) first, then LocalStorage
                 const urlParams = new URLSearchParams(window.location.search);
                 const apiParam = urlParams.get('api');
                 
@@ -331,7 +329,6 @@
             window.previewTimeout = setTimeout(window.updatePreview, 800);
         });
 
-        // Use Blob URL to prevent mobile spinner
         window.updatePreview = function() {
             const content = editor.value;
             const blob = new Blob([content], {type: 'text/html'});
@@ -341,7 +338,19 @@
 
         window.insertTemplate = function() {
             if(editor.value && !confirm('ทับโค้ดเดิมไหม?')) return;
-            editor.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; padding: 20px; text-align: center; }\n  h1 { color: #16a34a; }\n</style>\n</head>\n<body>\n  <h1>สวัสดีต้นกล้า!</h1>\n  <p>เขียนโค้ดที่นี่...</p>\n</body>\n</html>`;
+            editor.value = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { font-family: sans-serif; padding: 20px; text-align: center; }
+  h1 { color: #16a34a; }
+</style>
+</head>
+<body>
+  <h1>สวัสดีต้นกล้า!</h1>
+  <p>เขียนโค้ดที่นี่...</p>
+</body>
+</html>`;
             window.updateLineNumbers();
             window.updatePreview();
         }
@@ -461,7 +470,6 @@
             } catch(e) { window.showToast('Error deleting'); }
         }
 
-        /* ลากปุ่มลอยได้ทั้งมือถือและเมาส์ */
         window.initFloatingActionsDrag = function() {
             const el = document.getElementById('floatingActions');
             if (!el) return;
@@ -588,16 +596,24 @@
         window.openView = async function(id, fromApp = false) {
             window.currentViewId = id; 
             window.showPage('view');
-            document.getElementById('viewBackButton').style.display = fromApp ? 'flex' : 'none';
-            requestAnimationFrame(() => window.initFloatingActionsDrag());
 
             const loader = document.getElementById('viewLoading');
             const frame = document.getElementById('fullViewFrame');
             const url = localStorage.getItem('codeKeeper_url');
+            const actions = document.getElementById('floatingActions');
+            const backBtn = document.getElementById('viewBackButton');
 
-            // Reset iframe
             frame.src = 'about:blank';
             loader.classList.remove('hidden');
+
+            if (fromApp) {
+                actions.classList.remove('hidden');
+                backBtn.style.display = 'flex';
+                requestAnimationFrame(() => window.initFloatingActionsDrag());
+            } else {
+                actions.classList.add('hidden');
+                backBtn.style.display = 'none';
+            }
 
             if (!url) {
                 alert("ไม่มีการตั้งค่า API ไม่สามารถดูได้");
@@ -609,7 +625,6 @@
                 const response = await fetch(`${url}?action=view&id=${id}`);
                 const result = await response.json();
                 if (result.status === 'success') {
-                    // Use Blob to prevent spinning issue
                     const blob = new Blob([result.code], {type: 'text/html'});
                     const blobUrl = URL.createObjectURL(blob);
                     frame.src = blobUrl;
@@ -622,7 +637,6 @@
             window.showToast('กำลังสร้างลิงก์... ⏳');
             await new Promise(r => setTimeout(r, 500));
             
-            // Encode API URL into the link so viewers can see it
             const apiUrl = localStorage.getItem('codeKeeper_url') || '';
             let paramString = `?id=${id}`;
             if(apiUrl) {
@@ -633,23 +647,39 @@
             }
             
             const link = `${window.location.origin}${window.location.pathname}${paramString}`;
-            try { await navigator.clipboard.writeText(link); window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success'); }
+            try { 
+                await navigator.clipboard.writeText(link); 
+                window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success'); 
+            }
             catch (err) {
-                const el = document.createElement('textarea'); el.value = link; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+                const el = document.createElement('textarea'); 
+                el.value = link; 
+                document.body.appendChild(el); 
+                el.select(); 
+                document.execCommand('copy'); 
+                document.body.removeChild(el);
                 window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗', 'success');
             }
         }
-        window.shareCurrentView = function() { if(window.currentViewId) window.shareCode(window.currentViewId); }
-        window.showToast = function(msg, type='info') {
-            const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg;
-            toast.classList.remove('hidden'); setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+
+        window.shareCurrentView = function() { 
+            if(window.currentViewId) window.shareCode(window.currentViewId); 
         }
-        window.copyCurrentUrl = function() { window.shareCode(new URLSearchParams(window.location.search).get('id')); }
+
+        window.showToast = function(msg, type='info') {
+            const toast = document.getElementById('toast'); 
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('hidden'); 
+            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+        }
+
+        window.copyCurrentUrl = function() { 
+            window.shareCode(new URLSearchParams(window.location.search).get('id')); 
+        }
 
         window.addEventListener('load', () => {
             window.initTheme();
             const urlParams = new URLSearchParams(window.location.search);
-            // Check for ID and open view (fromApp = false)
             if(urlParams.get('id')) window.openView(urlParams.get('id'), false);
         });
     </script>
