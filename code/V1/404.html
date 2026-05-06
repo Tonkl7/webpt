@@ -7,20 +7,21 @@
   <script>
     (function () {
       try {
-        var path = window.location.pathname;              // /webpt/code/V1/bhfyj30ww
+        var path = window.location.pathname;
         var parts = path.split('/').filter(Boolean);
-        var id = parts[parts.length - 1];
+        var last = parts[parts.length - 1] || '';
 
-        // ถ้า URL สุดท้ายไม่ใช่ไฟล์ เช่น .html
-        if (id && !id.includes('.')) {
-          var base = path.replace(/[^/]*$/, '');          // /webpt/code/V1/
-          var target = base + '?id=' + encodeURIComponent(id);
-          window.location.replace(target);
-        } else {
-          // fallback ไปหน้าแรกของโปรเจกต์
+        // ถ้าเป็น path ที่ไม่ใช่ไฟล์จริง ให้ส่งเข้า ?id=
+        if (last && !last.includes('.')) {
           var base = path.replace(/[^/]*$/, '');
-          window.location.replace(base);
+          var target = base + '?id=' + encodeURIComponent(last);
+          window.location.replace(target);
+          return;
         }
+
+        // fallback
+        var base2 = path.replace(/[^/]*$/, '');
+        window.location.replace(base2 || '/');
       } catch (e) {
         window.location.replace('/');
       }
