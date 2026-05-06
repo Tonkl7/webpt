@@ -6,25 +6,29 @@
   <title>Redirecting...</title>
   <script>
     (function () {
-      try {
-        var path = window.location.pathname;
-        var parts = path.split('/').filter(Boolean);
-        var last = parts[parts.length - 1] || '';
+      const APP_BASE = '/webpt/code/V1/';
+      const INDEX_URL = '/webpt/code/V1/index.html';
+      const HOME_URL = '/webpt/';
 
-        // ถ้าเป็น path ที่ไม่ใช่ไฟล์จริง ให้ส่งเข้า ?id=
-        if (last && !last.includes('.')) {
-          var base = path.replace(/[^/]*$/, '');
-          var target = base + '?id=' + encodeURIComponent(last);
-          window.location.replace(target);
+      const path = decodeURIComponent(window.location.pathname).replace(/\/+$/, '');
+
+      // ถ้าเข้า /webpt/code/V1 หรือ /webpt/code/V1/
+      if (path === APP_BASE.slice(0, -1)) {
+        window.location.replace(INDEX_URL);
+        return;
+      }
+
+      // ถ้าเข้า /webpt/code/V1/<id>
+      if (path.startsWith(APP_BASE)) {
+        const id = path.split('/').filter(Boolean).pop();
+        if (id && !id.includes('.')) {
+          window.location.replace(INDEX_URL + '?id=' + encodeURIComponent(id));
           return;
         }
-
-        // fallback
-        var base2 = path.replace(/[^/]*$/, '');
-        window.location.replace(base2 || '/');
-      } catch (e) {
-        window.location.replace('/');
       }
+
+      // fallback
+      window.location.replace(HOME_URL);
     })();
   </script>
 </head>
