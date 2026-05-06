@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <script>
+    (function () {
+      try {
+        var path = window.location.pathname;              // /webpt/code/V1/bhfyj30ww
+        var parts = path.split('/').filter(Boolean);
+        var id = parts[parts.length - 1];
+
+        // ถ้า URL สุดท้ายไม่ใช่ไฟล์ เช่น .html
+        if (id && !id.includes('.')) {
+          var base = path.replace(/[^/]*$/, '');          // /webpt/code/V1/
+          var target = base + '?id=' + encodeURIComponent(id);
+          window.location.replace(target);
+        } else {
+          // fallback ไปหน้าแรกของโปรเจกต์
+          var base = path.replace(/[^/]*$/, '');
+          window.location.replace(base);
+        }
+      } catch (e) {
+        window.location.replace('/');
+      }
+    })();
+  </script>
+</head>
+<body></body>
+</html>
