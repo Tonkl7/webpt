@@ -6,29 +6,31 @@
   <title>Redirecting...</title>
   <script>
     (function () {
-      const APP_BASE = '/webpt/code/V1/';
-      const INDEX_URL = '/webpt/code/V1/index.html';
-      const HOME_URL = '/webpt/';
+      const APP_FILE = '/webpt/code/V1/webhub-fixed-v6.html';
+      const APP_DIR = '/webpt/code/V1/';
 
       const path = decodeURIComponent(window.location.pathname).replace(/\/+$/, '');
+      const dir = APP_DIR.replace(/\/+$/, '');
 
-      // ถ้าเข้า /webpt/code/V1 หรือ /webpt/code/V1/
-      if (path === APP_BASE.slice(0, -1)) {
-        window.location.replace(INDEX_URL);
-        return;
-      }
+      // ถ้าเข้ามาที่ /webpt/code/V1/bhfyj30ww
+      if (path.startsWith(dir + '/')) {
+        const last = path.split('/').pop();
 
-      // ถ้าเข้า /webpt/code/V1/<id>
-      if (path.startsWith(APP_BASE)) {
-        const id = path.split('/').filter(Boolean).pop();
-        if (id && !id.includes('.')) {
-          window.location.replace(INDEX_URL + '?id=' + encodeURIComponent(id));
+        // เฉพาะ id ที่ไม่มีจุด เช่น bhfyj30ww
+        if (last && !last.includes('.')) {
+          window.location.replace(APP_FILE + '?id=' + encodeURIComponent(last));
           return;
         }
       }
 
+      // ถ้าเปิดโฟลเดอร์ /webpt/code/V1/
+      if (path === dir) {
+        window.location.replace(APP_FILE);
+        return;
+      }
+
       // fallback
-      window.location.replace(HOME_URL);
+      window.location.replace('/webpt/');
     })();
   </script>
 </head>
