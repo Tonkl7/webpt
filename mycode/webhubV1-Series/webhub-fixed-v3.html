@@ -3,811 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script>
+        (function () {
+            try {
+                if (new URLSearchParams(window.location.search).has('id')) {
+                    document.documentElement.classList.add('shared-entry-loading');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <title>Tonkla's Code Space</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-        window.currentEditingId = null;
-        window.currentViewId = null;
-        window.isSharedLink = false;
-        window.allListItems = [];
-        window.DEFAULT_CODEKEEPER_URL = 'https://script.google.com/macros/s/AKfycbyM2OqlVU3G92pNdu4lQsgu_D5_shTYy5fVvnv57cSGxGiSNXcGFEG5m1afJCFD8GMCbg/exec';
-        window.isAdminMode = false;
-        window.adminPasswordCache = '';
-        window.previewObjectUrl = null;
-        window.bootOverlayHidden = false;
-
-        const editor = document.getElementById('codeEditor');
-        const lineNumbers = document.getElementById('lineNumbers');
-        const lineCountSummary = document.getElementById('lineCountSummary');
-        const previewFrame = document.getElementById('previewFrame');
-
-        function escapeHtml(text) {
-            return String(text ?? '')
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#39;');
-        }
-
-        function setSaveButtonLabel() {
-            const saveBtn = document.getElementById('saveBtn');
-            if (!saveBtn) return;
-            saveBtn.innerText = window.currentEditingId ? 'อัปเดตงาน' : 'บันทึกงาน';
-        }
-
-        function showBootOverlay(show) {
-            const overlay = document.getElementById('bootOverlay');
-            if (!overlay) return;
-
-            if (show) {
-                overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
-                overlay.style.display = 'flex';
-                window.bootOverlayHidden = false;
-                return;
-            }
-
-            if (window.bootOverlayHidden) return;
-            window.bootOverlayHidden = true;
-            overlay.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                overlay.style.display = 'none';
-            }, 240);
-        }
-
-        function revokePreviewBlob() {
-            if (window.previewObjectUrl) {
-                try { URL.revokeObjectURL(window.previewObjectUrl); } catch (e) {}
-                window.previewObjectUrl = null;
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { primary: { DEFAULT: '#16a34a' } },
+                    screens: { xs: '375px' }
+                }
             }
         }
-
-        window.getApiUrl = function() {
-            return window.DEFAULT_CODEKEEPER_URL || '';
-        };
-
-        window.getApiPass = function() {
-            return window.adminPasswordCache || '';
-        };
-
-        window.getAdminMode = function() {
-            return window.isAdminMode === true;
-        };
-
-        window.syncRoleUI = function() {
-            const admin = window.getAdminMode();
-
-            const navbarListBtn = document.getElementById('navbarListBtn');
-            const homeListBtn = document.getElementById('homeListBtn');
-            const listPage = document.getElementById('page-list');
-            const saveBtn = document.getElementById('saveBtn');
-            const roleText = document.getElementById('roleStatusText');
-            const homeRoleBadge = document.getElementById('homeRoleBadge');
-            const adminNote = document.getElementById('adminModeNote');
-            const createRoleHint = document.getElementById('createRoleHint');
-            const confirmAdminBtn = document.getElementById('confirmAdminBtn');
-            const floatingActions = document.getElementById('floatingActions');
-            const viewPageActive = document.getElementById('page-view')?.classList.contains('active');
-
-            if (navbarListBtn) navbarListBtn.classList.toggle('hidden', !admin);
-            if (homeListBtn) homeListBtn.classList.toggle('hidden', !admin);
-            if (listPage) listPage.classList.toggle('hidden', !admin);
-            if (saveBtn) saveBtn.classList.toggle('hidden', !admin);
-
-            const showActions = admin && !window.isSharedLink && viewPageActive;
-            if (floatingActions) {
-                floatingActions.classList.toggle('hidden', !showActions);
-                floatingActions.style.display = showActions ? 'flex' : 'none';
-            }
-
-            if (roleText) {
-                roleText.innerText = admin ? 'ผู้ดูแล' : 'ผู้ใช้ทั่วไป';
-                roleText.className = admin
-                    ? 'text-[10px] md:text-xs text-green-200 font-semibold'
-                    : 'text-[10px] md:text-xs text-green-100 font-semibold';
-            }
-
-            if (homeRoleBadge) {
-                homeRoleBadge.innerText = admin ? 'ผู้ดูแล' : 'ผู้ใช้ทั่วไป';
-                homeRoleBadge.className = admin
-                    ? 'inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-green-100 text-green-700 mb-3'
-                    : 'inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-gray-100 text-gray-700 mb-3';
-            }
-
-            if (adminNote) {
-                adminNote.innerText = admin
-                    ? 'โหมดผู้ดูแล: เห็นปุ่มดูงาน บันทึก แก้ไข และลบ'
-                    : 'โหมดผู้ใช้ทั่วไป: ดูและทดลองเขียนได้เท่านั้น';
-            }
-
-            if (createRoleHint) {
-                createRoleHint.innerText = admin
-                    ? 'ผู้ดูแล: เขียน แก้ไข บันทึก และดูงานเก่าได้'
-                    : 'ผู้ใช้ทั่วไป: ดูโค้ดและพรีวิวได้เท่านั้น';
-            }
-
-            if (confirmAdminBtn) {
-                confirmAdminBtn.innerText = admin ? 'ล็อกกลับเป็นผู้ใช้ทั่วไป' : 'บันทึกงาน';
-            }
-
-            setSaveButtonLabel();
-        };
-
-        window.showPage = function(pageId) {
-            if (pageId === 'list' && !window.getAdminMode()) {
-                window.showToast('โหมดผู้ใช้ทั่วไปไม่มีรายการงานเก่า');
-                pageId = 'home';
-            }
-
-            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
-            const target = document.getElementById('page-' + pageId);
-            if (target) target.classList.add('active');
-
-            const navbar = document.getElementById('mainNavbar');
-            if (navbar) {
-                if (pageId === 'view') navbar.classList.add('hidden');
-                else navbar.classList.remove('hidden');
-            }
-
-            window.syncRoleUI();
-        };
-
-        window.goBackToList = function() {
-            if (!window.getAdminMode()) {
-                window.showPage('home');
-                return;
-            }
-            window.showPage('list');
-            window.loadList();
-        };
-
-        window.toggleConfig = function() {
-            const modal = document.getElementById('configModal');
-            if (modal) modal.classList.toggle('hidden');
-        };
-
-        window.initTheme = function() {
-            try {
-                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const isDark = prefersDark;
-                if (isDark) document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-
-                const darkToggle = document.getElementById('darkModeToggle');
-                if (darkToggle) darkToggle.checked = isDark;
-
-                window.isAdminMode = false;
-                window.adminPasswordCache = '';
-
-                const adminInput = document.getElementById('adminPassInput');
-                if (adminInput) adminInput.value = '';
-
-                window.syncRoleUI();
-            } catch(e) {}
-        };
-
-        window.toggleDarkMode = function() {
-            const darkToggle = document.getElementById('darkModeToggle');
-            const isDark = !!darkToggle?.checked;
-            if (isDark) document.documentElement.classList.add('dark');
-            else document.documentElement.classList.remove('dark');
-        };
-
-        window.verifyAdminPassword = async function(passValue) {
-            const url = window.getApiUrl();
-            if (!url || !passValue) return false;
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'auth', password: passValue })
-                });
-
-                let result = null;
-                try {
-                    result = await response.json();
-                } catch (jsonError) {
-                    result = null;
-                }
-
-                return !!(result && (
-                    result.status === 'success' ||
-                    result.unlocked === true ||
-                    result.auth === true ||
-                    result.mode === 'admin'
-                ));
-            } catch (e) {
-                return false;
-            }
-        };
-
-        window.saveConfig = async function() {
-            const adminPassInput = document.getElementById('adminPassInput');
-            const passValue = (adminPassInput?.value || '').trim();
-
-            if (window.getAdminMode()) {
-                window.isAdminMode = false;
-                window.adminPasswordCache = '';
-                if (adminPassInput) adminPassInput.value = '';
-                window.syncRoleUI();
-                window.showToast('กลับเป็นโหมดผู้ใช้ทั่วไปแล้ว');
-                window.toggleConfig();
-                return;
-            }
-
-            if (!passValue) {
-                window.showToast('กรอกรหัสเพื่อปลดล็อก');
-                return;
-            }
-
-            const confirmBtn = document.getElementById('confirmAdminBtn');
-            if (confirmBtn) {
-                confirmBtn.disabled = true;
-                confirmBtn.innerText = 'กำลังตรวจสอบ...';
-            }
-
-            try {
-                const ok = await window.verifyAdminPassword(passValue);
-                if (ok) {
-                    window.isAdminMode = true;
-                    window.adminPasswordCache = passValue;
-                    if (adminPassInput) adminPassInput.value = '';
-                    window.syncRoleUI();
-                    window.showToast('ปลดล็อกโหมดผู้ดูแลแล้ว ✅');
-                    window.toggleConfig();
-                } else {
-                    window.isAdminMode = false;
-                    window.adminPasswordCache = '';
-                    window.syncRoleUI();
-                    window.showToast('รหัสไม่ถูกต้อง');
-                }
-            } finally {
-                if (confirmBtn) {
-                    confirmBtn.disabled = false;
-                    confirmBtn.innerText = window.getAdminMode() ? 'ล็อกกลับเป็นผู้ใช้ทั่วไป' : 'ยืนยันรหัส';
-                }
-            }
-        };
-
-        window.startNewCode = function() {
-            window.currentEditingId = null;
-            editor.value = '';
-            document.getElementById('codeTitle').value = '';
-            window.updateLineNumbers();
-            window.updatePreview();
-            window.showPage('create');
-            window.syncRoleUI();
-        };
-
-        window.updateLineNumbers = function() {
-            const text = editor.value || '';
-            const lines = text.split('
-').length;
-            lineNumbers.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
-            lineCountSummary.innerText = `${lines} บรรทัด`;
-        };
-
-        editor.addEventListener('scroll', () => { lineNumbers.scrollTop = editor.scrollTop; });
-        editor.addEventListener('input', () => {
-            window.updateLineNumbers();
-            clearTimeout(window.previewTimeout);
-            window.previewTimeout = setTimeout(window.updatePreview, 250);
-        });
-
-        window.updatePreview = function() {
-            const content = editor.value || '';
-            revokePreviewBlob();
-            const blob = new Blob([content], {type: 'text/html'});
-            window.previewObjectUrl = URL.createObjectURL(blob);
-            previewFrame.src = window.previewObjectUrl;
-        };
-
-        window.insertTemplate = function() {
-            if (editor.value && !confirm('ทับโค้ดเดิมไหม?')) return;
-            editor.value = `<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body { font-family: sans-serif; padding: 20px; text-align: center; }
-  h1 { color: #16a34a; }
-</style>
-</head>
-<body>
-  <h1>สวัสดีต้นกล้า!</h1>
-  <p>เขียนโค้ดที่นี่...</p>
-</body>
-</html>`;
-            window.updateLineNumbers();
-            window.updatePreview();
-        };
-
-        window.togglePreviewFullScreen = function() {
-            const el = document.getElementById('previewContainer');
-            if (!document.fullscreenElement) {
-                el.requestFullscreen?.().catch(() => window.showToast('ไม่สามารถขยายเต็มจอได้'));
-            } else {
-                document.exitFullscreen?.();
-            }
-        };
-
-        window.saveCode = async function() {
-            if (!window.getAdminMode()) {
-                window.showToast('โหมดผู้ใช้ทั่วไปไม่สามารถบันทึกได้');
-                return;
-            }
-
-            const url = window.getApiUrl();
-            const pass = window.getApiPass();
-            const title = document.getElementById('codeTitle').value.trim() || 'ไม่ได้ตั้งชื่อ';
-
-            if (!url || !pass) {
-                window.showToast('ยังไม่ได้ยืนยันรหัสผู้ดูแล');
-                return;
-            }
-            if (!editor.value.trim()) {
-                window.showToast('⚠️ ยังไม่ได้เขียนโค้ด');
-                return;
-            }
-
-            const btn = document.getElementById('saveBtn');
-            const isUpdate = !!window.currentEditingId;
-            const action = isUpdate ? 'update' : 'create';
-
-            if (btn) {
-                btn.disabled = true;
-                btn.innerText = isUpdate ? 'กำลังอัปเดต...' : 'กำลังบันทึก...';
-            }
-
-            try {
-                const body = { password: pass, code: editor.value, title: title, action: action };
-                if (isUpdate) body.id = window.currentEditingId;
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    window.showToast(isUpdate ? 'อัปเดตเรียบร้อย! 🎉' : 'บันทึกเรียบร้อย! 🎉');
-                    if (!isUpdate) {
-                        editor.value = '';
-                        document.getElementById('codeTitle').value = '';
-                        window.updateLineNumbers();
-                    }
-                    window.updatePreview();
-                    window.currentEditingId = null;
-                    setSaveButtonLabel();
-                    window.showPage('home');
-                } else {
-                    window.showToast('❌ ' + (result.message || 'เกิดข้อผิดพลาด'));
-                }
-            } catch (error) {
-                window.showToast('❌ เชื่อมต่อไม่ได้');
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    setSaveButtonLabel();
-                }
-            }
-        };
-
-        window.renderList = function(items) {
-            const container = document.getElementById('listContainer');
-            const countEl = document.getElementById('listCount');
-
-            if (!Array.isArray(items) || items.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-400 p-10 col-span-full">ไม่มีข้อมูล</div>';
-                if (countEl) countEl.innerText = '0 รายการ';
-                return;
-            }
-
-            if (countEl) countEl.innerText = `${items.length} รายการ`;
-
-            let html = '';
-            items.forEach(item => {
-                const date = item.timestamp
-                    ? new Date(item.timestamp).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })
-                    : '';
-
-                const safeId = escapeHtml(item.id || '');
-                const safeTitle = escapeHtml(item.title || 'ไม่ได้ตั้งชื่อ');
-                const displayId = escapeHtml(String(item.id || '').substring(0, 12));
-
-                html += `
-                    <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 md:border-l-4 md:border-l-green-500 flex flex-col gap-3 hover:shadow-md transition min-h-[120px]">
-                        <div onclick="window.openView('${safeId}', true)" class="cursor-pointer flex-1 overflow-hidden">
-                            <div class="font-bold text-lg md:text-xl text-gray-800 dark:text-white truncate mb-1">${safeTitle}</div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 text-[10px] md:text-xs px-2 py-0.5 rounded font-mono font-bold tracking-wide">ID: ${displayId}</span>
-                                <span class="text-xs text-gray-400 font-light"><i class="far fa-clock mr-1"></i>${date}</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 shrink-0 justify-end">
-                            <button onclick="event.stopPropagation(); window.shareCode('${safeId}')" class="text-purple-500 p-2 md:p-3 bg-purple-50 hover:bg-purple-100 rounded-full transition" title="สร้างลิงก์"><i class="fas fa-share-alt md:text-lg"></i></button>
-                            <button onclick="event.stopPropagation(); window.editCode('${safeId}')" class="text-blue-500 p-2 md:p-3 bg-blue-50 hover:bg-blue-100 rounded-full transition" title="แก้ไข"><i class="fas fa-edit md:text-lg"></i></button>
-                            <button onclick="event.stopPropagation(); window.deleteCode('${safeId}')" class="text-red-500 p-2 md:p-3 bg-red-50 hover:bg-red-100 rounded-full transition" title="ลบ"><i class="fas fa-trash md:text-lg"></i></button>
-                        </div>
-                    </div>`;
-            });
-
-            container.innerHTML = html;
-        };
-
-        window.filterList = function() {
-            const search = (document.getElementById('listSearch').value || '').trim().toLowerCase();
-            if (!search) {
-                window.renderList(window.allListItems);
-                return;
-            }
-
-            const filtered = window.allListItems.filter(item => {
-                const title = String(item.title || '').toLowerCase();
-                const id = String(item.id || '').toLowerCase();
-                return title.includes(search) || id.includes(search);
-            });
-
-            window.renderList(filtered);
-        };
-
-        window.clearListSearch = function() {
-            const input = document.getElementById('listSearch');
-            if (input) input.value = '';
-            window.renderList(window.allListItems);
-        };
-
-        window.loadList = async function() {
-            if (!window.getAdminMode()) {
-                window.showToast('โหมดผู้ใช้ทั่วไปไม่มีรายการงานเก่า');
-                window.showPage('home');
-                return;
-            }
-
-            window.showPage('list');
-            const container = document.getElementById('listContainer');
-            const url = window.getApiUrl();
-            const searchInput = document.getElementById('listSearch');
-            if (searchInput) searchInput.value = '';
-
-            container.innerHTML = '<div class="text-center mt-10 text-green-600 col-span-full"><i class="fas fa-spinner fa-spin text-3xl"></i><br>กำลังโหลด...</div>';
-
-            try {
-                const response = await fetch(`${url}?action=list`);
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    window.allListItems = Array.isArray(result.data) ? result.data : [];
-                    window.renderList(window.allListItems);
-                } else {
-                    container.innerHTML = '<div class="text-center text-red-500 p-10 col-span-full">Server Error</div>';
-                }
-            } catch (e) {
-                container.innerHTML = '<div class="text-center text-red-500 p-10 col-span-full">Connect Error</div>';
-            }
-        };
-
-        window.editCode = async function(id) {
-            if (!window.getAdminMode()) {
-                window.showToast('โหมดผู้ใช้ทั่วไปแก้ไขไม่ได้');
-                return;
-            }
-
-            const url = window.getApiUrl();
-            window.showToast('กำลังโหลดข้อมูล...');
-            try {
-                const response = await fetch(`${url}?action=view&id=${encodeURIComponent(id)}`);
-                const result = await response.json();
-                if (result.status === 'success') {
-                    window.currentEditingId = id;
-                    editor.value = result.code || '';
-                    document.getElementById('codeTitle').value = result.title || '';
-                    window.updateLineNumbers();
-                    window.updatePreview();
-                    window.showPage('create');
-                    setSaveButtonLabel();
-                    window.syncRoleUI();
-                } else {
-                    window.showToast('ไม่พบข้อมูล');
-                }
-            } catch(e) {
-                window.showToast('Error loading');
-            }
-        };
-
-        window.deleteCode = async function(id) {
-            if (!window.getAdminMode()) {
-                window.showToast('โหมดผู้ใช้ทั่วไปลบไม่ได้');
-                return;
-            }
-            if (!confirm('ลบจริงๆ นะ?')) return;
-
-            const url = window.getApiUrl();
-            const pass = window.getApiPass();
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pass, action: 'delete', id: id })
-                });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    window.showToast('ลบแล้ว 🗑️');
-                    window.loadList();
-                } else {
-                    window.showToast('❌ ' + (result.message || 'ลบไม่สำเร็จ'));
-                }
-            } catch(e) {
-                window.showToast('Error deleting');
-            }
-        };
-
-        window.initFloatingActionsDrag = function() {
-            const el = document.getElementById('floatingActions');
-            if (!el) return;
-
-            if (window.isSharedLink) {
-                el.classList.add('hidden');
-                el.style.display = 'none';
-                return;
-            }
-
-            el.classList.remove('hidden');
-            el.style.display = 'flex';
-
-            if (el.dataset.dragInit === '1') {
-                window.clampFloatingActions && window.clampFloatingActions();
-                return;
-            }
-            el.dataset.dragInit = '1';
-
-            let pointerId = null;
-            let startX = 0;
-            let startY = 0;
-            let startLeft = 0;
-            let startTop = 0;
-            let dragging = false;
-            let suppressClickUntil = 0;
-
-            const threshold = 6;
-
-            const clamp = () => {
-                const rect = el.getBoundingClientRect();
-                const minLeft = 8;
-                const minTop = 8;
-                const maxLeft = Math.max(minLeft, window.innerWidth - rect.width - 8);
-                const maxTop = Math.max(minTop, window.innerHeight - rect.height - 8);
-
-                const left = Math.min(Math.max(rect.left, minLeft), maxLeft);
-                const top = Math.min(Math.max(rect.top, minTop), maxTop);
-
-                el.style.left = `${left}px`;
-                el.style.top = `${top}px`;
-            };
-
-            window.clampFloatingActions = clamp;
-
-            const setInitial = () => {
-                if (el.dataset.positioned === '1') {
-                    clamp();
-                    return;
-                }
-                const rect = el.getBoundingClientRect();
-                const left = Math.max(window.innerWidth - rect.width - 24, 8);
-                const top = Math.max(window.innerHeight - rect.height - 24, 8);
-                el.style.left = `${left}px`;
-                el.style.top = `${top}px`;
-                el.style.right = 'auto';
-                el.style.bottom = 'auto';
-                el.dataset.positioned = '1';
-                clamp();
-            };
-
-            requestAnimationFrame(setInitial);
-
-            el.addEventListener('pointerdown', (e) => {
-                if (e.button !== undefined && e.button !== 0) return;
-
-                pointerId = e.pointerId;
-                dragging = false;
-                startX = e.clientX;
-                startY = e.clientY;
-
-                const rect = el.getBoundingClientRect();
-                startLeft = rect.left;
-                startTop = rect.top;
-
-                el.classList.add('dragging');
-            });
-
-            el.addEventListener('pointermove', (e) => {
-                if (pointerId !== e.pointerId) return;
-
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-
-                if (!dragging && Math.hypot(dx, dy) < threshold) return;
-
-                dragging = true;
-                try { el.setPointerCapture(pointerId); } catch (err) {}
-
-                el.style.left = `${startLeft + dx}px`;
-                el.style.top = `${startTop + dy}px`;
-                el.style.right = 'auto';
-                el.style.bottom = 'auto';
-                clamp();
-
-                e.preventDefault();
-            });
-
-            const finish = (e) => {
-                if (pointerId !== e.pointerId) return;
-
-                try { el.releasePointerCapture(pointerId); } catch (err) {}
-                el.classList.remove('dragging');
-
-                if (dragging) suppressClickUntil = Date.now() + 250;
-
-                pointerId = null;
-                dragging = false;
-            };
-
-            el.addEventListener('pointerup', finish);
-            el.addEventListener('pointercancel', finish);
-
-            el.addEventListener('click', (e) => {
-                if (Date.now() < suppressClickUntil) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, true);
-
-            window.addEventListener('resize', () => {
-                if (el.dataset.positioned === '1') clamp();
-            });
-        };
-
-        window.openView = async function(id, fromApp = false) {
-            window.currentViewId = id;
-            window.isSharedLink = !fromApp;
-            window.showPage('view');
-
-            const loader = document.getElementById('viewLoading');
-            const frame = document.getElementById('fullViewFrame');
-            const url = window.getApiUrl();
-            const actions = document.getElementById('floatingActions');
-            const backBtn = document.getElementById('viewBackButton');
-
-            if (window.previewObjectUrl) {
-                revokePreviewBlob();
-            }
-
-            if (frame) {
-                frame.onload = () => {
-                    if (loader) loader.classList.add('hidden');
-                    if (window.isSharedLink) {
-                        showBootOverlay(false);
-                    }
-                };
-                frame.src = 'about:blank';
-            }
-
-            if (loader) loader.classList.remove('hidden');
-
-            if (fromApp && window.getAdminMode()) {
-                actions.classList.remove('hidden');
-                actions.style.display = 'flex';
-                backBtn.style.display = 'flex';
-                requestAnimationFrame(() => window.initFloatingActionsDrag());
-            } else {
-                actions.classList.add('hidden');
-                actions.style.display = 'none';
-                backBtn.style.display = 'none';
-            }
-
-            try {
-                const response = await fetch(`${url}?action=view&id=${encodeURIComponent(id)}`);
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    const blob = new Blob([result.code || ''], {type: 'text/html'});
-                    const blobUrl = URL.createObjectURL(blob);
-                    if (frame) frame.src = blobUrl;
-                    window.previewObjectUrl = blobUrl;
-                } else {
-                    if (frame) {
-                        frame.srcdoc = `
-                            <html>
-                                <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff;color:#444;text-align:center;padding:24px">
-                                    <div>
-                                        <h2 style="margin:0 0 12px 0">ไม่พบข้อมูล</h2>
-                                        <p style="margin:0;line-height:1.6">ลิงก์นี้อาจถูกลบหรือไม่ถูกต้อง</p>
-                                    </div>
-                                </body>
-                            </html>`;
-                    }
-                }
-            } catch(e) {
-                if (frame) {
-                    frame.srcdoc = `
-                        <html>
-                            <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff;color:#444;text-align:center;padding:24px">
-                                <div>
-                                    <h2 style="margin:0 0 12px 0">เชื่อมต่อไม่ได้</h2>
-                                    <p style="margin:0;line-height:1.6">ตรวจสอบ API หรือการเชื่อมต่ออีกครั้ง</p>
-                                </div>
-                            </body>
-                        </html>`;
-                }
-            } finally {
-                if (loader) loader.classList.add('hidden');
-                window.syncRoleUI();
-            }
-        };
-
-        window.shareCode = async function(id) {
-            window.showToast('กำลังสร้างลิงก์... ⏳');
-            await new Promise(r => setTimeout(r, 180));
-
-            const linkUrl = new URL(window.location.href);
-            linkUrl.searchParams.set('id', id);
-            linkUrl.hash = '';
-            const link = linkUrl.toString();
-
-            try {
-                await navigator.clipboard.writeText(link);
-                window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗');
-            } catch (err) {
-                const el = document.createElement('textarea');
-                el.value = link;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-                window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗');
-            }
-        };
-
-        window.shareCurrentView = function() {
-            if (window.currentViewId) window.shareCode(window.currentViewId);
-        };
-
-        window.showToast = function(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            toast.classList.remove('hidden');
-            clearTimeout(window.toastTimeout);
-            window.toastTimeout = setTimeout(() => { toast.classList.add('hidden'); }, 2400);
-        };
-
-        window.copyCurrentUrl = function() {
-            window.shareCode(new URLSearchParams(window.location.search).get('id'));
-        };
-
-        window.addEventListener('load', async () => {
-            showBootOverlay(true);
-            window.initTheme();
-            window.syncRoleUI();
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const sharedId = urlParams.get('id');
-
-            if (sharedId) {
-                await window.openView(sharedId, false);
-            } else {
-                window.showPage('home');
-                window.syncRoleUI();
-                requestAnimationFrame(() => showBootOverlay(false));
-            }
-        });
-
-        window.addEventListener('resize', () => {
-            window.syncRoleUI();
-        });
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -820,6 +37,7 @@
             touch-action: manipulation;
             overscroll-behavior-y: none;
         }
+        html.shared-entry-loading body { visibility: hidden; }
         h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
         .code-font { font-family: 'JetBrains Mono', 'Courier New', monospace; }
 
@@ -865,21 +83,9 @@
         }
         .floating-actions.dragging { cursor: grabbing; }
         .floating-actions button { pointer-events: auto; }
-
-        .boot-overlay {
-            transition: opacity 220ms ease;
-        }
     </style>
 </head>
 <body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-[100dvh] w-screen flex flex-col overflow-hidden transition-colors duration-300">
-
-    <div id="bootOverlay" class="boot-overlay fixed inset-0 z-[100] bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm flex items-center justify-center">
-        <div class="flex flex-col items-center gap-4 text-center px-6">
-            <div class="w-12 h-12 rounded-full border-4 border-gray-200 border-t-green-500 animate-spin"></div>
-            <div class="brand-font text-xl md:text-2xl text-gray-700 dark:text-gray-200">Tonkla's Code Space</div>
-            <div class="text-xs md:text-sm text-gray-400">กำลังเปิดหน้าเว็บ...</div>
-        </div>
-    </div>
 
     <nav id="mainNavbar" class="bg-green-600 dark:bg-green-900 text-white shadow-lg z-50 shrink-0 h-16 md:h-20 flex items-center justify-between px-4 md:px-8 transition-all duration-300">
         <div class="flex items-center gap-2 cursor-pointer select-none" onclick="window.showPage('home')">
@@ -980,7 +186,7 @@
                     <span id="statusMsg">พร้อม</span>
                 </div>
                 <button type="button" onclick="window.saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-6 md:px-10 rounded-lg shadow active:scale-95 transition w-32 md:w-auto md:min-w-[150px] md:text-lg">
-                    บันทึกงาน
+                    ยืนยันรหัส
                 </button>
             </div>
         </div>
@@ -1082,16 +288,14 @@
         <source src="https://actions.google.com/sounds/v1/ambiences/forest_morning.ogg" type="audio/ogg">
     </audio>
 
-        <script>
+    <script>
         window.currentEditingId = null;
         window.currentViewId = null;
         window.isSharedLink = false;
         window.allListItems = [];
         window.DEFAULT_CODEKEEPER_URL = 'https://script.google.com/macros/s/AKfycbyM2OqlVU3G92pNdu4lQsgu_D5_shTYy5fVvnv57cSGxGiSNXcGFEG5m1afJCFD8GMCbg/exec';
+        window.ADMIN_PASS = '632552';
         window.isAdminMode = false;
-        window.adminPasswordCache = '';
-        window.previewObjectUrl = null;
-        window.bootOverlayHidden = false;
 
         const editor = document.getElementById('codeEditor');
         const lineNumbers = document.getElementById('lineNumbers');
@@ -1107,49 +311,16 @@
                 .replaceAll("'", '&#39;');
         }
 
-        function setSaveButtonLabel() {
-            const saveBtn = document.getElementById('saveBtn');
-            if (!saveBtn) return;
-            saveBtn.innerText = window.currentEditingId ? 'อัปเดตงาน' : 'บันทึกงาน';
-        }
-
-        function showBootOverlay(show) {
-            const overlay = document.getElementById('bootOverlay');
-            if (!overlay) return;
-
-            if (show) {
-                overlay.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
-                overlay.style.display = 'flex';
-                window.bootOverlayHidden = false;
-                return;
-            }
-
-            if (window.bootOverlayHidden) return;
-            window.bootOverlayHidden = true;
-            overlay.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                overlay.style.display = 'none';
-            }, 240);
-        }
-
-        function revokePreviewBlob() {
-            if (window.previewObjectUrl) {
-                try { URL.revokeObjectURL(window.previewObjectUrl); } catch (e) {}
-                window.previewObjectUrl = null;
-            }
-        }
-
         window.getApiUrl = function() {
             return window.DEFAULT_CODEKEEPER_URL || '';
         };
 
         window.getApiPass = function() {
-            return window.adminPasswordCache || '';
+            return window.ADMIN_PASS;
         };
 
         window.getAdminMode = function() {
-            return window.isAdminMode === true;
+            return window.isAdminMode || localStorage.getItem('tonkla_admin_unlocked') === '1';
         };
 
         window.syncRoleUI = function() {
@@ -1164,19 +335,11 @@
             const adminNote = document.getElementById('adminModeNote');
             const createRoleHint = document.getElementById('createRoleHint');
             const confirmAdminBtn = document.getElementById('confirmAdminBtn');
-            const floatingActions = document.getElementById('floatingActions');
-            const viewPageActive = document.getElementById('page-view')?.classList.contains('active');
 
             if (navbarListBtn) navbarListBtn.classList.toggle('hidden', !admin);
             if (homeListBtn) homeListBtn.classList.toggle('hidden', !admin);
             if (listPage) listPage.classList.toggle('hidden', !admin);
             if (saveBtn) saveBtn.classList.toggle('hidden', !admin);
-
-            const showActions = admin && !window.isSharedLink && viewPageActive;
-            if (floatingActions) {
-                floatingActions.classList.toggle('hidden', !showActions);
-                floatingActions.style.display = showActions ? 'flex' : 'none';
-            }
 
             if (roleText) {
                 roleText.innerText = admin ? 'ผู้ดูแล' : 'ผู้ใช้ทั่วไป';
@@ -1207,27 +370,20 @@
             if (confirmAdminBtn) {
                 confirmAdminBtn.innerText = admin ? 'ล็อกกลับเป็นผู้ใช้ทั่วไป' : 'ยืนยันรหัส';
             }
-
-            setSaveButtonLabel();
         };
 
         window.showPage = function(pageId) {
-            if (pageId === 'list' && !window.getAdminMode()) {
-                window.showToast('โหมดผู้ใช้ทั่วไปไม่มีรายการงานเก่า');
-                pageId = 'home';
-            }
-
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById('page-' + pageId);
             if (target) target.classList.add('active');
 
             const navbar = document.getElementById('mainNavbar');
-            if (navbar) {
-                if (pageId === 'view') navbar.classList.add('hidden');
-                else navbar.classList.remove('hidden');
-            }
+            if (pageId === 'view') navbar.classList.add('hidden');
+            else navbar.classList.remove('hidden');
 
-            window.syncRoleUI();
+            if (pageId !== 'view' && pageId !== 'list') {
+                try { history.pushState("", document.title, window.location.pathname); } catch(e){}
+            }
         };
 
         window.goBackToList = function() {
@@ -1240,22 +396,17 @@
         };
 
         window.toggleConfig = function() {
-            const modal = document.getElementById('configModal');
-            if (modal) modal.classList.toggle('hidden');
+            document.getElementById('configModal').classList.toggle('hidden');
         };
 
         window.initTheme = function() {
             try {
-                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const isDark = prefersDark;
+                const isDark = localStorage.getItem('tonkla_theme') === 'dark';
                 if (isDark) document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
+                document.getElementById('darkModeToggle').checked = isDark;
 
-                const darkToggle = document.getElementById('darkModeToggle');
-                if (darkToggle) darkToggle.checked = isDark;
-
-                window.isAdminMode = false;
-                window.adminPasswordCache = '';
+                const unlocked = localStorage.getItem('tonkla_admin_unlocked') === '1';
+                window.isAdminMode = unlocked;
 
                 const adminInput = document.getElementById('adminPassInput');
                 if (adminInput) adminInput.value = '';
@@ -1265,91 +416,44 @@
         };
 
         window.toggleDarkMode = function() {
-            const darkToggle = document.getElementById('darkModeToggle');
-            const isDark = !!darkToggle?.checked;
+            const isDark = document.getElementById('darkModeToggle').checked;
             if (isDark) document.documentElement.classList.add('dark');
             else document.documentElement.classList.remove('dark');
+            localStorage.setItem('tonkla_theme', isDark ? 'dark' : 'light');
         };
 
-        window.verifyAdminPassword = async function(passValue) {
-            const url = window.getApiUrl();
-            if (!url || !passValue) return false;
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'auth', password: passValue })
-                });
-
-                let result = null;
-                try {
-                    result = await response.json();
-                } catch (jsonError) {
-                    result = null;
-                }
-
-                return !!(result && (
-                    result.status === 'success' ||
-                    result.unlocked === true ||
-                    result.auth === true ||
-                    result.mode === 'admin'
-                ));
-            } catch (e) {
-                return false;
-            }
-        };
-
-        window.saveConfig = async function() {
+        window.saveConfig = function() {
             const adminPassInput = document.getElementById('adminPassInput');
             const passValue = (adminPassInput?.value || '').trim();
 
-            if (window.getAdminMode()) {
-                window.isAdminMode = false;
-                window.adminPasswordCache = '';
-                if (adminPassInput) adminPassInput.value = '';
-                window.syncRoleUI();
-                window.showToast('กลับเป็นโหมดผู้ใช้ทั่วไปแล้ว');
-                window.toggleConfig();
-                return;
-            }
-
-            if (!passValue) {
-                window.showToast('กรอกรหัสเพื่อปลดล็อก');
-                return;
-            }
-
-            const confirmBtn = document.getElementById('confirmAdminBtn');
-            if (confirmBtn) {
-                confirmBtn.disabled = true;
-                confirmBtn.innerText = 'กำลังตรวจสอบ...';
-            }
-
-            try {
-                const ok = await window.verifyAdminPassword(passValue);
-                if (ok) {
-                    window.isAdminMode = true;
-                    window.adminPasswordCache = passValue;
-                    if (adminPassInput) adminPassInput.value = '';
-                    window.syncRoleUI();
-                    window.showToast('ปลดล็อกโหมดผู้ดูแลแล้ว ✅');
-                    window.toggleConfig();
-                } else {
+            if (passValue === window.ADMIN_PASS) {
+                const unlocked = window.getAdminMode();
+                if (unlocked) {
+                    localStorage.removeItem('tonkla_admin_unlocked');
                     window.isAdminMode = false;
-                    window.adminPasswordCache = '';
-                    window.syncRoleUI();
-                    window.showToast('รหัสไม่ถูกต้อง');
+                    window.showToast('กลับเป็นโหมดผู้ใช้ทั่วไปแล้ว');
+                } else {
+                    localStorage.setItem('tonkla_admin_unlocked', '1');
+                    window.isAdminMode = true;
+                    window.showToast('ปลดล็อกโหมดผู้ดูแลแล้ว ✅');
                 }
-            } finally {
-                if (confirmBtn) {
-                    confirmBtn.disabled = false;
-                    confirmBtn.innerText = window.getAdminMode() ? 'ล็อกกลับเป็นผู้ใช้ทั่วไป' : 'ยืนยันรหัส';
-                }
+            } else if (passValue) {
+                localStorage.removeItem('tonkla_admin_unlocked');
+                window.isAdminMode = false;
+                window.showToast('รหัสไม่ถูกต้อง');
+            } else {
+                window.showToast(window.getAdminMode() ? 'อยู่ในโหมดผู้ดูแล' : 'โหมดผู้ใช้ทั่วไปยังเปิดอยู่');
             }
+
+            if (adminPassInput) adminPassInput.value = '';
+            window.toggleConfig();
+            window.syncRoleUI();
         };
 
         window.startNewCode = function() {
             window.currentEditingId = null;
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) saveBtn.innerText = "ยืนยันรหัส";
             editor.value = '';
             document.getElementById('codeTitle').value = '';
             window.updateLineNumbers();
@@ -1359,9 +463,8 @@
         };
 
         window.updateLineNumbers = function() {
-            const text = editor.value || '';
-            const lines = text.split('
-').length;
+            const text = editor.value;
+            const lines = text.split('\n').length;
             lineNumbers.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
             lineCountSummary.innerText = `${lines} บรรทัด`;
         };
@@ -1370,15 +473,14 @@
         editor.addEventListener('input', () => {
             window.updateLineNumbers();
             clearTimeout(window.previewTimeout);
-            window.previewTimeout = setTimeout(window.updatePreview, 250);
+            window.previewTimeout = setTimeout(window.updatePreview, 300);
         });
 
         window.updatePreview = function() {
-            const content = editor.value || '';
-            revokePreviewBlob();
+            const content = editor.value;
             const blob = new Blob([content], {type: 'text/html'});
-            window.previewObjectUrl = URL.createObjectURL(blob);
-            previewFrame.src = window.previewObjectUrl;
+            const url = URL.createObjectURL(blob);
+            previewFrame.src = url;
         };
 
         window.insertTemplate = function() {
@@ -1403,9 +505,9 @@
         window.togglePreviewFullScreen = function() {
             const el = document.getElementById('previewContainer');
             if (!document.fullscreenElement) {
-                el.requestFullscreen?.().catch(() => window.showToast('ไม่สามารถขยายเต็มจอได้'));
+                el.requestFullscreen().catch(() => window.showToast('ไม่สามารถขยายเต็มจอได้'));
             } else {
-                document.exitFullscreen?.();
+                document.exitFullscreen();
             }
         };
 
@@ -1420,7 +522,7 @@
             const title = document.getElementById('codeTitle').value.trim() || 'ไม่ได้ตั้งชื่อ';
 
             if (!url || !pass) {
-                window.showToast('ยังไม่ได้ยืนยันรหัสผู้ดูแล');
+                window.showToast('API ไม่พร้อมใช้งาน');
                 return;
             }
             if (!editor.value.trim()) {
@@ -1432,10 +534,8 @@
             const isUpdate = !!window.currentEditingId;
             const action = isUpdate ? 'update' : 'create';
 
-            if (btn) {
-                btn.disabled = true;
-                btn.innerText = isUpdate ? 'กำลังอัปเดต...' : 'กำลังบันทึก...';
-            }
+            btn.disabled = true;
+            btn.innerText = "กำลังส่ง...";
 
             try {
                 const body = { password: pass, code: editor.value, title: title, action: action };
@@ -1443,7 +543,6 @@
 
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
                 const result = await response.json();
@@ -1456,8 +555,6 @@
                         window.updateLineNumbers();
                     }
                     window.updatePreview();
-                    window.currentEditingId = null;
-                    setSaveButtonLabel();
                     window.showPage('home');
                 } else {
                     window.showToast('❌ ' + (result.message || 'เกิดข้อผิดพลาด'));
@@ -1465,10 +562,8 @@
             } catch (error) {
                 window.showToast('❌ เชื่อมต่อไม่ได้');
             } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    setSaveButtonLabel();
-                }
+                btn.disabled = false;
+                btn.innerText = "ยืนยันรหัส";
             }
         };
 
@@ -1584,7 +679,6 @@
                     window.updateLineNumbers();
                     window.updatePreview();
                     window.showPage('create');
-                    setSaveButtonLabel();
                     window.syncRoleUI();
                 } else {
                     window.showToast('ไม่พบข้อมูล');
@@ -1607,7 +701,6 @@
             try {
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password: pass, action: 'delete', id: id })
                 });
                 const result = await response.json();
@@ -1752,27 +845,18 @@
             window.isSharedLink = !fromApp;
             window.showPage('view');
 
+            if (window.isSharedLink) {
+                requestAnimationFrame(() => document.documentElement.classList.remove('shared-entry-loading'));
+            }
+
             const loader = document.getElementById('viewLoading');
             const frame = document.getElementById('fullViewFrame');
             const url = window.getApiUrl();
             const actions = document.getElementById('floatingActions');
             const backBtn = document.getElementById('viewBackButton');
 
-            if (window.previewObjectUrl) {
-                revokePreviewBlob();
-            }
-
-            if (frame) {
-                frame.onload = () => {
-                    if (loader) loader.classList.add('hidden');
-                    if (window.isSharedLink) {
-                        showBootOverlay(false);
-                    }
-                };
-                frame.src = 'about:blank';
-            }
-
-            if (loader) loader.classList.remove('hidden');
+            frame.src = 'about:blank';
+            loader.classList.remove('hidden');
 
             if (fromApp && window.getAdminMode()) {
                 actions.classList.remove('hidden');
@@ -1792,48 +876,38 @@
                 if (result.status === 'success') {
                     const blob = new Blob([result.code || ''], {type: 'text/html'});
                     const blobUrl = URL.createObjectURL(blob);
-                    if (frame) frame.src = blobUrl;
-                    window.previewObjectUrl = blobUrl;
+                    frame.src = blobUrl;
                 } else {
-                    if (frame) {
-                        frame.srcdoc = `
-                            <html>
-                                <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff;color:#444;text-align:center;padding:24px">
-                                    <div>
-                                        <h2 style="margin:0 0 12px 0">ไม่พบข้อมูล</h2>
-                                        <p style="margin:0;line-height:1.6">ลิงก์นี้อาจถูกลบหรือไม่ถูกต้อง</p>
-                                    </div>
-                                </body>
-                            </html>`;
-                    }
-                }
-            } catch(e) {
-                if (frame) {
                     frame.srcdoc = `
                         <html>
                             <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff;color:#444;text-align:center;padding:24px">
                                 <div>
-                                    <h2 style="margin:0 0 12px 0">เชื่อมต่อไม่ได้</h2>
-                                    <p style="margin:0;line-height:1.6">ตรวจสอบ API หรือการเชื่อมต่ออีกครั้ง</p>
+                                    <h2 style="margin:0 0 12px 0">ไม่พบข้อมูล</h2>
+                                    <p style="margin:0;line-height:1.6">ลิงก์นี้อาจถูกลบหรือไม่ถูกต้อง</p>
                                 </div>
                             </body>
                         </html>`;
                 }
+            } catch(e) {
+                frame.srcdoc = `
+                    <html>
+                        <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fff;color:#444;text-align:center;padding:24px">
+                            <div>
+                                <h2 style="margin:0 0 12px 0">เชื่อมต่อไม่ได้</h2>
+                                <p style="margin:0;line-height:1.6">ตรวจสอบ API หรือการเชื่อมต่ออีกครั้ง</p>
+                            </div>
+                        </body>
+                    </html>`;
             } finally {
-                if (loader) loader.classList.add('hidden');
-                window.syncRoleUI();
+                loader.classList.add('hidden');
             }
         };
 
         window.shareCode = async function(id) {
             window.showToast('กำลังสร้างลิงก์... ⏳');
-            await new Promise(r => setTimeout(r, 180));
+            await new Promise(r => setTimeout(r, 250));
 
-            const linkUrl = new URL(window.location.href);
-            linkUrl.searchParams.set('id', id);
-            linkUrl.hash = '';
-            const link = linkUrl.toString();
-
+            const link = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(id)}`;
             try {
                 await navigator.clipboard.writeText(link);
                 window.showToast('คัดลอกลิงก์เรียบร้อย! 🔗');
@@ -1857,32 +931,24 @@
             document.getElementById('toastMsg').innerText = msg;
             toast.classList.remove('hidden');
             clearTimeout(window.toastTimeout);
-            window.toastTimeout = setTimeout(() => { toast.classList.add('hidden'); }, 2400);
+            window.toastTimeout = setTimeout(() => { toast.classList.add('hidden'); }, 2500);
         };
 
         window.copyCurrentUrl = function() {
             window.shareCode(new URLSearchParams(window.location.search).get('id'));
         };
 
-        window.addEventListener('load', async () => {
-            showBootOverlay(true);
+        window.addEventListener('load', () => {
             window.initTheme();
-            window.syncRoleUI();
-
             const urlParams = new URLSearchParams(window.location.search);
             const sharedId = urlParams.get('id');
+            window.syncRoleUI();
 
             if (sharedId) {
-                await window.openView(sharedId, false);
+                window.openView(sharedId, false);
             } else {
                 window.showPage('home');
-                window.syncRoleUI();
-                requestAnimationFrame(() => showBootOverlay(false));
             }
-        });
-
-        window.addEventListener('resize', () => {
-            window.syncRoleUI();
         });
     </script>
 </body>
