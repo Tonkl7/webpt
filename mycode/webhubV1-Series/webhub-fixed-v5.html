@@ -37,7 +37,8 @@
             touch-action: manipulation;
             overscroll-behavior-y: none;
         }
-        html.shared-entry-loading body { visibility: hidden; }
+        html.shared-entry-loading body > *:not(#globalBusyOverlay) { visibility: hidden; }
+        html.shared-entry-loading #globalBusyOverlay { display: flex; }
         h1, h2, h3, .brand-font { font-family: 'Mitr', sans-serif; }
         .code-font { font-family: 'JetBrains Mono', 'Courier New', monospace; }
 
@@ -83,6 +84,68 @@
         }
         .floating-actions.dragging { cursor: grabbing; }
         .floating-actions button { pointer-events: auto; }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.45rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .role-badge.user { background: rgba(229, 231, 235, 0.95); color: #374151; }
+        .role-badge.admin { background: rgba(209, 250, 229, 0.95); color: #047857; }
+        .secret-trigger { cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        .secret-trigger:hover { text-decoration: none; }
+
+        .busy-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 90;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .dark .busy-overlay { background: rgba(17, 24, 39, 0.92); }
+        .busy-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.7rem;
+            text-align: center;
+            padding: 1.5rem 1.8rem;
+        }
+        .busy-logo {
+            position: relative;
+            width: 4rem;
+            height: 4rem;
+            display: grid;
+            place-items: center;
+        }
+        .busy-logo::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            border: 4px solid rgba(229, 231, 235, 0.9);
+            border-top-color: #16a34a;
+            animation: busySpin 0.8s linear infinite;
+        }
+        .busy-logo i {
+            position: relative;
+            z-index: 1;
+            font-size: 1.3rem;
+            color: #16a34a;
+        }
+        .busy-label { font-size: 0.78rem; font-weight: 700; color: #6b7280; }
+        .dark .busy-label { color: #d1d5db; }
+        @keyframes busySpin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-green-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 h-[100dvh] w-screen flex flex-col overflow-hidden transition-colors duration-300">
@@ -92,18 +155,17 @@
             <i class="fas fa-code-branch fa-lg md:text-2xl text-green-200"></i>
             <div class="flex flex-col leading-tight">
                 <span class="font-bold text-lg xs:text-xl md:text-2xl brand-font">Tonkla's Code Space</span>
-                <span id="roleStatusText" class="text-[10px] md:text-xs text-green-100 font-semibold">ผู้ใช้ทั่วไป</span>
             </div>
         </div>
 
         <div class="flex space-x-1 md:space-x-4 items-center">
-            <button type="button" onclick="window.showPage('create')" class="p-2 md:px-4 md:py-2 rounded-full hover:bg-green-500 active:scale-95 transition flex items-center">
-                <i class="fas fa-pen md:text-lg"></i> <span class="hidden sm:inline ml-1 md:ml-2 md:text-lg">เขียน</span>
+            <button id="navbarListBtn" type="button" onclick="window.loadList()" class="hidden p-2 md:px-4 md:py-2 rounded-full hover:bg-green-500 active:scale-95 transition flex items-center">
+                <i class="fas fa-folder md:text-lg"></i> <span class="hidden sm:inline ml-1 md:ml-2 md:text-lg">ดูงานเก่า</span>
             </button>
-            <button id="navbarListBtn" type="button" onclick="window.loadList()" class="p-2 md:px-4 md:py-2 rounded-full hover:bg-green-500 active:scale-95 transition flex items-center">
-                <i class="fas fa-folder md:text-lg"></i> <span class="hidden sm:inline ml-1 md:ml-2 md:text-lg">งาน</span>
+            <button type="button" onclick="window.toggleInfoModal()" class="p-2 md:p-3 rounded-full hover:bg-green-500 active:scale-95 transition" title="Information">
+                <i class="fas fa-circle-info md:text-xl"></i>
             </button>
-            <button type="button" onclick="window.toggleConfig()" class="p-2 md:p-3 rounded-full hover:bg-green-500 active:scale-95 transition">
+            <button type="button" onclick="window.toggleConfig()" class="p-2 md:p-3 rounded-full hover:bg-green-500 active:scale-95 transition" title="ตั้งค่า">
                 <i class="fas fa-cog md:text-xl"></i>
             </button>
         </div>
@@ -114,23 +176,21 @@
         <!-- HOME -->
         <div id="page-home" class="page-section active bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm overflow-y-auto">
             <div class="min-h-full flex flex-col items-center justify-center p-6 text-center">
-                <div class="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-3xl shadow-xl w-full max-w-sm md:max-w-2xl border border-green-100 dark:border-green-800 transition-all">
+                <div class="relative bg-white dark:bg-gray-800 p-8 md:p-12 rounded-3xl shadow-xl w-full max-w-sm md:max-w-2xl border border-green-100 dark:border-green-800 transition-all">
+                    <div id="homeRoleBadge" class="role-badge user absolute right-4 top-4">
+                        <i class="fas fa-user"></i><span>ผู้ใช้ทั่วไป</span>
+                    </div>
                     <i class="fas fa-laptop-code text-6xl md:text-8xl text-green-500 mb-6 inline-block animate-bounce"></i>
                     <h1 class="text-2xl md:text-4xl font-bold mb-2 brand-font">Tonkla's Code Space</h1>
-                    <p id="homeRoleBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-green-100 text-green-700 mb-3">ผู้ใช้ทั่วไป</p>
                     <p class="text-gray-600 dark:text-gray-400 mb-8 text-sm md:text-lg">พื้นที่เขียนและดูโค้ดส่วนตัว</p>
 
-                    <div class="flex flex-col md:flex-row gap-3 md:gap-6 justify-center">
-                        <button type="button" onclick="window.startNewCode()" class="w-full md:w-auto md:px-10 bg-green-600 text-white font-bold py-3 md:py-4 rounded-xl shadow active:scale-95 transition md:text-lg">
-                            <i class="fas fa-plus mr-2"></i> สร้างงานใหม่
+                    <div class="flex flex-col items-center gap-3">
+                        <button id="homeCodeBtn" type="button" onclick="window.startNewCode()" class="w-full md:w-auto md:px-10 bg-green-600 text-white font-bold py-3 md:py-4 rounded-xl shadow active:scale-95 transition md:text-lg">
+                            <i class="fas fa-code mr-2"></i> เขียนโค้ด
                         </button>
-                        <button id="homeListBtn" type="button" onclick="window.loadList()" class="w-full md:w-auto md:px-10 bg-white text-green-600 border border-green-600 font-bold py-3 md:py-4 rounded-xl shadow active:scale-95 transition md:text-lg">
+                        <button id="homeAdminListBtn" type="button" onclick="window.loadList()" class="hidden w-full md:w-auto md:px-10 bg-white text-green-600 border border-green-600 font-bold py-3 md:py-4 rounded-xl shadow active:scale-95 transition md:text-lg">
                             <i class="fas fa-folder-open mr-2"></i> ดูงานเก่า
                         </button>
-                    </div>
-
-                    <div id="adminModeNote" class="mt-5 text-xs md:text-sm text-gray-400">
-                        โหมดผู้ใช้ทั่วไป: ดูและทดลองเขียนได้เท่านั้น
                     </div>
                 </div>
             </div>
@@ -145,9 +205,6 @@
 
                 <div class="flex-1 min-w-0 flex flex-col items-center">
                     <input type="text" id="codeTitle" placeholder="ตั้งชื่อผลงาน..." class="w-full max-w-xl bg-transparent border-b border-transparent hover:border-gray-300 focus:border-green-500 text-gray-700 dark:text-gray-200 text-center font-bold text-sm md:text-xl focus:outline-none transition-colors px-2 py-1 placeholder-gray-400" autocomplete="off">
-                    <div class="mt-1 text-[10px] md:text-xs text-gray-400">
-                        <span id="createRoleHint">ผู้ใช้ทั่วไป: ดูโค้ดและพรีวิวได้เท่านั้น</span>
-                    </div>
                 </div>
 
                 <button type="button" onclick="window.insertTemplate()" class="text-xs md:text-base bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 transition font-bold">
@@ -185,8 +242,8 @@
                     <div class="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-500 mr-2"></div>
                     <span id="statusMsg">พร้อม</span>
                 </div>
-                <button type="button" onclick="window.saveCode()" id="saveBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-6 md:px-10 rounded-lg shadow active:scale-95 transition w-32 md:w-auto md:min-w-[150px] md:text-lg">
-                    ยืนยันรหัส
+                <button type="button" onclick="window.saveCode()" id="saveBtn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 md:py-3 px-6 md:px-10 rounded-lg shadow active:scale-95 transition w-32 md:w-auto md:min-w-[150px] md:text-lg">
+                    บันทึก
                 </button>
             </div>
         </div>
@@ -216,8 +273,11 @@
                 </div>
 
                 <div id="listContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
-                    <div class="text-center py-10 text-gray-400 col-span-full">
-                        <i class="fas fa-circle-notch fa-spin text-2xl md:text-4xl"></i><br>กำลังโหลด...
+                    <div class="text-center py-10 col-span-full">
+                        <div class="busy-box">
+                            <div class="busy-logo"><i class="fas fa-code-branch"></i></div>
+                            <div class="busy-label">กำลังโหลด...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -227,10 +287,10 @@
         <div id="page-view" class="page-section bg-white w-full h-full relative">
             <iframe id="fullViewFrame" class="w-full h-full border-none block"></iframe>
 
-            <div id="viewLoading" class="absolute inset-0 bg-white flex items-center justify-center z-20 hidden">
-                <div class="flex flex-col items-center gap-3">
-                    <div class="w-10 h-10 rounded-full border-4 border-gray-200 border-t-green-500 animate-spin"></div>
-                    <div class="text-xs text-gray-500 font-semibold">กำลังโหลด...</div>
+            <div id="viewLoading" class="absolute inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-20 hidden">
+                <div class="busy-box">
+                    <div class="busy-logo"><i class="fas fa-code-branch"></i></div>
+                    <div class="busy-label">กำลังโหลด...</div>
                 </div>
             </div>
 
@@ -247,10 +307,10 @@
 
     <!-- Config Modal -->
     <div id="configModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onclick="if(event.target === this) window.toggleConfig()">
-        <div class="bg-white dark:bg-gray-800 w-full max-w-xs rounded-2xl p-5 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
+        <div class="relative bg-white dark:bg-gray-800 w-full max-w-xs rounded-2xl p-5 shadow-2xl">
+            <div class="relative mb-4 pr-10">
                 <h3 class="font-bold text-lg brand-font">ตั้งค่า</h3>
-                <button onclick="window.toggleConfig()" class="text-gray-400 p-2"><i class="fas fa-times"></i></button>
+                <button onclick="window.toggleConfig()" class="absolute right-0 top-0 text-gray-400 p-2"><i class="fas fa-times"></i></button>
             </div>
 
             <div class="space-y-4">
@@ -259,24 +319,72 @@
                     <input type="checkbox" id="darkModeToggle" class="accent-green-600 w-5 h-5" onchange="window.toggleDarkMode()">
                 </div>
 
-                <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                    <div class="text-xs text-center text-gray-500 pb-1">ยืนยันรหัสผู้ดูแลเพื่อเปิดงานเก่า</div>
-                    <input type="password" id="adminPassInput" placeholder="ใส่รหัส 6 หลัก" class="w-full text-xs p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
-                    <div class="mt-2 text-[10px] text-gray-400 text-center">เมื่อยืนยันถูกต้อง ระบบจะปลดล็อกเป็นผู้ดูแล</div>
-                </div>
+                <div id="adminSecretPanel" class="hidden bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg space-y-3">
+                    <div>
+                        <div class="text-xs text-center text-gray-500 pb-1">ใส่รหัสเพื่อปลดล็อกสิทธิ์พิเศษ</div>
+                        <input type="password" id="adminPassInput" placeholder="ใส่รหัส" class="w-full text-xs p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
+                        <div class="mt-2 text-[10px] text-gray-400 text-center">เมื่อรหัสถูกต้อง ระบบจะปลดล็อกสิทธิ์พิเศษในหน้านี้</div>
+                    </div>
 
-                <button id="confirmAdminBtn" onclick="window.saveConfig()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg shadow active:scale-95 transition">
-                    ยืนยันรหัส
-                </button>
+                    <button id="confirmAdminBtn" onclick="window.saveConfig()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg shadow active:scale-95 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-shield-alt"></i> <span>ยืนยัน</span>
+                    </button>
+                </div>
             </div>
 
             <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
                 <p class="text-xs text-gray-400 dark:text-gray-500">
                     Developed by<br>
-                    <span class="font-semibold text-gray-600 dark:text-gray-300">Sarayut Angko</span><br>
+                    <span id="creditTrigger" class="secret-trigger font-semibold text-gray-600 dark:text-gray-300">Sarayut Angko</span><br>
                     Nongphai School
                 </p>
             </div>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[65] flex items-center justify-center p-4" onclick="if(event.target === this) window.toggleInfoModal()">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl p-5 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg brand-font">Information</h3>
+                <button onclick="window.toggleInfoModal()" class="text-gray-400 p-2"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="space-y-3 text-sm leading-6 text-gray-700 dark:text-gray-200">
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-700/50 p-4">
+                    <div class="font-bold text-green-600 dark:text-green-400">เวอร์ชั่นปัจจุบัน : fixed V.5</div>
+                    <ul class="mt-1 space-y-1 text-gray-600 dark:text-gray-300">
+                        <li>- performance fixed</li>
+                        <li>- bug fixed</li>
+                        <li>- resolution fixed</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-700/50 p-4">
+                    <div class="font-bold text-green-600 dark:text-green-400">fixed V.4</div>
+                    <ul class="mt-1 space-y-1 text-gray-600 dark:text-gray-300">
+                        <li>- performance fixed</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-700/50 p-4">
+                    <div class="font-bold text-green-600 dark:text-green-400">fixed V.3.5</div>
+                    <ul class="mt-1 space-y-1 text-gray-600 dark:text-gray-300">
+                        <li>- bug fixed</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-700/50 p-4">
+                    <div class="font-bold text-green-600 dark:text-green-400">fixed V.2</div>
+                    <ul class="mt-1 space-y-1 text-gray-600 dark:text-gray-300">
+                        <li>- user feature fixed</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="globalBusyOverlay" class="busy-overlay" aria-hidden="true">
+        <div class="busy-box">
+            <div class="busy-logo"><i class="fas fa-code-branch"></i></div>
+            <div id="globalBusyText" class="busy-label">กำลังโหลด...</div>
         </div>
     </div>
 
@@ -294,8 +402,11 @@
         window.isSharedLink = false;
         window.allListItems = [];
         window.DEFAULT_CODEKEEPER_URL = 'https://script.google.com/macros/s/AKfycbyM2OqlVU3G92pNdu4lQsgu_D5_shTYy5fVvnv57cSGxGiSNXcGFEG5m1afJCFD8GMCbg/exec';
-        window.ADMIN_PASS = '632552';
+        const AUTH_CODE = '632552';
         window.isAdminMode = false;
+        window.creditTapCount = 0;
+        window.secretPanelVisible = false;
+        window.adminVerifyBusy = false;
 
         const editor = document.getElementById('codeEditor');
         const lineNumbers = document.getElementById('lineNumbers');
@@ -316,59 +427,61 @@
         };
 
         window.getApiPass = function() {
-            return window.ADMIN_PASS;
+            return AUTH_CODE;
         };
 
         window.getAdminMode = function() {
-            return window.isAdminMode || localStorage.getItem('tonkla_admin_unlocked') === '1';
+            return window.isAdminMode === true;
         };
 
         window.syncRoleUI = function() {
             const admin = window.getAdminMode();
 
             const navbarListBtn = document.getElementById('navbarListBtn');
-            const homeListBtn = document.getElementById('homeListBtn');
-            const listPage = document.getElementById('page-list');
-            const saveBtn = document.getElementById('saveBtn');
-            const roleText = document.getElementById('roleStatusText');
+            const homeAdminListBtn = document.getElementById('homeAdminListBtn');
+            const homeCodeBtn = document.getElementById('homeCodeBtn');
             const homeRoleBadge = document.getElementById('homeRoleBadge');
-            const adminNote = document.getElementById('adminModeNote');
-            const createRoleHint = document.getElementById('createRoleHint');
+            const saveBtn = document.getElementById('saveBtn');
             const confirmAdminBtn = document.getElementById('confirmAdminBtn');
+            const adminSecretPanel = document.getElementById('adminSecretPanel');
 
             if (navbarListBtn) navbarListBtn.classList.toggle('hidden', !admin);
-            if (homeListBtn) homeListBtn.classList.toggle('hidden', !admin);
-            if (listPage) listPage.classList.toggle('hidden', !admin);
+            if (homeAdminListBtn) homeAdminListBtn.classList.toggle('hidden', !admin);
             if (saveBtn) saveBtn.classList.toggle('hidden', !admin);
 
-            if (roleText) {
-                roleText.innerText = admin ? 'ผู้ดูแล' : 'ผู้ใช้ทั่วไป';
-                roleText.className = admin
-                    ? 'text-[10px] md:text-xs text-green-200 font-semibold'
-                    : 'text-[10px] md:text-xs text-green-100 font-semibold';
+            if (homeCodeBtn) {
+                homeCodeBtn.classList.toggle('md:w-full', admin);
+                homeCodeBtn.classList.toggle('md:w-auto', !admin);
+            }
+            if (homeAdminListBtn) {
+                homeAdminListBtn.classList.toggle('md:w-full', admin);
+                homeAdminListBtn.classList.toggle('md:w-auto', !admin);
             }
 
             if (homeRoleBadge) {
-                homeRoleBadge.innerText = admin ? 'ผู้ดูแล' : 'ผู้ใช้ทั่วไป';
-                homeRoleBadge.className = admin
-                    ? 'inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-green-100 text-green-700 mb-3'
-                    : 'inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-semibold bg-gray-100 text-gray-700 mb-3';
+                homeRoleBadge.className = admin ? 'role-badge admin absolute right-4 top-4' : 'role-badge user absolute right-4 top-4';
+                homeRoleBadge.innerHTML = admin
+                    ? '<i class="fas fa-user-shield"></i><span>ผู้ดูแล</span>'
+                    : '<i class="fas fa-user"></i><span>ผู้ใช้ทั่วไป</span>';
             }
 
-            if (adminNote) {
-                adminNote.innerText = admin
-                    ? 'โหมดผู้ดูแล: เห็นปุ่มดูงาน บันทึก แก้ไข และลบ'
-                    : 'โหมดผู้ใช้ทั่วไป: ดูและทดลองเขียนได้เท่านั้น';
-            }
-
-            if (createRoleHint) {
-                createRoleHint.innerText = admin
-                    ? 'ผู้ดูแล: เขียน แก้ไข บันทึก และดูงานเก่าได้'
-                    : 'ผู้ใช้ทั่วไป: ดูโค้ดและพรีวิวได้เท่านั้น';
+            if (adminSecretPanel) {
+                adminSecretPanel.classList.toggle('hidden', !window.secretPanelVisible && !admin);
             }
 
             if (confirmAdminBtn) {
-                confirmAdminBtn.innerText = admin ? 'ล็อกกลับเป็นผู้ใช้ทั่วไป' : 'ยืนยันรหัส';
+                const label = confirmAdminBtn.querySelector('span') || confirmAdminBtn;
+                if (window.adminVerifyBusy) {
+                    confirmAdminBtn.disabled = true;
+                    confirmAdminBtn.classList.add('opacity-80', 'cursor-wait');
+                    if (label !== confirmAdminBtn) label.innerText = 'กำลังตรวจอยู่...';
+                    else confirmAdminBtn.innerText = 'กำลังตรวจอยู่...';
+                } else {
+                    confirmAdminBtn.disabled = false;
+                    confirmAdminBtn.classList.remove('opacity-80', 'cursor-wait');
+                    if (label !== confirmAdminBtn) label.innerText = admin ? 'เปิดใช้งานแล้ว' : 'ยืนยัน';
+                    else confirmAdminBtn.innerText = admin ? 'เปิดใช้งานแล้ว' : 'ยืนยัน';
+                }
             }
         };
 
@@ -401,13 +514,14 @@
 
         window.initTheme = function() {
             try {
-                const isDark = localStorage.getItem('tonkla_theme') === 'dark';
-                if (isDark) document.documentElement.classList.add('dark');
-                document.getElementById('darkModeToggle').checked = isDark;
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (prefersDark) document.documentElement.classList.add('dark');
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                if (darkModeToggle) darkModeToggle.checked = prefersDark;
 
-                const unlocked = localStorage.getItem('tonkla_admin_unlocked') === '1';
-                window.isAdminMode = unlocked;
-
+                window.isAdminMode = false;
+                window.secretPanelVisible = false;
+                window.creditTapCount = 0;
                 const adminInput = document.getElementById('adminPassInput');
                 if (adminInput) adminInput.value = '';
 
@@ -419,41 +533,88 @@
             const isDark = document.getElementById('darkModeToggle').checked;
             if (isDark) document.documentElement.classList.add('dark');
             else document.documentElement.classList.remove('dark');
-            localStorage.setItem('tonkla_theme', isDark ? 'dark' : 'light');
         };
 
-        window.saveConfig = function() {
+        window.toggleInfoModal = function() {
+            document.getElementById('infoModal').classList.toggle('hidden');
+        };
+
+        window.setBusyOverlay = function(visible, message) {
+            const overlay = document.getElementById('globalBusyOverlay');
+            const label = document.getElementById('globalBusyText');
+            if (!overlay) return;
+            if (label && typeof message === 'string' && message.trim()) label.innerText = message;
+            overlay.style.display = visible ? 'flex' : 'none';
+        };
+
+        window.revealSecretPanel = function() {
+            window.secretPanelVisible = true;
+            const panel = document.getElementById('adminSecretPanel');
+            if (panel) panel.classList.remove('hidden');
+        };
+
+        window.bindCreditTrigger = function() {
+            const credit = document.getElementById('creditTrigger');
+            if (!credit || credit.dataset.bound === '1') return;
+            credit.dataset.bound = '1';
+            credit.addEventListener('click', () => {
+                window.creditTapCount = (window.creditTapCount || 0) + 1;
+                if (window.creditTapCount >= 15) {
+                    window.revealSecretPanel();
+                }
+            });
+        };
+
+        window.verifyAdminUnlock = async function(passValue) {
+            const url = window.getApiUrl();
+            if (!url) return false;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({ password: passValue, action: 'auth' })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (result && (result.status === 'success' || result.ok === true)) {
+                    return true;
+                }
+            } catch (e) {}
+            return passValue === AUTH_CODE;
+        };
+
+        window.saveConfig = async function() {
             const adminPassInput = document.getElementById('adminPassInput');
             const passValue = (adminPassInput?.value || '').trim();
 
-            if (passValue === window.ADMIN_PASS) {
-                const unlocked = window.getAdminMode();
-                if (unlocked) {
-                    localStorage.removeItem('tonkla_admin_unlocked');
-                    window.isAdminMode = false;
-                    window.showToast('กลับเป็นโหมดผู้ใช้ทั่วไปแล้ว');
-                } else {
-                    localStorage.setItem('tonkla_admin_unlocked', '1');
-                    window.isAdminMode = true;
-                    window.showToast('ปลดล็อกโหมดผู้ดูแลแล้ว ✅');
-                }
-            } else if (passValue) {
-                localStorage.removeItem('tonkla_admin_unlocked');
-                window.isAdminMode = false;
-                window.showToast('รหัสไม่ถูกต้อง');
-            } else {
-                window.showToast(window.getAdminMode() ? 'อยู่ในโหมดผู้ดูแล' : 'โหมดผู้ใช้ทั่วไปยังเปิดอยู่');
+            if (!passValue) {
+                window.showToast('ใส่รหัสก่อน');
+                if (adminPassInput) adminPassInput.value = '';
+                window.syncRoleUI();
+                return;
             }
 
+            window.adminVerifyBusy = true;
+            window.syncRoleUI();
+            window.showToast('กำลังตรวจรหัส...');
+
+            const ok = await window.verifyAdminUnlock(passValue);
+            if (ok) {
+                window.isAdminMode = true;
+                window.showToast('ปลดล็อกเรียบร้อย');
+            } else {
+                window.isAdminMode = false;
+                window.showToast('รหัสไม่ถูกต้อง');
+            }
+
+            window.adminVerifyBusy = false;
             if (adminPassInput) adminPassInput.value = '';
-            window.toggleConfig();
             window.syncRoleUI();
         };
 
         window.startNewCode = function() {
             window.currentEditingId = null;
             const saveBtn = document.getElementById('saveBtn');
-            if (saveBtn) saveBtn.innerText = "ยืนยันรหัส";
+            if (saveBtn) saveBtn.innerText = "บันทึก";
             editor.value = '';
             document.getElementById('codeTitle').value = '';
             window.updateLineNumbers();
@@ -563,7 +724,7 @@
                 window.showToast('❌ เชื่อมต่อไม่ได้');
             } finally {
                 btn.disabled = false;
-                btn.innerText = "ยืนยันรหัส";
+                btn.innerText = "บันทึก";
             }
         };
 
@@ -644,7 +805,7 @@
             const searchInput = document.getElementById('listSearch');
             if (searchInput) searchInput.value = '';
 
-            container.innerHTML = '<div class="text-center mt-10 text-green-600 col-span-full"><i class="fas fa-spinner fa-spin text-3xl"></i><br>กำลังโหลด...</div>';
+            container.innerHTML = '<div class="text-center mt-10 col-span-full"><div class="busy-box"><div class="busy-logo"><i class="fas fa-code-branch"></i></div><div class="busy-label">กำลังโหลด...</div></div></div>';
 
             try {
                 const response = await fetch(`${url}?action=list`);
@@ -698,6 +859,7 @@
             const url = window.getApiUrl();
             const pass = window.getApiPass();
 
+            window.setBusyOverlay(true, 'กำลังลบข้อมูล...');
             try {
                 const response = await fetch(url, {
                     method: 'POST',
@@ -712,6 +874,8 @@
                 }
             } catch(e) {
                 window.showToast('Error deleting');
+            } finally {
+                window.setBusyOverlay(false, '');
             }
         };
 
@@ -845,10 +1009,6 @@
             window.isSharedLink = !fromApp;
             window.showPage('view');
 
-            if (window.isSharedLink) {
-                requestAnimationFrame(() => document.documentElement.classList.remove('shared-entry-loading'));
-            }
-
             const loader = document.getElementById('viewLoading');
             const frame = document.getElementById('fullViewFrame');
             const url = window.getApiUrl();
@@ -900,6 +1060,9 @@
                     </html>`;
             } finally {
                 loader.classList.add('hidden');
+                if (window.isSharedLink) {
+                    document.documentElement.classList.remove('shared-entry-loading');
+                }
             }
         };
 
@@ -942,6 +1105,7 @@
             window.initTheme();
             const urlParams = new URLSearchParams(window.location.search);
             const sharedId = urlParams.get('id');
+            window.bindCreditTrigger();
             window.syncRoleUI();
 
             if (sharedId) {
